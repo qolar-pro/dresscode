@@ -141,8 +141,10 @@ export default function AdminProducts() {
                   className="w-full h-full object-cover"
                   onError={(e) => {
                     // Fallback to emoji if image fails to load
-                    e.currentTarget.style.display = 'none';
-                    e.currentTarget.parentElement.innerHTML = `<span class="text-6xl">${emojiMap[product.category] || '👗'}</span>`;
+                    if (e.currentTarget.parentElement) {
+                      e.currentTarget.style.display = 'none';
+                      e.currentTarget.parentElement.innerHTML = `<span class="text-6xl">${emojiMap[product.category] || '👗'}</span>`;
+                    }
                   }}
                 />
               ) : (
