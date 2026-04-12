@@ -34,7 +34,7 @@ export default function CheckoutPage() {
   
   const enabledPaymentMethods = getEnabledPaymentMethods();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     const newOrderId = `ORD-${Date.now()}`;
