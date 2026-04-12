@@ -1,0 +1,48 @@
+export interface Product {
+  id: number;
+  name: string;
+  price: number;
+  category: string;
+  description: string;
+  images: string[];
+  sizes: Size[];
+  colors: Color[];
+  isNew?: boolean;
+  isFeatured?: boolean;
+}
+
+export interface Size {
+  name: string;
+  available: boolean;
+}
+
+export interface Color {
+  name: string;
+  hex: string;
+  available: boolean;
+}
+
+export interface CartItem {
+  product: Product;
+  size: string;
+  color: string;
+  quantity: number;
+}
+
+export interface Order {
+  items: CartItem[];
+  customer: CustomerInfo;
+  total: number;
+  date: string;
+}
+
+export interface CustomerInfo {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  address: string;
+  city: string;
+  zipCode: string;
+  notes?: string;
+}

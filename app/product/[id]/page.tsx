@@ -1,0 +1,273 @@
+'use client';
+
+import { useParams, useRouter } from 'next/navigation';
+import { useLanguage } from '@/context/LanguageContext';
+import { products as defaultProducts, defaultImages } from '@/data/products';
+import { useCart } from '@/context/CartContext';
+import { useState, useEffect } from 'react';
+import { Minus, Plus, ShoppingBag, ArrowLeft, Star } from 'lucide-react';
+import Link from 'next/link';
+
+export default function ProductPage() {
+  const params = useParams();
+  const router = useRouter();
+  const [products, setProducts] = useState(defaultProducts);
+  
+  useEffect(() => {
+    const storedProducts = localStorage.getItem('products');
+    if (storedProducts) {
+      setProducts(JSON.parse(storedProducts));
+    }
+  }, []);
+
+  const productId = parseInt(params.id as string);
+  const product = products.find(p => p.id === productId);
+
+  if (!product) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-neutral-950">
+        <div className="text-center">
+          <h1 className="font-display text-4xl tracking-tight text-neutral-900 dark:text-white mb-4">Product Not Found</h1>
+          <Link href="/shop" className="bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 px-8 py-4 text-xs tracking-[0.2em] uppercase font-medium hover:bg-neutral-800 dark:hover:bg-neutral-200 transition-colors inline-block">
+            Back to Shop
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  return <ProductDetail product={product} />;
+}
+
+function ProductDetail({ product }: { product: any }) {
+  const router = useRouter();
+  const { t } = useLanguage();
+  const { addToCart } = useCart();
+  const [selectedSize, setSelectedSize] = useState<string | null>(null);
+  const [selectedColor, setSelectedColor] = useState<string | null>(null);
+  const [quantity, setQuantity] = useState(1);
+  const [addedToCart, setAddedToCart] = useState(false);
+
+  const emojiMap: Record<string, string> = {
+    dresses: '👗',
+    tops: '👚',
+    pants: '👖',
+    skirts: '👗',
+    outerwear: '🧥',
+    accessories: '👜',
+  };
+
+  const handleAddToCart = () => {
+    if (!selectedSize) {
+      alert(t('product.selectSize'));
+      return;
+    }
+    if (!selectedColor) {
+      alert(t('product.selectColor'));
+      return;
+    }
+
+    addToCart(product, selectedSize, selectedColor, quantity);
+    setAddedToCart(true);
+    setTimeout(() => setAddedToCart(false), 2000);
+  };
+
+  const availableSizes = product.sizes.filter((s: any) => s.available);
+  const availableColors = product.colors.filter((c: any) => c.available);
+
+  return (
+    <div className="min-h-screen bg-white dark:bg-neutral-950 relative overflow-hidden">
+      {/* Subtle Background Image */}
+      <div className="absolute inset-0">
+        <img
+          src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=1920&q=80"
+          alt=""
+          className="w-full h-full object-cover opacity-[0.03] dark:opacity-[0.02]"
+        />
+      </div>
+      
+      <div className="relative z-10 pt-20">
+        {/* Breadcrumb */}
+        <div className="container mx-auto px-4 py-6">
+          <button
+            onClick={() => router.back()}
+            className="flex items-center gap-3 text-xs tracking-[0.2em] uppercase text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors"
+          >
+            <ArrowLeft className="w-3 h-3" />
+            {t('product.back')}
+          </button>
+        </div>
+
+        <div className="container mx-auto px-4 py-12">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 mb-24">
+            {/* Product Image */}
+            <div className="aspect-[4/5] bg-neutral-100 dark:bg-neutral-800 relative overflow-hidden">
+              {product.images?.[0] ? (
+                <img
+                  src={product.images[0]}
+                  alt={product.name}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.currentTarget.src = defaultImages[product.category] || defaultImages.dresses;
+                  }}
+                />
+              ) : (
+                <img
+                  src={defaultImages[product.category] || defaultImages.dresses}
+                  alt={product.name}
+                  className="w-full h-full object-cover"
+                />
+              )}
+              {product.isNew && (
+                <span className="absolute top-6 left-6 text-[10px] tracking-[0.2em] uppercase font-medium bg-white dark:bg-neutral-900 text-neutral-900 dark:text-white px-4 py-2">
+                  {t('common.newArrival')}
+                </span>
+              )}
+            </div>
+
+            {/* Product Info */}
+            <div className="flex flex-col justify-center">
+              <div className="max-w-lg">
+                <Link href={`/shop?category=${product.category}`} className="text-[10px] tracking-[0.3em] uppercase text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors mb-4 inline-block">
+                  {product.category}
+                </Link>
+                
+                <h1 className="font-display text-4xl md:text-5xl font-light tracking-tight text-neutral-900 dark:text-white mb-6">{product.name}</h1>
+                
+                {/* Rating */}
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="flex items-center gap-1">
+                    {[...Array(5)].map((_, i) => (
+                      <Star key={i} className="w-4 h-4 fill-neutral-900 dark:fill-white text-neutral-900 dark:text-white" />
+                    ))}
+                  </div>
+                  <span className="text-xs text-neutral-500 dark:text-neutral-400">(48 reviews)</span>
+                </div>
+
+                <p className="text-3xl font-light text-neutral-900 dark:text-white mb-8">${product.price.toFixed(2)}</p>
+                
+                <p className="text-neutral-600 dark:text-neutral-400 leading-relaxed mb-10 font-light">{product.description}</p>
+
+                {/* Color Selection */}
+                {availableColors.length > 0 && (
+                  <div className="mb-8">
+                    <label className="block text-xs tracking-[0.2em] uppercase font-medium mb-4 text-neutral-900 dark:text-white">
+                      {t('common.color')} {selectedColor && <span className="text-neutral-500 dark:text-neutral-400 font-normal">— {selectedColor}</span>}
+                    </label>
+                    <div className="flex flex-wrap gap-3">
+                      {availableColors.map((color: any) => (
+                        <button
+                          key={color.name}
+                          onClick={() => setSelectedColor(color.name)}
+                          className={`w-10 h-10 transition-all duration-300 ${
+                            selectedColor === color.name
+                              ? 'ring-2 ring-neutral-900 dark:ring-white ring-offset-2 dark:ring-offset-neutral-950'
+                              : 'hover:ring-2 hover:ring-neutral-400 hover:ring-offset-2 dark:hover:ring-offset-neutral-950'
+                          }`}
+                          style={{ backgroundColor: color.hex }}
+                          title={color.name}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Size Selection */}
+                {availableSizes.length > 0 && (
+                  <div className="mb-8">
+                    <div className="flex items-center justify-between mb-4">
+                      <label className="block text-xs tracking-[0.2em] uppercase font-medium text-neutral-900 dark:text-white">
+                        {t('common.size')}
+                      </label>
+                      <button className="text-xs tracking-[0.15em] uppercase text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white underline underline-offset-4 transition-colors">
+                        {t('product.sizeGuide')}
+                      </button>
+                    </div>
+                    <div className="flex flex-wrap gap-3">
+                      {product.sizes.map((size: any) => (
+                        <button
+                          key={size.name}
+                          onClick={() => size.available && setSelectedSize(size.name)}
+                          disabled={!size.available}
+                          className={`min-w-[60px] px-5 py-3 text-xs tracking-[0.15em] uppercase font-medium transition-all duration-300 ${
+                            !size.available
+                              ? 'bg-neutral-100 dark:bg-neutral-800 text-neutral-400 cursor-not-allowed line-through'
+                              : selectedSize === size.name
+                              ? 'bg-neutral-900 dark:bg-white text-white dark:text-neutral-900'
+                              : 'bg-transparent border border-neutral-300 dark:border-neutral-700 hover:border-neutral-900 dark:hover:border-white text-neutral-900 dark:text-white'
+                          }`}
+                        >
+                          {size.name}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Quantity Selection */}
+                <div className="mb-10">
+                  <label className="block text-xs tracking-[0.2em] uppercase font-medium mb-4 text-neutral-900 dark:text-white">
+                    {t('product.quantity')}
+                  </label>
+                  <div className="flex items-center border border-neutral-300 dark:border-neutral-700 w-fit">
+                    <button
+                      onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                      className="p-4 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+                    >
+                      <Minus className="w-4 h-4 text-neutral-700 dark:text-neutral-300" />
+                    </button>
+                    <span className="w-16 text-center font-medium text-neutral-900 dark:text-white">{quantity}</span>
+                    <button
+                      onClick={() => setQuantity(quantity + 1)}
+                      className="p-4 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+                    >
+                      <Plus className="w-4 h-4 text-neutral-700 dark:text-neutral-300" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Add to Cart Button */}
+                <button
+                  onClick={handleAddToCart}
+                  className={`w-full py-5 text-xs tracking-[0.2em] uppercase font-medium transition-all duration-500 ${
+                    addedToCart
+                      ? 'bg-neutral-700 dark:bg-neutral-300 text-white dark:text-neutral-900'
+                      : 'bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 hover:bg-neutral-800 dark:hover:bg-neutral-200'
+                  }`}
+                >
+                  {addedToCart ? t('product.addedToCart') : t('product.addToCart')}
+                </button>
+
+                {/* Features */}
+                <div className="mt-10 pt-10 border-t border-neutral-200 dark:border-neutral-800 space-y-4">
+                  <p className="text-sm text-neutral-600 dark:text-neutral-400 font-light">✓ {t('product.complimentaryShipping')}</p>
+                  <p className="text-sm text-neutral-600 dark:text-neutral-400 font-light">✓ {t('product.cashOnDelivery')}</p>
+                  <p className="text-sm text-neutral-600 dark:text-neutral-400 font-light">✓ {t('product.easyReturns')}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Product Details Section */}
+          <div className="border-t border-neutral-200 dark:border-neutral-800 pt-16">
+            <h2 className="font-display text-3xl font-light tracking-tight text-neutral-900 dark:text-white mb-12">{t('product.details')}</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-16">
+              <div>
+                <h3 className="text-xs tracking-[0.2em] uppercase font-medium mb-4 text-neutral-500 dark:text-neutral-400">{t('product.description')}</h3>
+                <p className="text-neutral-700 dark:text-neutral-300 leading-relaxed font-light">{product.description}</p>
+              </div>
+              <div>
+                <h3 className="text-xs tracking-[0.2em] uppercase font-medium mb-4 text-neutral-500 dark:text-neutral-400">{t('product.sizeFit')}</h3>
+                <ul className="space-y-3 text-neutral-700 dark:text-neutral-300 font-light">
+                  <li>• {t('product.modelWearing')}</li>
+                  <li>• {t('product.fitsTrue')}</li>
+                  <li>• {t('product.referToGuide')}</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
