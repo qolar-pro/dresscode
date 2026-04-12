@@ -6,9 +6,11 @@ export async function POST(request: Request) {
   try {
     const { order } = await request.json();
 
+    // FIX: Changed 'from' address to match the verified domain 'blancographics.xyz'
+    // Previously it was 'onboarding@resend.dev' which causes a 500 error on custom domains.
     const { data, error } = await resend.emails.send({
-      from: 'DRESS CODE <onboarding@resend.dev>',
-      to: [order.customer.email, 'admin@blancographics.xyz'], // Sends to customer AND you
+      from: 'DRESS CODE <orders@blancographics.xyz>',
+      to: [order.customer.email, 'admin@blancographics.xyz'],
       subject: `Order Confirmation #${order.id}`,
       html: `
         <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #171717;">
@@ -42,11 +44,13 @@ export async function POST(request: Request) {
     });
 
     if (error) {
-      return Response.json({ error }, { status: 500 });
+      console.error('Resend API Error:', error);
+      return Response.json({ error: error.message }, { status: 500 });
     }
 
     return Response.json({ data });
   } catch (error) {
-    return Response.json({ error }, { status: 500 });
+    console.error('Server Error:', error);
+    return Response.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
