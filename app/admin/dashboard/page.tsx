@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ShoppingBag, TrendingUp, Users, Package } from 'lucide-react';
+import { ShoppingBag, TrendingUp, Users, Package, Send, Mail } from 'lucide-react';
 
 interface Order {
   id: string;
@@ -16,6 +16,7 @@ interface Order {
 export default function AdminDashboard() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [totalRevenue, setTotalRevenue] = useState(0);
+  const [emailStatus, setEmailStatus] = useState<'idle' | 'sending' | 'success' | 'error'>('idle');
 
   useEffect(() => {
     const storedOrders = JSON.parse(localStorage.getItem('orders') || '[]');
@@ -24,6 +25,34 @@ export default function AdminDashboard() {
     const revenue = storedOrders.reduce((sum: number, order: Order) => sum + order.total, 0);
     setTotalRevenue(revenue);
   }, []);
+
+  const handleSendTestEmail = async () => {
+    setEmailStatus('sending');
+    const testOrder = {
+      id: 'TEST-' + Date.now(),
+      items: [{ product: { name: 'Test Dress', price: 99.99 }, quantity: 1 }],
+      customer: { email: 'admin@blancographics.xyz', firstName: 'Admin', lastName: 'Test' },
+      total: 99.99,
+      date: new Date().toISOString(),
+      paymentMethod: 'Cash on Delivery',
+    };
+
+    try {
+      const res = await fetch('/api/email/send-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ order: testOrder }),
+      });
+      if (res.ok) {
+        setEmailStatus('success');
+        setTimeout(() => setEmailStatus('idle'), 3000);
+      } else {
+        setEmailStatus('error');
+      }
+    } catch (err) {
+      setEmailStatus('error');
+    }
+  };
 
   const stats = [
     {
@@ -57,9 +86,44 @@ export default function AdminDashboard() {
   return (
     <div className="space-y-8">
       {/* Page Title */}
-      <div>
-        <h1 className="font-display text-3xl text-pearl-50 mb-2">Dashboard</h1>
-        <p className="text-neutral-400">Welcome back! Here's your store overview.</p>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+        <div>
+          <h1 className="font-display text-3xl text-pearl-50 mb-2">Dashboard</h1>
+          <p className="text-neutral-400">Welcome back! Here's your store overview.</p>
+        </div>
+        
+        {/* Test Email Button */}
+        <button
+          onClick={handleSendTestEmail}
+          disabled={emailStatus === 'sending'}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
+            emailStatus === 'success' ? 'bg-green-500/20 text-green-400' :
+            emailStatus === 'error' ? 'bg-red-500/20 text-red-400' :
+            'bg-pearl-50 text-charcoal-900 hover:bg-pearl-100'
+          }`}
+        >
+          {emailStatus === 'sending' ? (
+            <>
+              <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+              Sending...
+            </>
+          ) : emailStatus === 'success' ? (
+            <>
+              <Mail className="w-4 h-4" />
+              Sent!
+            </>
+          ) : emailStatus === 'error' ? (
+            <>
+              <Send className="w-4 h-4" />
+              Failed
+            </>
+          ) : (
+            <>
+              <Send className="w-4 h-4" />
+              Send Test Email
+            </>
+          )}
+        </button>
       </div>
 
       {/* Stats Grid */}

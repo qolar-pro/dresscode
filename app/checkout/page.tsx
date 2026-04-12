@@ -56,7 +56,18 @@ export default function CheckoutPage() {
     const orders = JSON.parse(localStorage.getItem('orders') || '[]');
     orders.push(order);
     localStorage.setItem('orders', JSON.stringify(orders));
-    
+
+    // Send Email Notification
+    try {
+      await fetch('/api/email/send-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ order }),
+      });
+    } catch (error) {
+      console.error('Failed to send email notification:', error);
+    }
+
     clearCart();
     setOrderPlaced(true);
   };

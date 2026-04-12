@@ -128,13 +128,16 @@ export default function Footer() {
             <p className="text-neutral-500 text-sm font-light">
               {t('footer.rights')}
             </p>
-            <div className="flex gap-8">
-              <a href="#" className="text-neutral-500 hover:text-pearl-50 text-sm font-light transition-colors">
-                {t('footer.privacy')}
-              </a>
-              <a href="#" className="text-neutral-500 hover:text-pearl-50 text-sm font-light transition-colors">
-                {t('footer.terms')}
-              </a>
+            <div className="flex flex-wrap justify-center gap-6">
+              <Link href="/legal/privacy-policy" className="text-neutral-500 hover:text-pearl-50 text-sm font-light transition-colors">
+                Privacy Policy
+              </Link>
+              <Link href="/legal/terms-of-service" className="text-neutral-500 hover:text-pearl-50 text-sm font-light transition-colors">
+                Terms of Service
+              </Link>
+              <Link href="/legal/return-policy" className="text-neutral-500 hover:text-pearl-50 text-sm font-light transition-colors">
+                Return Policy
+              </Link>
             </div>
           </div>
         </div>

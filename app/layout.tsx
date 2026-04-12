@@ -17,8 +17,33 @@ const playfair = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-  title: "DRESS CODE - Modern Fashion Boutique",
-  description: "Discover the latest trends in women's fashion. Shop dresses, tops, pants, and more with cash on delivery.",
+  title: {
+    default: "DRESS CODE - Modern Fashion Boutique",
+    template: "%s | DRESS CODE"
+  },
+  description: "Discover the latest trends in women's fashion. Shop dresses, tops, pants, and more with cash on delivery. Free shipping on orders over $100.",
+  openGraph: {
+    title: "DRESS CODE - Modern Fashion Boutique",
+    description: "Discover the latest trends in women's fashion. Shop dresses, tops, pants, and more.",
+    url: "https://blancographics.xyz",
+    siteName: "DRESS CODE",
+    locale: "en_US",
+    type: "website",
+    images: [
+      {
+        url: "https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=1200&q=80",
+        width: 1200,
+        height: 630,
+        alt: "DRESS CODE Fashion",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "DRESS CODE - Modern Fashion Boutique",
+    description: "Discover the latest trends in women's fashion. Shop dresses, tops, pants, and more.",
+    images: ["https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=1200&q=80"],
+  },
 };
 
 export default function RootLayout({
