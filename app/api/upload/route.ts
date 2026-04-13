@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { uploadImage } from '@/lib/image-upload';
 
+export const runtime = 'nodejs';
+
 export const config = {
   api: {
     bodyParser: false,

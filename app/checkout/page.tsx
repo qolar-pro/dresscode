@@ -41,7 +41,7 @@ function CheckoutContent() {
     if (sessionId) {
       async function fetchSessionDetails() {
         try {
-          const res = await fetch(`/api/checkout/session/${sessionId}`);
+          const res = await fetch(`/api/checkout/session-details?id=${sessionId}`);
           const data = await res.json();
           
           // Get the Order ID from Stripe metadata

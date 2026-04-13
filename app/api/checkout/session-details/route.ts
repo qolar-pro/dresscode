@@ -5,15 +5,16 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2026-03-25.dahlia',
 });
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { sessionId: string } }
-) {
-  try {
-    const { sessionId } = params;
-    const session = await stripe.checkout.sessions.retrieve(sessionId);
+export async function GET(request: NextRequest) {
+  const searchParams = request.nextUrl.searchParams;
+  const sessionId = searchParams.get('id');
 
-    // Return the metadata we stored (orderId)
+  if (!sessionId) {
+    return NextResponse.json({ error: 'Missing session ID' }, { status: 400 });
+  }
+
+  try {
+    const session = await stripe.checkout.sessions.retrieve(sessionId);
     return NextResponse.json({
       metadata: session.metadata,
       status: session.status,
