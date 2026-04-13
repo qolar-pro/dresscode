@@ -46,19 +46,30 @@ export async function POST(request: NextRequest) {
     // 2. Decrement Stock for each item
     if (sanitized.items && sanitized.items.length > 0) {
       for (const item of sanitized.items) {
+        const productId = item.product?.id;
+        if (!productId) {
+          console.warn('Missing product ID in order item, skipping stock update');
+          continue;
+        }
+
         // Fetch current product
-        const { data: product, error: prodError } = await supabaseAdmin
+        const { data: products, error: prodError } = await supabaseAdmin
           .from('products')
           .select('id, stock')
-          .eq('id', item.product.id)
-          .single();
+          .eq('id', productId);
 
-        if (!prodError && product) {
-          const newStock = Math.max(0, (product.stock || 0) - item.quantity);
+        if (!prodError && products && products.length > 0) {
+          const currentStock = products[0].stock || 0;
+          const newStock = Math.max(0, currentStock - item.quantity);
+          
           await supabaseAdmin
             .from('products')
             .update({ stock: newStock })
-            .eq('id', item.product.id);
+            .eq('id', productId);
+            
+          console.log(`Stock update: Product ${productId} -> ${currentStock} - ${item.quantity} = ${newStock}`);
+        } else {
+          console.error(`Product ${productId} not found in database for stock update`);
         }
       }
     }

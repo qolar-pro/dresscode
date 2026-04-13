@@ -227,8 +227,12 @@ export default function AdminProducts() {
                 {product.isFeatured && (
                   <span className="text-xs bg-purple-500/20 text-purple-400 px-2 py-1 rounded">FEATURED</span>
                 )}
-                {product.stock !== undefined && product.stock < 10 && (
-                  <span className="text-xs bg-red-500/20 text-red-400 px-2 py-1 rounded">LOW STOCK</span>
+                {product.stock !== undefined && (
+                  <span className={`text-xs px-2 py-1 rounded ${
+                    product.stock <= 5 ? 'bg-red-500/20 text-red-400' : 'bg-neutral-500/20 text-neutral-400'
+                  }`}>
+                    Stock: {product.stock}
+                  </span>
                 )}
               </div>
 
