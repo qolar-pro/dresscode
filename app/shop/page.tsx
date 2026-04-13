@@ -31,11 +31,13 @@ interface SalesCollection {
 
 // Calculate total stock from all sizes
 function getTotalStock(product: Product): number {
+  if (!product.sizes || !Array.isArray(product.sizes)) return 0;
   return product.sizes.reduce((total, size) => total + (size.stock ?? 0), 0);
 }
 
 // Get the size with the lowest stock (for display)
 function getLowStockSize(product: Product): { name: string; stock: number } | null {
+  if (!product.sizes || !Array.isArray(product.sizes)) return null;
   const availableSizes = product.sizes.filter(s => s.available && (s.stock ?? 0) > 0);
   if (availableSizes.length === 0) return null;
   
@@ -244,10 +246,12 @@ function ProductCard({ product, activeCollection }: { product: Product; activeCo
   
   const totalStock = getTotalStock(product);
   const lowStockSize = getLowStockSize(product);
-  const isSoldOut = totalStock <= 0 || !product.sizes.some(s => s.available);
+  const isSoldOut = totalStock <= 0 || !product.sizes || !Array.isArray(product.sizes) || !product.sizes.some(s => s.available);
   
   // Calculate discounted price if in an active collection
-  const isInCollection = activeCollection?.product_ids.includes(product.id);
+  const isInCollection = activeCollection && activeCollection.product_ids && Array.isArray(activeCollection.product_ids)
+    ? activeCollection.product_ids.includes(product.id)
+    : false;
   const discountedPrice = isInCollection && activeCollection
     ? product.price * (1 - activeCollection.discount_percentage / 100)
     : product.price;
@@ -255,7 +259,7 @@ function ProductCard({ product, activeCollection }: { product: Product; activeCo
   return (
     <Link href={`/product/${product.id}`} className="group">
       <div className="aspect-[3/4] bg-neutral-100 dark:bg-charcoal-700 relative overflow-hidden mb-6">
-        {product.images?.[0] ? (
+        {(product.images && product.images[0]) ? (
           <img
             src={product.images[0]}
             alt={product.name}

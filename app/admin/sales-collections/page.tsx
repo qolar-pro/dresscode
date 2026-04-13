@@ -116,9 +116,10 @@ export default function AdminSalesCollections() {
   const toggleProduct = (productId: number) => {
     if (!editingCollection) return;
 
-    const updatedIds = editingCollection.product_ids.includes(productId)
-      ? editingCollection.product_ids.filter(id => id !== productId)
-      : [...editingCollection.product_ids, productId];
+    const currentIds = editingCollection.product_ids || [];
+    const updatedIds = currentIds.includes(productId)
+      ? currentIds.filter(id => id !== productId)
+      : [...currentIds, productId];
 
     setEditingCollection({ ...editingCollection, product_ids: updatedIds });
   };
@@ -182,7 +183,7 @@ export default function AdminSalesCollections() {
                 <div className="flex items-start justify-between mb-2">
                   <div>
                     <h3 className="text-pearl-50 font-medium mb-1">{collection.name}</h3>
-                    <p className="text-xs text-neutral-400">{collection.product_ids.length} products</p>
+                    <p className="text-xs text-neutral-400">{(collection.product_ids || []).length} products</p>
                   </div>
                   <span className="text-lg font-display text-red-400">-{collection.discount_percentage}%</span>
                 </div>

@@ -111,11 +111,11 @@ function ProductDetail({ product }: { product: any }) {
     setTimeout(() => setAddedToCart(false), 2000);
   };
 
-  const availableSizes = product.sizes.filter((s: any) => s.available);
-  const availableColors = product.colors.filter((c: any) => c.available);
+  const availableSizes = product.sizes ? product.sizes.filter((s: any) => s.available) : [];
+  const availableColors = product.colors ? product.colors.filter((c: any) => c.available) : [];
 
   // Calculate total stock
-  const totalStock = product.sizes.reduce((sum: number, s: any) => sum + (s.stock ?? 0), 0);
+  const totalStock = product.sizes ? product.sizes.reduce((sum: number, s: any) => sum + (s.stock ?? 0), 0) : 0;
   const isSoldOut = totalStock <= 0 || availableSizes.length === 0;
 
   return (
@@ -227,7 +227,7 @@ function ProductDetail({ product }: { product: any }) {
                       </button>
                     </div>
                     <div className="flex flex-wrap gap-3">
-                      {product.sizes.map((size: any) => {
+                      {(product.sizes || []).map((size: any) => {
                         const sizeStock = size.stock ?? 0;
                         const isSizeSoldOut = sizeStock <= 0;
 
