@@ -39,10 +39,26 @@ function CheckoutContent() {
   useEffect(() => {
     const sessionId = searchParams.get('session_id');
     if (sessionId) {
-      clearCart();
-      setOrderPlaced(true);
-      // In a real app, you'd fetch the session details to get the Order ID
-      setOrderId('STRIPE-PAID');
+      async function fetchSessionDetails() {
+        try {
+          const res = await fetch(`/api/checkout/session/${sessionId}`);
+          const data = await res.json();
+          
+          // Get the Order ID from Stripe metadata
+          const recoveredOrderId = data.metadata?.orderId || 'STRIPE-PAID';
+          setOrderId(recoveredOrderId);
+          
+          // Clear the cart only after we confirm the session
+          clearCart();
+          setOrderPlaced(true);
+        } catch (error) {
+          console.error('Failed to fetch session details:', error);
+          setOrderId('STRIPE-PAID');
+          clearCart();
+          setOrderPlaced(true);
+        }
+      }
+      fetchSessionDetails();
     }
   }, [searchParams, clearCart]);
 
