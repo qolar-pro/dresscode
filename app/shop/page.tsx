@@ -71,7 +71,7 @@ export default function ShopPage() {
         const productsData = await productsRes.json();
         const collectionsData = await collectionsRes.json();
 
-        if (productsData.products) {
+        if (productsData.products && Array.isArray(productsData.products)) {
           const frontendProducts = productsData.products.map((p: any) => ({
             id: p.id,
             name: p.name,
@@ -87,7 +87,7 @@ export default function ShopPage() {
           setProducts(frontendProducts);
         }
 
-        if (collectionsData.collections) {
+        if (collectionsData.collections && Array.isArray(collectionsData.collections)) {
           const activeCollections = collectionsData.collections.filter((c: any) => c.is_active);
           setSalesCollections(activeCollections);
           if (activeCollections.length > 0) {
@@ -107,7 +107,7 @@ export default function ShopPage() {
     let filtered = [...products];
 
     // If a sales collection is active and selected, filter by product IDs
-    if (activeCollection && selectedCategory === `sale-${activeCollection.id}`) {
+    if (activeCollection && activeCollection.product_ids && selectedCategory === `sale-${activeCollection.id}`) {
       filtered = filtered.filter(p => activeCollection.product_ids.includes(p.id));
     } else if (selectedCategory !== 'all') {
       // Normal category filter
@@ -137,7 +137,7 @@ export default function ShopPage() {
 
   const allCategories = [
     { id: 'all', name: 'All' },
-    ...salesCollections.map(c => ({ id: `sale-${c.id}`, name: `${c.name} (-${c.discount_percentage}%)` })),
+    ...(salesCollections || []).map(c => ({ id: `sale-${c.id}`, name: `${c.name} (-${c.discount_percentage}%)` })),
     ...categories.filter(c => c.id !== 'all'),
   ];
 

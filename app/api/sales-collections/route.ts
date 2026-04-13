@@ -8,11 +8,14 @@ export async function GET() {
       .select('*')
       .order('created_at', { ascending: false });
 
-    if (error) throw error;
+    if (error) {
+      console.warn('Sales collections table error:', error.message);
+      return NextResponse.json({ collections: [] });
+    }
     return NextResponse.json({ collections: data || [] });
   } catch (error: any) {
     console.error('Sales Collections GET error:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ collections: [] });
   }
 }
 
@@ -26,6 +29,7 @@ export async function POST(request: NextRequest) {
         description: body.description || '',
         discount_percentage: body.discount_percentage || 0,
         image_url: body.image_url || '',
+        product_ids: body.product_ids || [],
         is_active: body.is_active ?? true,
         start_date: body.start_date || null,
         end_date: body.end_date || null,
