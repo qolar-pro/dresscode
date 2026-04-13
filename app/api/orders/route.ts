@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { sanitizeOrderData } from '@/lib/sanitize';
+import { requireAdmin } from '@/lib/auth-middleware';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const auth = await requireAdmin(request);
+  if (auth) return auth;
+
   try {
     const { data, error } = await supabaseAdmin
       .from('orders')
@@ -18,24 +22,47 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
+  // NOTE: This endpoint is used by checkout, so we don't require auth here.
+  // But we validate prices server-side (see price validation below).
   try {
     const body = await request.json();
     const sanitized = sanitizeOrderData(body);
 
-    // 1. Insert Order
+    // VALIDATE PRICES: Recalculate total from database prices
+    let serverTotal = 0;
+    if (sanitized.items && sanitized.items.length > 0) {
+      for (const item of sanitized.items) {
+        const productId = item.product?.id;
+        if (!productId) continue;
+
+        const { data: products, error: prodError } = await supabaseAdmin
+          .from('products')
+          .select('price')
+          .eq('id', productId);
+
+        if (!prodError && products && products.length > 0) {
+          serverTotal += products[0].price * (item.quantity || 1);
+        }
+      }
+    }
+
+    // Use server-calculated total (never trust client-side price)
+    const finalTotal = serverTotal + (sanitized.shipping || 0) + (sanitized.paymentFee || 0);
+
+    // 1. Insert Order with server-validated total
     const { data, error } = await supabaseAdmin
       .from('orders')
       .insert([{
         id: sanitized.id,
         items: sanitized.items || [],
         customer: sanitized.customer,
-        total: sanitized.total || 0,
-        subtotal: sanitized.subtotal || 0,
+        total: finalTotal,
+        subtotal: serverTotal,
         shipping: sanitized.shipping || 0,
         payment_fee: sanitized.paymentFee || 0,
         payment_method: sanitized.paymentMethod || 'cash_on_delivery',
         payment_status: sanitized.paymentStatus || 'pending',
-        status: 'pending', // Default order status
+        status: 'pending',
         date: sanitized.date || new Date().toISOString(),
       }])
       .select()
@@ -47,7 +74,7 @@ export async function POST(request: NextRequest) {
     if (sanitized.items && sanitized.items.length > 0) {
       for (const item of sanitized.items) {
         const productId = item.product?.id;
-        const selectedSize = item.size; // e.g., "M"
+        const selectedSize = item.size;
         const quantity = item.quantity;
 
         if (!productId || !selectedSize) {
@@ -55,7 +82,6 @@ export async function POST(request: NextRequest) {
           continue;
         }
 
-        // Fetch current product
         const { data: products, error: prodError } = await supabaseAdmin
           .from('products')
           .select('id, sizes')
@@ -63,8 +89,7 @@ export async function POST(request: NextRequest) {
 
         if (!prodError && products && products.length > 0) {
           const currentSizes = products[0].sizes || [];
-          
-          // Find the size and decrement its stock
+
           const updatedSizes = currentSizes.map((s: any) => {
             if (s.name === selectedSize) {
               const currentSizeStock = s.stock ?? 0;
@@ -79,8 +104,6 @@ export async function POST(request: NextRequest) {
             .from('products')
             .update({ sizes: updatedSizes })
             .eq('id', productId);
-        } else {
-          console.error(`Product ${productId} not found in database for stock update`);
         }
       }
     }
@@ -93,6 +116,9 @@ export async function POST(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
+  const auth = await requireAdmin(request);
+  if (auth) return auth;
+
   try {
     const body = await request.json();
     const { id } = body;

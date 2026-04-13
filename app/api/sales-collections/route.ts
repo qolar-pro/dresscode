@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { requireAdmin } from '@/lib/auth-middleware';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const auth = await requireAdmin(request);
+  if (auth) return auth;
+
   try {
     const { data, error } = await supabaseAdmin
       .from('sales_collections')
@@ -13,7 +17,6 @@ export async function GET() {
       return NextResponse.json({ collections: [] });
     }
 
-    // Ensure product_ids is always an array
     const safeData = (data || []).map((c: any) => ({
       ...c,
       product_ids: Array.isArray(c.product_ids) ? c.product_ids : [],
@@ -27,9 +30,12 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
+  const auth = await requireAdmin(request);
+  if (auth) return auth;
+
   try {
     const body = await request.json();
-    
+
     const collectionData = {
       name: body.name || 'Unnamed Collection',
       description: body.description || '',
@@ -51,7 +57,7 @@ export async function POST(request: NextRequest) {
       console.error('Sales Collections insert error:', error);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
-    
+
     return NextResponse.json({ collection: data }, { status: 201 });
   } catch (error: any) {
     console.error('Sales Collections POST error:', error);
@@ -60,10 +66,13 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PATCH(request: NextRequest) {
+  const auth = await requireAdmin(request);
+  if (auth) return auth;
+
   try {
     const body = await request.json();
     const { id, ...updates } = body;
-    
+
     if (!id) {
       return NextResponse.json({ error: 'Collection ID is required' }, { status: 400 });
     }
@@ -84,10 +93,13 @@ export async function PATCH(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
+  const auth = await requireAdmin(request);
+  if (auth) return auth;
+
   try {
     const body = await request.json();
     const { id } = body;
-    
+
     if (!id) {
       return NextResponse.json({ error: 'Collection ID is required' }, { status: 400 });
     }

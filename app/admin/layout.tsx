@@ -6,7 +6,6 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useLanguage } from '@/context/LanguageContext';
 import { useTheme } from '@/context/ThemeContext';
 import { ShoppingBag, Package, LogOut, ArrowLeft, Globe, Sun, Moon, Shield, Tag } from 'lucide-react';
-import { ADMIN_CONFIG, SecurityUtils } from '@/lib/admin-config';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -16,59 +15,42 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [showLangDropdown, setShowLangDropdown] = useState(false);
-  const [sessionTimeLeft, setSessionTimeLeft] = useState(ADMIN_CONFIG.SESSION_TIMEOUT);
 
+  // Check authentication via server-side cookie verification
   useEffect(() => {
-    const auth = localStorage.getItem('adminAuthenticated');
-    const sessionStart = localStorage.getItem('adminSessionStart');
-    
-    if (auth && sessionStart) {
-      const elapsed = (Date.now() - parseInt(sessionStart)) / (1000 * 60);
-      
-      if (elapsed < ADMIN_CONFIG.SESSION_TIMEOUT) {
-        setIsAuthenticated(true);
-        // Update session timer
-        const remaining = Math.ceil(ADMIN_CONFIG.SESSION_TIMEOUT - elapsed);
-        setSessionTimeLeft(remaining);
-      } else {
-        // Session expired
-        SecurityUtils.logActivity('SESSION_EXPIRED', 'Session timeout');
-        localStorage.removeItem('adminAuthenticated');
-        localStorage.removeItem('adminSessionStart');
-        router.push('/admin');
-      }
-    } else if (!auth && pathname !== '/admin') {
-      router.push('/admin');
+    if (pathname === '/admin') {
+      setIsLoading(false);
+      return;
     }
-    
-    setIsLoading(false);
+
+    async function checkAuth() {
+      try {
+        const res = await fetch('/api/admin/verify');
+        if (res.ok) {
+          setIsAuthenticated(true);
+        } else {
+          router.push('/admin');
+        }
+      } catch {
+        router.push('/admin');
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    checkAuth();
+
+    // Check session every minute
+    const interval = setInterval(checkAuth, 60000);
+    return () => clearInterval(interval);
   }, [router, pathname]);
 
-  // Update session timer every minute
-  useEffect(() => {
-    if (isAuthenticated) {
-      const timer = setInterval(() => {
-        const sessionStart = localStorage.getItem('adminSessionStart');
-        if (sessionStart) {
-          const elapsed = (Date.now() - parseInt(sessionStart)) / (1000 * 60);
-          const remaining = Math.max(0, Math.ceil(ADMIN_CONFIG.SESSION_TIMEOUT - elapsed));
-          setSessionTimeLeft(remaining);
-          
-          if (remaining === 0) {
-            // Session expired
-            handleLogout();
-          }
-        }
-      }, 60000); // Every minute
-      
-      return () => clearInterval(timer);
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/admin/logout', { method: 'POST' });
+    } catch {
+      // Logout anyway
     }
-  }, [isAuthenticated]);
-
-  const handleLogout = () => {
-    SecurityUtils.logActivity('LOGOUT', 'Manual logout');
-    localStorage.removeItem('adminAuthenticated');
-    localStorage.removeItem('adminSessionStart');
     router.push('/admin');
   };
 
@@ -91,7 +73,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   // Redirect if not authenticated
   if (!isAuthenticated) {
-    router.push('/admin');
     return null;
   }
 
@@ -101,14 +82,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { href: '/admin/products', icon: Package, label: 'Products' },
     { href: '/admin/sales-collections', icon: Tag, label: 'Sales Collections' },
   ];
-
-  // Format time remaining
-  const formatTime = (minutes: number) => {
-    const hrs = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    if (hrs > 0) return `${hrs}h ${mins}m`;
-    return `${mins}m`;
-  };
 
   return (
     <div className="min-h-screen bg-charcoal-950">
@@ -129,16 +102,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </div>
 
           <div className="flex items-center gap-2">
-            {/* Session Timer */}
-            <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-charcoal-800 rounded-lg mr-2">
-              <div className={`w-2 h-2 rounded-full ${
-                sessionTimeLeft < 5 ? 'bg-red-500 animate-pulse' : 'bg-green-500'
-              }`} />
-              <span className="text-xs text-neutral-400">
-                Session: {formatTime(sessionTimeLeft)}
-              </span>
-            </div>
-
             {/* Language Toggle */}
             <div className="relative">
               <button
@@ -148,14 +111,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               >
                 <Globe className="w-5 h-5 text-neutral-400" />
               </button>
-              
+
               {showLangDropdown && (
                 <div className="absolute right-0 top-full mt-2 bg-charcoal-800 border border-charcoal-700 rounded-lg shadow-xl overflow-hidden min-w-[120px] animate-fade-in z-50">
                   <button
                     onClick={() => { setLanguage('en'); setShowLangDropdown(false); }}
                     className={`w-full text-left px-4 py-3 text-sm transition-colors ${
-                      language === 'en' 
-                        ? 'bg-charcoal-700 text-pearl-50 font-medium' 
+                      language === 'en'
+                        ? 'bg-charcoal-700 text-pearl-50 font-medium'
                         : 'text-neutral-400 hover:bg-charcoal-700'
                     }`}
                   >
@@ -164,8 +127,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   <button
                     onClick={() => { setLanguage('gr'); setShowLangDropdown(false); }}
                     className={`w-full text-left px-4 py-3 text-sm transition-colors ${
-                      language === 'gr' 
-                        ? 'bg-charcoal-700 text-pearl-50 font-medium' 
+                      language === 'gr'
+                        ? 'bg-charcoal-700 text-pearl-50 font-medium'
                         : 'text-neutral-400 hover:bg-charcoal-700'
                     }`}
                   >
@@ -202,8 +165,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
       {/* Click outside to close language dropdown */}
       {showLangDropdown && (
-        <div 
-          className="fixed inset-0 z-40" 
+        <div
+          className="fixed inset-0 z-40"
           onClick={() => setShowLangDropdown(false)}
         />
       )}
@@ -238,10 +201,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <div className="text-xs text-neutral-500 space-y-2">
               <div className="flex items-center gap-2">
                 <Shield className="w-3 h-3" />
-                <span>SHA-256 Encrypted</span>
+                <span>bcrypt Encrypted</span>
               </div>
-              <p>Session expires after {ADMIN_CONFIG.SESSION_TIMEOUT} min</p>
-              <p>Activity is logged</p>
+              <p>Session expires after 30 min</p>
+              <p>Server-side authentication</p>
             </div>
           </div>
         </aside>

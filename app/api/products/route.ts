@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { sanitizeProductData } from '@/lib/sanitize';
+import { requireAdmin } from '@/lib/auth-middleware';
 
 export async function GET() {
   try {
@@ -18,6 +19,9 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
+  const auth = await requireAdmin(request);
+  if (auth) return auth;
+
   try {
     const body = await request.json();
     const sanitized = sanitizeProductData(body);
@@ -48,6 +52,9 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PUT(request: NextRequest) {
+  const auth = await requireAdmin(request);
+  if (auth) return auth;
+
   try {
     const body = await request.json();
     const { id, ...updates } = body;
@@ -82,6 +89,9 @@ export async function PUT(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
+  const auth = await requireAdmin(request);
+  if (auth) return auth;
+
   try {
     const body = await request.json();
     const { id } = body;

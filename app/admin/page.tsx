@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ADMIN_CONFIG, hashPassword, SecurityUtils } from '@/lib/admin-config';
 import { Lock, AlertCircle, Clock } from 'lucide-react';
 
 export default function AdminLogin() {
@@ -10,93 +9,63 @@ export default function AdminLogin() {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [lockoutTime, setLockoutTime] = useState(0);
-  const [attemptsRemaining, setAttemptsRemaining] = useState(ADMIN_CONFIG.MAX_LOGIN_ATTEMPTS);
   const router = useRouter();
 
-  // Check if already authenticated
+  // Check if already authenticated via cookie
   useEffect(() => {
-    const auth = localStorage.getItem('adminAuthenticated');
-    const sessionStart = localStorage.getItem('adminSessionStart');
-    
-    if (auth && sessionStart) {
-      const elapsed = (Date.now() - parseInt(sessionStart)) / (1000 * 60);
-      if (elapsed < ADMIN_CONFIG.SESSION_TIMEOUT) {
+    checkAuth();
+  }, []);
+
+  const checkAuth = async () => {
+    try {
+      const res = await fetch('/api/admin/verify');
+      if (res.ok) {
         router.push('/admin/dashboard');
-        return;
-      } else {
-        // Session expired
-        localStorage.removeItem('adminAuthenticated');
-        localStorage.removeItem('adminSessionStart');
       }
+    } catch {
+      // Not authenticated, stay on login
     }
-    
-    // Check lockout status
-    updateLockoutStatus();
-  }, [router]);
+  };
 
   // Update lockout timer every second
   useEffect(() => {
     if (lockoutTime > 0) {
-      const timer = setInterval(updateLockoutStatus, 1000);
+      const timer = setInterval(() => {
+        setLockoutTime(prev => Math.max(0, prev - 1));
+      }, 1000);
       return () => clearInterval(timer);
     }
   }, [lockoutTime]);
-
-  const updateLockoutStatus = () => {
-    if (SecurityUtils.isAccountLocked()) {
-      setLockoutTime(SecurityUtils.getLockoutTimeRemaining());
-      const attempts = parseInt(localStorage.getItem('adminLoginAttempts') || '0');
-      setAttemptsRemaining(ADMIN_CONFIG.MAX_LOGIN_ATTEMPTS - attempts);
-    } else {
-      setLockoutTime(0);
-      const attempts = parseInt(localStorage.getItem('adminLoginAttempts') || '0');
-      setAttemptsRemaining(Math.max(0, ADMIN_CONFIG.MAX_LOGIN_ATTEMPTS - attempts));
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setIsLoading(true);
 
-    // Check if account is locked
-    if (SecurityUtils.isAccountLocked()) {
-      setError(`Account locked. Try again in ${SecurityUtils.getLockoutTimeRemaining()} minutes.`);
-      setIsLoading(false);
-      return;
-    }
-
     try {
-      // Hash the entered password
-      const hashedPassword = await hashPassword(password);
-      
-      // Compare with stored hash
-      if (hashedPassword === ADMIN_CONFIG.ADMIN_PASSWORD_HASH) {
-        // Successful login
-        SecurityUtils.resetFailedAttempts();
-        localStorage.setItem('adminAuthenticated', 'true');
-        localStorage.setItem('adminSessionStart', Date.now().toString());
-        SecurityUtils.logActivity('LOGIN', 'Successful admin login');
-        
+      const res = await fetch('/api/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        // Successful login - redirect
         router.push('/admin/dashboard');
+      } else if (res.status === 429) {
+        // Rate limited
+        const retryAfter = parseInt(res.headers.get('Retry-After') || '900');
+        setLockoutTime(retryAfter);
+        setError(`Too many attempts. Please try again in ${Math.ceil(retryAfter / 60)} minutes.`);
       } else {
-        // Failed login
-        SecurityUtils.recordFailedAttempt();
-        SecurityUtils.logActivity('LOGIN_FAILED', 'Incorrect password attempt');
-        
-        if (SecurityUtils.isAccountLocked()) {
-          setError(`Account locked due to too many failed attempts. Try again in ${ADMIN_CONFIG.LOCKOUT_DURATION} minutes.`);
-          updateLockoutStatus();
-        } else {
-          const remaining = ADMIN_CONFIG.MAX_LOGIN_ATTEMPTS - parseInt(localStorage.getItem('adminLoginAttempts') || '0');
-          setError(`Incorrect password. ${remaining} attempt${remaining !== 1 ? 's' : ''} remaining.`);
-          setAttemptsRemaining(remaining);
-        }
+        setError(data.error || 'Invalid password');
       }
     } catch (err) {
-      setError('An error occurred. Please try again.');
+      setError('Connection error. Please try again.');
     }
-    
+
     setIsLoading(false);
   };
 
@@ -159,13 +128,6 @@ export default function AdminLogin() {
               </div>
             )}
 
-            {/* Attempts Remaining */}
-            {attemptsRemaining < ADMIN_CONFIG.MAX_LOGIN_ATTEMPTS && attemptsRemaining > 0 && lockoutTime === 0 && (
-              <p className="text-xs text-neutral-500 text-center">
-                {attemptsRemaining} login attempt{attemptsRemaining !== 1 ? 's' : ''} remaining before account lockout
-              </p>
-            )}
-
             {/* Submit Button */}
             <button
               type="submit"
@@ -186,20 +148,10 @@ export default function AdminLogin() {
           {/* Session Info */}
           <div className="mt-6 pt-6 border-t border-charcoal-800">
             <div className="flex items-center justify-between text-xs text-neutral-500">
-              <span>Session timeout: {ADMIN_CONFIG.SESSION_TIMEOUT} minutes</span>
-              <span>SHA-256 Encrypted</span>
+              <span>Session timeout: 30 minutes</span>
+              <span>bcrypt Encrypted</span>
             </div>
           </div>
-        </div>
-
-        {/* Footer Info */}
-        <div className="mt-8 text-center">
-          <p className="text-xs text-neutral-600">
-            Default password: <code className="bg-charcoal-900 px-2 py-1 rounded text-neutral-400">DressCode2026!</code>
-          </p>
-          <p className="text-xs text-neutral-600 mt-2">
-            Change password in lib/admin-config.ts
-          </p>
         </div>
       </div>
     </div>
