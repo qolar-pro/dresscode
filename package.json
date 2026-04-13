@@ -11,7 +11,7 @@
   "dependencies": {
     "@stripe/stripe-js": "^9.1.0",
     "@supabase/supabase-js": "^2.103.0",
-    "bcrypt": "^6.0.0",
+    "bcryptjs": "^3.0.3",
     "cookie": "^1.1.1",
     "lucide-react": "^0.400.0",
     "next": "^14.2.5",
@@ -23,6 +23,7 @@
   "devDependencies": {
     "@tailwindcss/typography": "^0.5.19",
     "@types/bcrypt": "^6.0.0",
+    "@types/bcryptjs": "^2.4.6",
     "@types/node": "^20.14.11",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",

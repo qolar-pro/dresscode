@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import { serialize } from 'cookie';
 import { randomBytes } from 'crypto';
 import { sessions, SESSION_TTL } from '@/lib/admin-sessions';
