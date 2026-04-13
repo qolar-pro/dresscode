@@ -370,17 +370,34 @@ export default function AdminProducts() {
                       <input
                         type="file"
                         accept="image/*"
-                        onChange={(e) => {
+                        onChange={async (e) => {
                           const file = e.target.files?.[0];
                           if (file) {
-                            const reader = new FileReader();
-                            reader.onloadend = () => {
-                              setEditingProduct({
-                                ...editingProduct,
-                                images: [reader.result as string]
+                            setSaving(true); // Use saving state to show loading
+                            try {
+                              const formData = new FormData();
+                              formData.append('image', file);
+
+                              const res = await fetch('/api/upload', {
+                                method: 'POST',
+                                body: formData,
                               });
-                            };
-                            reader.readAsDataURL(file);
+
+                              const data = await res.json();
+                              if (data.url) {
+                                setEditingProduct({
+                                  ...editingProduct,
+                                  images: [data.url],
+                                });
+                              } else {
+                                alert('Failed to upload image: ' + (data.error || 'Unknown error'));
+                              }
+                            } catch (error) {
+                              console.error('Upload error:', error);
+                              alert('Failed to upload image');
+                            } finally {
+                              setSaving(false);
+                            }
                           }
                         }}
                         className="hidden"
