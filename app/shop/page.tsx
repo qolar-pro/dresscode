@@ -107,16 +107,32 @@ export default function ShopPage() {
     fetchData();
   }, []);
 
+  // Handle ?sale= query parameter from homepage
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const saleId = urlParams.get('sale');
+    if (saleId && salesCollections.length > 0) {
+      const foundCollection = salesCollections.find(c => String(c.id) === String(saleId));
+      if (foundCollection) {
+        setSelectedCategory(`sale-${foundCollection.id}`);
+        setActiveCollection(foundCollection);
+      }
+    }
+  }, [salesCollections]);
+
   useEffect(() => {
     let filtered = [...products];
 
-    // If a sales collection is active and selected, filter by product IDs
-    if (activeCollection && activeCollection.product_ids && selectedCategory === `sale-${activeCollection.id}`) {
-      filtered = filtered.filter(p => activeCollection.product_ids.includes(p.id));
+    // If a sales collection is selected, filter by product IDs
+    if (selectedCategory.startsWith('sale-')) {
+      const collectionId = parseInt(selectedCategory.replace('sale-', ''));
+      const collection = salesCollections.find(c => c.id === collectionId);
+      if (collection && collection.product_ids && Array.isArray(collection.product_ids)) {
+        filtered = filtered.filter(p => collection.product_ids.includes(p.id));
+      }
     } else if (selectedCategory !== 'all') {
       // Normal category filter
-      const categoryId = selectedCategory.replace('sale-', '');
-      filtered = filtered.filter(p => p.category === categoryId);
+      filtered = filtered.filter(p => p.category === selectedCategory);
     }
 
     // Sort

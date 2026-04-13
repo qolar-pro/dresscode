@@ -2,13 +2,43 @@
 
 import Link from 'next/link';
 import { useLanguage } from '@/context/LanguageContext';
-import { ArrowRight, Star, Sparkles, ArrowDownRight } from 'lucide-react';
+import { ArrowRight, Star, Sparkles, ArrowDownRight, Tag } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
+
+interface SalesCollection {
+  id: number;
+  name: string;
+  description: string;
+  discount_percentage: number;
+  image_url: string;
+  product_ids: number[];
+  is_active: boolean;
+}
 
 export default function Home() {
   const { t } = useLanguage();
   const [scrollY, setScrollY] = useState(0);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [salesCollections, setSalesCollections] = useState<SalesCollection[]>([]);
+  const [loadingSales, setLoadingSales] = useState(true);
+
+  // Fetch active sales collections
+  useEffect(() => {
+    async function fetchSales() {
+      try {
+        const res = await fetch('/api/sales-collections');
+        const data = await res.json();
+        if (data.collections && Array.isArray(data.collections)) {
+          setSalesCollections(data.collections.filter((c: any) => c.is_active));
+        }
+      } catch (error) {
+        console.warn('Failed to fetch sales collections:', error);
+      } finally {
+        setLoadingSales(false);
+      }
+    }
+    fetchSales();
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => setScrollY(window.scrollY);
@@ -129,6 +159,84 @@ export default function Home() {
           ))}
         </div>
       </section>
+
+      {/* ==================== SALES COLLECTIONS (Above Categories) ==================== */}
+      {salesCollections.length > 0 && (
+        <section className="py-16 px-4 bg-gradient-to-r from-red-50 via-orange-50 to-yellow-50 dark:from-red-950/30 dark:via-orange-950/30 dark:to-yellow-950/30">
+          <div className="container mx-auto max-w-7xl">
+            {/* Section Header */}
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-12">
+              <div>
+                <div className="inline-flex items-center gap-3 mb-4">
+                  <Tag className="w-4 h-4 text-red-500" />
+                  <span className="text-xs tracking-[0.3em] uppercase text-red-600 dark:text-red-400 font-semibold">
+                    Active Sales
+                  </span>
+                </div>
+                <h2 className="font-display text-4xl md:text-5xl font-light tracking-tight text-charcoal-900 dark:text-pearl-50">
+                  Don't Miss Out
+                </h2>
+              </div>
+              <Link href="/shop" className="btn-luxury mt-4 md:mt-0 text-sm">
+                Shop All Sales →
+              </Link>
+            </div>
+
+            {/* Sales Cards Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {salesCollections.map((collection) => (
+                <Link
+                  key={collection.id}
+                  href={`/shop?sale=${collection.id}`}
+                  className="group relative rounded-2xl overflow-hidden bg-white dark:bg-charcoal-800 shadow-lg hover:shadow-xl transition-all duration-500 hover:-translate-y-1"
+                >
+                  {/* Background Image or Gradient */}
+                  <div className="aspect-video relative overflow-hidden">
+                    {collection.image_url ? (
+                      <img
+                        src={collection.image_url}
+                        alt={collection.name}
+                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-red-500 to-orange-500 dark:from-red-700 dark:to-orange-700" />
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+                    
+                    {/* Discount Badge */}
+                    <div className="absolute top-4 right-4 bg-white dark:bg-charcoal-900 rounded-full w-16 h-16 flex items-center justify-center shadow-lg animate-pulse">
+                      <span className="text-lg font-display font-bold text-red-500">
+                        -{collection.discount_percentage}%
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Card Content */}
+                  <div className="p-6">
+                    <h3 className="font-display text-xl text-charcoal-900 dark:text-pearl-50 font-light mb-2">
+                      {collection.name}
+                    </h3>
+                    {collection.description && (
+                      <p className="text-sm text-neutral-600 dark:text-neutral-400 line-clamp-2 mb-4">
+                        {collection.description}
+                      </p>
+                    )}
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-neutral-500 dark:text-neutral-400">
+                        {(collection.product_ids || []).length} products included
+                      </span>
+                      <span className="text-xs tracking-[0.15em] uppercase text-red-500 font-medium group-hover:translate-x-1 transition-transform duration-300">
+                        Shop Now →
+                      </span>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* ==================== BENTO GRID - CATEGORIES ==================== */}
       <section className="py-24 px-4">
