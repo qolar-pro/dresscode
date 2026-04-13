@@ -13,29 +13,64 @@ interface Product {
   category: string;
   description: string;
   images: string[];
-  sizes: { name: string; available: boolean }[];
+  sizes: { name: string; available: boolean; stock?: number }[];
   colors: { name: string; hex: string; available: boolean }[];
   isNew?: boolean;
   isFeatured?: boolean;
-  stock?: number;
+}
+
+interface SalesCollection {
+  id: number;
+  name: string;
+  description: string;
+  discount_percentage: number;
+  image_url: string;
+  product_ids: number[];
+  is_active: boolean;
+}
+
+// Calculate total stock from all sizes
+function getTotalStock(product: Product): number {
+  return product.sizes.reduce((total, size) => total + (size.stock ?? 0), 0);
+}
+
+// Get the size with the lowest stock (for display)
+function getLowStockSize(product: Product): { name: string; stock: number } | null {
+  const availableSizes = product.sizes.filter(s => s.available && (s.stock ?? 0) > 0);
+  if (availableSizes.length === 0) return null;
+  
+  const lowest = availableSizes.reduce((min, size) => {
+    const sizeStock = size.stock ?? 0;
+    return sizeStock < (min.stock ?? Infinity) ? { name: size.name, stock: sizeStock } : min;
+  }, { name: '', stock: Infinity });
+  
+  return lowest.stock <= 5 ? lowest : null;
 }
 
 export default function ShopPage() {
   const { t } = useLanguage();
   const [products, setProducts] = useState<Product[]>([]);
+  const [salesCollections, setSalesCollections] = useState<SalesCollection[]>([]);
+  const [activeCollection, setActiveCollection] = useState<SalesCollection | null>(null);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedSort, setSelectedSort] = useState('newest');
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Fetch products from Supabase API
+  // Fetch products and sales collections from Supabase
   useEffect(() => {
-    async function fetchProducts() {
+    async function fetchData() {
       try {
-        const res = await fetch('/api/products');
-        const data = await res.json();
-        if (data.products && data.products.length > 0) {
-          const frontendProducts = data.products.map((p: any) => ({
+        const [productsRes, collectionsRes] = await Promise.all([
+          fetch('/api/products'),
+          fetch('/api/sales-collections'),
+        ]);
+
+        const productsData = await productsRes.json();
+        const collectionsData = await collectionsRes.json();
+
+        if (productsData.products) {
+          const frontendProducts = productsData.products.map((p: any) => ({
             id: p.id,
             name: p.name,
             price: p.price,
@@ -49,21 +84,33 @@ export default function ShopPage() {
           }));
           setProducts(frontendProducts);
         }
+
+        if (collectionsData.collections) {
+          const activeCollections = collectionsData.collections.filter((c: any) => c.is_active);
+          setSalesCollections(activeCollections);
+          if (activeCollections.length > 0) {
+            setActiveCollection(activeCollections[0]);
+          }
+        }
       } catch (error) {
-        console.error('Failed to fetch products:', error);
+        console.error('Failed to fetch data:', error);
       } finally {
         setLoading(false);
       }
     }
-    fetchProducts();
+    fetchData();
   }, []);
 
   useEffect(() => {
     let filtered = [...products];
 
-    // Filter by category
-    if (selectedCategory !== 'all') {
-      filtered = filtered.filter(p => p.category === selectedCategory);
+    // If a sales collection is active and selected, filter by product IDs
+    if (activeCollection && selectedCategory === `sale-${activeCollection.id}`) {
+      filtered = filtered.filter(p => activeCollection.product_ids.includes(p.id));
+    } else if (selectedCategory !== 'all') {
+      // Normal category filter
+      const categoryId = selectedCategory.replace('sale-', '');
+      filtered = filtered.filter(p => p.category === categoryId);
     }
 
     // Sort
@@ -84,7 +131,13 @@ export default function ShopPage() {
     }
 
     setFilteredProducts(filtered);
-  }, [selectedCategory, selectedSort, products]);
+  }, [selectedCategory, selectedSort, products, activeCollection]);
+
+  const allCategories = [
+    { id: 'all', name: 'All' },
+    ...salesCollections.map(c => ({ id: `sale-${c.id}`, name: `${c.name} (-${c.discount_percentage}%)` })),
+    ...categories.filter(c => c.id !== 'all'),
+  ];
 
   const getCategoryTranslation = (catId: string) => {
     const key = `home.${catId}`;
@@ -127,7 +180,7 @@ export default function ShopPage() {
         <div className="flex flex-wrap items-center justify-between gap-6 mb-12 pb-8 border-b border-neutral-200 dark:border-neutral-800">
           {/* Category Pills */}
           <div className="flex flex-wrap gap-2">
-            {categories.map(cat => (
+            {allCategories.map(cat => (
               <button
                 key={cat.id}
                 onClick={() => setSelectedCategory(cat.id)}
@@ -137,7 +190,7 @@ export default function ShopPage() {
                     : 'bg-transparent text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white border border-neutral-300 dark:border-neutral-700 hover:border-neutral-900 dark:hover:border-white'
                 }`}
               >
-                {cat.id === 'all' ? t('shop.all') : getCategoryTranslation(cat.id)}
+                {cat.id === 'all' ? t('shop.all') : cat.name}
               </button>
             ))}
           </div>
@@ -177,7 +230,7 @@ export default function ShopPage() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-8 gap-y-16">
             {filteredProducts.map((product) => (
-              <ProductCard key={product.id} product={product} />
+              <ProductCard key={product.id} product={product} activeCollection={activeCollection} />
             ))}
           </div>
         )}
@@ -186,8 +239,18 @@ export default function ShopPage() {
   );
 }
 
-function ProductCard({ product }: { product: Product }) {
+function ProductCard({ product, activeCollection }: { product: Product; activeCollection: SalesCollection | null }) {
   const { t } = useLanguage();
+  
+  const totalStock = getTotalStock(product);
+  const lowStockSize = getLowStockSize(product);
+  const isSoldOut = totalStock <= 0 || !product.sizes.some(s => s.available);
+  
+  // Calculate discounted price if in an active collection
+  const isInCollection = activeCollection?.product_ids.includes(product.id);
+  const discountedPrice = isInCollection && activeCollection
+    ? product.price * (1 - activeCollection.discount_percentage / 100)
+    : product.price;
 
   return (
     <Link href={`/product/${product.id}`} className="group">
@@ -210,26 +273,55 @@ function ProductCard({ product }: { product: Product }) {
             loading="lazy"
           />
         )}
-        {product.isNew && (
-          <span className="absolute top-4 left-4 text-[10px] tracking-[0.2em] uppercase font-medium bg-white dark:bg-neutral-900 text-neutral-900 dark:text-white px-3 py-2">
-            {t('shop.new')}
-          </span>
-        )}
-        {!product.sizes.some(s => s.available) ? (
+        
+        {/* Badges */}
+        <div className="absolute top-4 left-4 flex flex-col gap-2">
+          {product.isNew && (
+            <span className="text-[10px] tracking-[0.2em] uppercase font-medium bg-white dark:bg-neutral-900 text-neutral-900 dark:text-white px-3 py-2">
+              {t('shop.new')}
+            </span>
+          )}
+          {isInCollection && activeCollection && (
+            <span className="text-[10px] tracking-[0.2em] uppercase font-medium bg-red-500 text-white px-3 py-2">
+              -{activeCollection.discount_percentage}%
+            </span>
+          )}
+          {lowStockSize && !isSoldOut && (
+            <span className="text-[10px] tracking-[0.2em] uppercase font-medium bg-yellow-500 text-neutral-900 px-3 py-2">
+              Only {lowStockSize.stock} left!
+            </span>
+          )}
+        </div>
+
+        {/* Sold Out Overlay */}
+        {isSoldOut && (
           <div className="absolute inset-0 bg-neutral-900/60 dark:bg-white/60 flex items-center justify-center">
             <span className="text-white dark:text-neutral-900 text-xs tracking-[0.2em] uppercase font-medium">{t('shop.soldOut')}</span>
           </div>
-        ) : product.stock !== undefined && product.stock <= 0 ? (
-          <div className="absolute inset-0 bg-red-900/60 dark:bg-red-900/60 flex items-center justify-center">
-            <span className="text-white text-xs tracking-[0.2em] uppercase font-medium">Sold Out</span>
-          </div>
-        ) : null}
+        )}
+        
         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 dark:group-hover:bg-white/5 transition-colors duration-500" />
       </div>
+      
       <div className="space-y-2">
         <p className="text-[10px] tracking-[0.2em] uppercase text-neutral-500 dark:text-neutral-400">{product.category}</p>
         <h3 className="font-medium tracking-wide text-neutral-900 dark:text-white group-hover:text-neutral-600 dark:group-hover:text-neutral-400 transition-colors duration-300">{product.name}</h3>
-        <p className="font-light text-neutral-900 dark:text-white">${product.price.toFixed(2)}</p>
+        <div className="flex items-center gap-2">
+          {isInCollection && activeCollection ? (
+            <>
+              <p className="font-light text-red-500">${discountedPrice.toFixed(2)}</p>
+              <p className="font-light text-neutral-400 line-through">${product.price.toFixed(2)}</p>
+            </>
+          ) : (
+            <p className="font-light text-neutral-900 dark:text-white">${product.price.toFixed(2)}</p>
+          )}
+        </div>
+        {/* Stock indicator */}
+        {!isSoldOut && totalStock > 0 && (
+          <p className="text-[10px] text-neutral-400">
+            {totalStock > 20 ? `${totalStock} available` : `${totalStock} left in stock`}
+          </p>
+        )}
       </div>
     </Link>
   );

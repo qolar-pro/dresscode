@@ -91,8 +91,10 @@ function ProductDetail({ product }: { product: any }) {
   };
 
   const handleAddToCart = () => {
-    if (product.stock !== undefined && product.stock <= 0) {
-      alert('Sorry, this product is sold out.');
+    // Check if selected size has stock
+    const selectedSizeObj = product.sizes.find((s: any) => s.name === selectedSize);
+    if (selectedSizeObj && selectedSizeObj.stock !== undefined && selectedSizeObj.stock <= 0) {
+      alert('Sorry, this size is sold out. Please select another size.');
       return;
     }
     if (!selectedSize) {
@@ -111,6 +113,10 @@ function ProductDetail({ product }: { product: any }) {
 
   const availableSizes = product.sizes.filter((s: any) => s.available);
   const availableColors = product.colors.filter((c: any) => c.available);
+
+  // Calculate total stock
+  const totalStock = product.sizes.reduce((sum: number, s: any) => sum + (s.stock ?? 0), 0);
+  const isSoldOut = totalStock <= 0 || availableSizes.length === 0;
 
   return (
     <div className="min-h-screen bg-white dark:bg-neutral-950 relative overflow-hidden">
@@ -221,22 +227,39 @@ function ProductDetail({ product }: { product: any }) {
                       </button>
                     </div>
                     <div className="flex flex-wrap gap-3">
-                      {product.sizes.map((size: any) => (
-                        <button
-                          key={size.name}
-                          onClick={() => size.available && setSelectedSize(size.name)}
-                          disabled={!size.available}
-                          className={`min-w-[60px] px-5 py-3 text-xs tracking-[0.15em] uppercase font-medium transition-all duration-300 ${
-                            !size.available
-                              ? 'bg-neutral-100 dark:bg-neutral-800 text-neutral-400 cursor-not-allowed line-through'
-                              : selectedSize === size.name
-                              ? 'bg-neutral-900 dark:bg-white text-white dark:text-neutral-900'
-                              : 'bg-transparent border border-neutral-300 dark:border-neutral-700 hover:border-neutral-900 dark:hover:border-white text-neutral-900 dark:text-white'
-                          }`}
-                        >
-                          {size.name}
-                        </button>
-                      ))}
+                      {product.sizes.map((size: any) => {
+                        const sizeStock = size.stock ?? 0;
+                        const isSizeSoldOut = sizeStock <= 0;
+
+                        return (
+                          <div key={size.name} className="relative">
+                            <button
+                              onClick={() => size.available && !isSizeSoldOut && setSelectedSize(size.name)}
+                              disabled={!size.available || isSizeSoldOut}
+                              className={`min-w-[60px] px-5 py-3 text-xs tracking-[0.15em] uppercase font-medium transition-all duration-300 ${
+                                !size.available || isSizeSoldOut
+                                  ? 'bg-neutral-100 dark:bg-neutral-800 text-neutral-400 cursor-not-allowed line-through'
+                                  : selectedSize === size.name
+                                  ? 'bg-neutral-900 dark:bg-white text-white dark:text-neutral-900'
+                                  : 'bg-transparent border border-neutral-300 dark:border-neutral-700 hover:border-neutral-900 dark:hover:border-white text-neutral-900 dark:text-white'
+                              }`}
+                            >
+                              {size.name}
+                            </button>
+                            {/* Stock indicator for selected size */}
+                            {selectedSize === size.name && sizeStock > 0 && sizeStock <= 5 && (
+                              <p className="text-[10px] text-yellow-600 dark:text-yellow-400 mt-1 text-center">
+                                Only {sizeStock} left!
+                              </p>
+                            )}
+                            {isSizeSoldOut && (
+                              <p className="text-[10px] text-red-500 mt-1 text-center">
+                                Sold Out
+                              </p>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 )}

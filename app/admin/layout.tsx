@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useLanguage } from '@/context/LanguageContext';
 import { useTheme } from '@/context/ThemeContext';
-import { ShoppingBag, Package, LogOut, ArrowLeft, Globe, Sun, Moon, Shield } from 'lucide-react';
+import { ShoppingBag, Package, LogOut, ArrowLeft, Globe, Sun, Moon, Shield, Tag } from 'lucide-react';
 import { ADMIN_CONFIG, SecurityUtils } from '@/lib/admin-config';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -99,6 +99,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { href: '/admin/dashboard', icon: Package, label: 'Dashboard' },
     { href: '/admin/orders', icon: ShoppingBag, label: 'Orders' },
     { href: '/admin/products', icon: Package, label: 'Products' },
+    { href: '/admin/sales-collections', icon: Tag, label: 'Sales Collections' },
   ];
 
   // Format time remaining

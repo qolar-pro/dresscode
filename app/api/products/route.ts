@@ -35,7 +35,6 @@ export async function POST(request: NextRequest) {
         colors: sanitized.colors || [],
         is_new: sanitized.isNew ?? false,
         is_featured: sanitized.isFeatured ?? false,
-        stock: sanitized.stock ?? 100,
       }])
       .select()
       .single();
@@ -69,7 +68,6 @@ export async function PUT(request: NextRequest) {
         colors: sanitized.colors || [],
         is_new: sanitized.isNew ?? false,
         is_featured: sanitized.isFeatured ?? false,
-        stock: sanitized.stock ?? 100,
       })
       .eq('id', id)
       .select()

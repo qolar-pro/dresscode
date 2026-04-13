@@ -15,6 +15,7 @@ export interface Product {
 export interface Size {
   name: string;
   available: boolean;
+  stock?: number; // Per-size stock tracking
 }
 
 export interface Color {

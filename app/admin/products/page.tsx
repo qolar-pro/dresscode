@@ -11,7 +11,7 @@ interface Product {
   category: string;
   description: string;
   images: string[];
-  sizes: { name: string; available: boolean }[];
+  sizes: { name: string; available: boolean; stock?: number }[];
   colors: { name: string; hex: string; available: boolean }[];
   isNew?: boolean;
   isFeatured?: boolean;
@@ -44,7 +44,6 @@ export default function AdminProducts() {
           colors: p.colors || [],
           isNew: p.is_new,
           isFeatured: p.is_featured,
-          stock: p.stock,
         }));
         setProducts(frontendProducts);
       } else {
@@ -290,8 +289,8 @@ export default function AdminProducts() {
                 />
               </div>
 
-              {/* Price, Category, Stock */}
-              <div className="grid grid-cols-3 gap-4">
+              {/* Price & Category */}
+              <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs text-neutral-400 uppercase tracking-wider mb-2">Price ($)</label>
                   <input
@@ -323,15 +322,6 @@ export default function AdminProducts() {
                     <option value="outerwear">Outerwear</option>
                     <option value="accessories">Accessories</option>
                   </select>
-                </div>
-                <div>
-                  <label className="block text-xs text-neutral-400 uppercase tracking-wider mb-2">Stock</label>
-                  <input
-                    type="number"
-                    value={editingProduct.stock ?? 100}
-                    onChange={(e) => setEditingProduct({ ...editingProduct, stock: parseInt(e.target.value) })}
-                    className="w-full px-4 py-3 bg-charcoal-800 border border-charcoal-700 rounded-lg text-pearl-50 focus:outline-none focus:border-pearl-50"
-                  />
                 </div>
               </div>
 
@@ -422,34 +412,67 @@ export default function AdminProducts() {
                 </div>
               </div>
 
-              {/* Sizes */}
+              {/* Sizes with Per-Size Stock */}
               <div>
-                <label className="block text-xs text-neutral-400 uppercase tracking-wider mb-3">Sizes</label>
-                <div className="flex flex-wrap gap-2">
+                <label className="block text-xs text-neutral-400 uppercase tracking-wider mb-3">Sizes & Stock</label>
+                <div className="space-y-3">
                   {['XS', 'S', 'M', 'L', 'XL'].map((size) => {
                     const sizeObj = editingProduct.sizes.find(s => s.name === size);
                     const isAvailable = sizeObj?.available ?? true;
+                    const stock = sizeObj?.stock ?? 0;
 
                     return (
-                      <button
-                        key={size}
-                        onClick={() => {
-                          const updatedSizes = editingProduct.sizes.map(s =>
-                            s.name === size ? { ...s, available: !s.available } : s
-                          );
-                          if (!editingProduct.sizes.find(s => s.name === size)) {
-                            updatedSizes.push({ name: size, available: true });
-                          }
-                          setEditingProduct({ ...editingProduct, sizes: updatedSizes });
-                        }}
-                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                          isAvailable
-                            ? 'bg-pearl-50 text-charcoal-900'
-                            : 'bg-charcoal-800 text-neutral-500'
-                        }`}
-                      >
-                        {size}
-                      </button>
+                      <div key={size} className="flex items-center gap-3 bg-charcoal-800 rounded-lg p-3">
+                        {/* Size Toggle Button */}
+                        <button
+                          onClick={() => {
+                            const updatedSizes = editingProduct.sizes.map(s =>
+                              s.name === size ? { ...s, available: !s.available } : s
+                            );
+                            if (!editingProduct.sizes.find(s => s.name === size)) {
+                              updatedSizes.push({ name: size, available: true, stock: 0 });
+                            }
+                            setEditingProduct({ ...editingProduct, sizes: updatedSizes });
+                          }}
+                          className={`min-w-[60px] px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                            isAvailable
+                              ? 'bg-pearl-50 text-charcoal-900'
+                              : 'bg-charcoal-700 text-neutral-500'
+                          }`}
+                        >
+                          {size}
+                        </button>
+
+                        {/* Stock Input */}
+                        <div className="flex items-center gap-2 flex-1">
+                          <span className="text-xs text-neutral-400">Stock:</span>
+                          <input
+                            type="number"
+                            value={stock}
+                            onChange={(e) => {
+                              const updatedSizes = editingProduct.sizes.map(s =>
+                                s.name === size ? { ...s, stock: parseInt(e.target.value) || 0 } : s
+                              );
+                              if (!editingProduct.sizes.find(s => s.name === size)) {
+                                updatedSizes.push({ name: size, available: true, stock: parseInt(e.target.value) || 0 });
+                              }
+                              setEditingProduct({ ...editingProduct, sizes: updatedSizes });
+                            }}
+                            disabled={!isAvailable}
+                            className="w-20 px-3 py-2 bg-charcoal-700 border border-charcoal-600 rounded-lg text-pearl-50 focus:outline-none focus:border-pearl-50 disabled:opacity-50 text-sm"
+                          />
+                        </div>
+
+                        {/* Status Indicator */}
+                        <span className={`text-xs px-2 py-1 rounded ${
+                          !isAvailable ? 'bg-neutral-500/20 text-neutral-400' :
+                          stock <= 0 ? 'bg-red-500/20 text-red-400' :
+                          stock <= 5 ? 'bg-yellow-500/20 text-yellow-400' :
+                          'bg-green-500/20 text-green-400'
+                        }`}>
+                          {!isAvailable ? 'Hidden' : stock <= 0 ? 'Sold Out' : stock <= 5 ? 'Low' : `${stock} in stock`}
+                        </span>
+                      </div>
                     );
                   })}
                 </div>

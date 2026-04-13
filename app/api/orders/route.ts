@@ -43,31 +43,42 @@ export async function POST(request: NextRequest) {
 
     if (error) throw error;
 
-    // 2. Decrement Stock for each item
+    // 2. Decrement Stock PER SIZE for each item
     if (sanitized.items && sanitized.items.length > 0) {
       for (const item of sanitized.items) {
         const productId = item.product?.id;
-        if (!productId) {
-          console.warn('Missing product ID in order item, skipping stock update');
+        const selectedSize = item.size; // e.g., "M"
+        const quantity = item.quantity;
+
+        if (!productId || !selectedSize) {
+          console.warn('Missing product ID or size in order item, skipping stock update');
           continue;
         }
 
         // Fetch current product
         const { data: products, error: prodError } = await supabaseAdmin
           .from('products')
-          .select('id, stock')
+          .select('id, sizes')
           .eq('id', productId);
 
         if (!prodError && products && products.length > 0) {
-          const currentStock = products[0].stock || 0;
-          const newStock = Math.max(0, currentStock - item.quantity);
+          const currentSizes = products[0].sizes || [];
           
+          // Find the size and decrement its stock
+          const updatedSizes = currentSizes.map((s: any) => {
+            if (s.name === selectedSize) {
+              const currentSizeStock = s.stock ?? 0;
+              const newSizeStock = Math.max(0, currentSizeStock - quantity);
+              console.log(`Stock update: Product ${productId}, Size ${selectedSize} -> ${currentSizeStock} - ${quantity} = ${newSizeStock}`);
+              return { ...s, stock: newSizeStock };
+            }
+            return s;
+          });
+
           await supabaseAdmin
             .from('products')
-            .update({ stock: newStock })
+            .update({ sizes: updatedSizes })
             .eq('id', productId);
-            
-          console.log(`Stock update: Product ${productId} -> ${currentStock} - ${item.quantity} = ${newStock}`);
         } else {
           console.error(`Product ${productId} not found in database for stock update`);
         }
