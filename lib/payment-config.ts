@@ -1,11 +1,10 @@
 /**
  * DRESS CODE - Payment Gateway Configuration
- * 
- * CURRENT STATUS: Cash on Delivery Only
- * FUTURE INTEGRATIONS: Ready for Stripe, PayPal, Viva Wallet, etc.
+ *
+ * STATUS: Stripe Test Mode Active + Cash on Delivery
  * 
  * HOW TO ADD A NEW PAYMENT GATEWAY:
- * 1. Add your API keys below (NEVER commit real keys to git!)
+ * 1. Add your API keys in .env.local (NEVER commit real keys to git!)
  * 2. Create a payment processor in lib/payments/
  * 3. Update checkout page to use the new gateway
  */
@@ -20,6 +19,8 @@ export interface PaymentGateway {
     fixed: number;
   };
   testMode: boolean;
+  apiKey?: string;
+  publishableKey?: string;
 }
 
 export interface PaymentGateways {
@@ -52,16 +53,16 @@ export const PAYMENT_CONFIG: PaymentGateways = {
   // Future Integrations - Ready to Enable
   stripe: {
     id: 'stripe',
-    name: 'Stripe (Credit/Debit Cards)',
-    enabled: false, // Set to true when ready
+    name: 'Credit/Debit Card (Stripe)',
+    enabled: true, // ENABLED for testing
     currency: 'EUR',
     fees: {
       percentage: 1.4,
       fixed: 0.25,
     },
     testMode: true, // Use test mode first!
-    // apiKey: process.env.STRIPE_SECRET_KEY || 'sk_test_...',
-    // publishableKey: process.env.STRIPE_PUBLISHABLE_KEY || 'pk_test_...',
+    apiKey: process.env.STRIPE_SECRET_KEY,
+    publishableKey: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY,
   },
   
   paypal: {
@@ -130,6 +131,7 @@ export type PaymentStatus = typeof PAYMENT_STATUS[keyof typeof PAYMENT_STATUS];
 export const PAYMENT_METHODS = {
   CASH_ON_DELIVERY: 'cash_on_delivery',
   CREDIT_CARD: 'credit_card',
+  STRIPE: 'stripe',
   PAYPAL: 'paypal',
   BANK_TRANSFER: 'bank_transfer',
   VIVA_WALLET: 'viva_wallet',

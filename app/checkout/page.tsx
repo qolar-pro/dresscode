@@ -2,15 +2,22 @@
 
 import { useCart } from '@/context/CartContext';
 import { useLanguage } from '@/context/LanguageContext';
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { Check, ShoppingBag, CreditCard, Banknote, Wallet } from 'lucide-react';
+import { useState, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Check, ShoppingBag, CreditCard, Banknote, Wallet, Loader2 } from 'lucide-react';
 import { PAYMENT_CONFIG, getEnabledPaymentMethods, calculatePaymentFee, PaymentMethod } from '@/lib/payment-config';
 import { defaultImages } from '@/data/products';
 import Link from 'next/link';
+import { loadStripe } from '@stripe/stripe-js';
 
-export default function CheckoutPage() {
+// Initialize Stripe
+const stripePromise = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY 
+  ? loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY) 
+  : null;
+
+function CheckoutContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { cart, getCartTotal, clearCart } = useCart();
   const { t } = useLanguage();
   const [formData, setFormData] = useState({
@@ -26,16 +33,29 @@ export default function CheckoutPage() {
   const [orderPlaced, setOrderPlaced] = useState(false);
   const [orderId, setOrderId] = useState('');
   const [selectedPayment, setSelectedPayment] = useState<PaymentMethod>('cash_on_delivery');
+  const [processing, setProcessing] = useState(false);
+
+  // Check for successful Stripe payment redirect
+  useEffect(() => {
+    const sessionId = searchParams.get('session_id');
+    if (sessionId) {
+      clearCart();
+      setOrderPlaced(true);
+      // In a real app, you'd fetch the session details to get the Order ID
+      setOrderId('STRIPE-PAID');
+    }
+  }, [searchParams, clearCart]);
 
   const total = getCartTotal();
   const shipping = total >= 100 ? 0 : 9.99;
   const paymentFee = calculatePaymentFee(total, selectedPayment);
   const grandTotal = total + shipping + paymentFee;
-  
+
   const enabledPaymentMethods = getEnabledPaymentMethods();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setProcessing(true);
 
     const newOrderId = `ORD-${Date.now()}`;
     setOrderId(newOrderId);
@@ -53,7 +73,7 @@ export default function CheckoutPage() {
       paymentFee: paymentFee,
     };
 
-    // Save to Supabase via API
+    // 1. Save Order to Supabase (always save first)
     try {
       const res = await fetch('/api/orders', {
         method: 'POST',
@@ -62,7 +82,6 @@ export default function CheckoutPage() {
       });
 
       if (!res.ok) {
-        // Fallback to localStorage if Supabase fails
         console.warn('Supabase save failed, falling back to localStorage');
         const orders = JSON.parse(localStorage.getItem('orders') || '[]');
         orders.push(order);
@@ -70,25 +89,56 @@ export default function CheckoutPage() {
       }
     } catch (error) {
       console.error('Failed to save order to Supabase:', error);
-      // Fallback to localStorage
       const orders = JSON.parse(localStorage.getItem('orders') || '[]');
       orders.push(order);
       localStorage.setItem('orders', JSON.stringify(orders));
     }
 
-    // Send Email Notification
-    try {
-      await fetch('/api/email/send-order', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ order }),
-      });
-    } catch (error) {
-      console.error('Failed to send email notification:', error);
-    }
+    // 2. Handle Payment Method
+    if (selectedPayment === 'stripe' && stripePromise) {
+      // STRIPE: Create Checkout Session and redirect
+      try {
+        const res = await fetch('/api/checkout/session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            items: cart,
+            customer: {
+              ...formData,
+              orderId: newOrderId,
+              total: grandTotal,
+            },
+          }),
+        });
 
-    clearCart();
-    setOrderPlaced(true);
+        const data = await res.json();
+        if (data.url) {
+          window.location.href = data.url; // Redirect to Stripe Checkout
+        } else {
+          alert('Failed to initialize Stripe checkout');
+          setProcessing(false);
+        }
+      } catch (error) {
+        console.error('Stripe checkout error:', error);
+        alert('Failed to initialize Stripe checkout');
+        setProcessing(false);
+      }
+    } else {
+      // COD: Finish here
+      try {
+        await fetch('/api/email/send-order', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ order }),
+        });
+      } catch (error) {
+        console.error('Failed to send email notification:', error);
+      }
+
+      clearCart();
+      setOrderPlaced(true);
+      setProcessing(false);
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -361,8 +411,21 @@ export default function CheckoutPage() {
                 </div>
               </div>
 
-              <button type="submit" className="w-full bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 py-5 text-xs tracking-[0.2em] uppercase font-medium hover:bg-neutral-800 dark:hover:bg-neutral-200 transition-colors">
-                {t('checkout.placeOrder')} — ${grandTotal.toFixed(2)}
+              <button 
+                type="submit" 
+                disabled={processing}
+                className="w-full bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 py-5 text-xs tracking-[0.2em] uppercase font-medium hover:bg-neutral-800 dark:hover:bg-neutral-200 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {processing ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Processing...
+                  </>
+                ) : (
+                  <>
+                    {t('checkout.placeOrder')} — ${grandTotal.toFixed(2)}
+                  </>
+                )}
               </button>
             </form>
           </div>
@@ -434,5 +497,17 @@ export default function CheckoutPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function CheckoutPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 text-neutral-400 animate-spin" />
+      </div>
+    }>
+      <CheckoutContent />
+    </Suspense>
   );
 }
