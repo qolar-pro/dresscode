@@ -182,11 +182,13 @@ export default function AdminOrders() {
                     </td>
                     <td className="px-6 py-4">
                       <span className={`text-xs px-2 py-1 rounded ${
-                        order.paymentStatus === 'completed' ? 'bg-green-500/20 text-green-400' :
-                        order.paymentStatus === 'pending' ? 'bg-yellow-500/20 text-yellow-400' :
-                        'bg-neutral-500/20 text-neutral-400'
+                        order.status === 'delivered' ? 'bg-green-500/20 text-green-400' :
+                        order.status === 'shipped' ? 'bg-blue-500/20 text-blue-400' :
+                        order.status === 'processing' ? 'bg-purple-500/20 text-purple-400' :
+                        order.status === 'cancelled' ? 'bg-red-500/20 text-red-400' :
+                        'bg-yellow-500/20 text-yellow-400'
                       }`}>
-                        {order.paymentStatus || 'pending'}
+                        {order.status || 'pending'}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-right">
