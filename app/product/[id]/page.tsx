@@ -91,6 +91,10 @@ function ProductDetail({ product }: { product: any }) {
   };
 
   const handleAddToCart = () => {
+    if (product.stock !== undefined && product.stock <= 0) {
+      alert('Sorry, this product is sold out.');
+      return;
+    }
     if (!selectedSize) {
       alert(t('product.selectSize'));
       return;

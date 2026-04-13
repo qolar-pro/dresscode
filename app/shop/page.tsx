@@ -17,6 +17,7 @@ interface Product {
   colors: { name: string; hex: string; available: boolean }[];
   isNew?: boolean;
   isFeatured?: boolean;
+  stock?: number;
 }
 
 export default function ShopPage() {
@@ -214,11 +215,15 @@ function ProductCard({ product }: { product: Product }) {
             {t('shop.new')}
           </span>
         )}
-        {!product.sizes.some(s => s.available) && (
+        {!product.sizes.some(s => s.available) ? (
           <div className="absolute inset-0 bg-neutral-900/60 dark:bg-white/60 flex items-center justify-center">
             <span className="text-white dark:text-neutral-900 text-xs tracking-[0.2em] uppercase font-medium">{t('shop.soldOut')}</span>
           </div>
-        )}
+        ) : product.stock !== undefined && product.stock <= 0 ? (
+          <div className="absolute inset-0 bg-red-900/60 dark:bg-red-900/60 flex items-center justify-center">
+            <span className="text-white text-xs tracking-[0.2em] uppercase font-medium">Sold Out</span>
+          </div>
+        ) : null}
         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 dark:group-hover:bg-white/5 transition-colors duration-500" />
       </div>
       <div className="space-y-2">

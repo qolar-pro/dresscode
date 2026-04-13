@@ -12,6 +12,7 @@ interface Order {
   date: string;
   paymentMethod: string;
   paymentStatus?: string;
+  status?: string;
 }
 
 export default function AdminOrders() {
@@ -19,6 +20,7 @@ export default function AdminOrders() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
+  const [updatingStatus, setUpdatingStatus] = useState(false);
 
   const fetchOrders = useCallback(async () => {
     try {
@@ -33,12 +35,12 @@ export default function AdminOrders() {
           date: o.date,
           paymentMethod: o.payment_method,
           paymentStatus: o.payment_status,
+          status: o.status || 'pending',
         }));
         setOrders(frontendOrders);
       }
     } catch (error) {
       console.error('Failed to fetch orders:', error);
-      // Fallback to localStorage
       const stored = JSON.parse(localStorage.getItem('orders') || '[]');
       setOrders(stored);
     } finally {
@@ -49,6 +51,30 @@ export default function AdminOrders() {
   useEffect(() => {
     fetchOrders();
   }, [fetchOrders]);
+
+  const updateOrderStatus = async (orderId: string, newStatus: string) => {
+    setUpdatingStatus(true);
+    try {
+      const res = await fetch(`/api/orders/${orderId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus }),
+      });
+
+      if (!res.ok) throw new Error('Failed to update status');
+
+      // Update local state
+      setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
+      if (selectedOrder?.id === orderId) {
+        setSelectedOrder({ ...selectedOrder, status: newStatus });
+      }
+    } catch (error) {
+      console.error('Error updating status:', error);
+      alert('Failed to update status');
+    } finally {
+      setUpdatingStatus(false);
+    }
+  };
 
   const filteredOrders = orders.filter(order =>
     order.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -255,6 +281,26 @@ export default function AdminOrders() {
                 <div>
                   <p className="text-xs text-neutral-400 uppercase tracking-wider mb-1">Total</p>
                   <p className="text-pearl-50 font-medium">${selectedOrder.total.toFixed(2)}</p>
+                </div>
+              </div>
+
+              {/* Order Status Update */}
+              <div>
+                <p className="text-xs text-neutral-400 uppercase tracking-wider mb-2">Order Status</p>
+                <div className="flex items-center gap-3">
+                  <select
+                    value={selectedOrder.status || 'pending'}
+                    onChange={(e) => updateOrderStatus(selectedOrder.id, e.target.value)}
+                    disabled={updatingStatus}
+                    className="flex-1 px-4 py-2 bg-charcoal-800 border border-charcoal-700 rounded-lg text-pearl-50 focus:outline-none focus:border-pearl-50 disabled:opacity-50"
+                  >
+                    <option value="pending">Pending</option>
+                    <option value="processing">Processing</option>
+                    <option value="shipped">Shipped</option>
+                    <option value="delivered">Delivered</option>
+                    <option value="cancelled">Cancelled</option>
+                  </select>
+                  {updatingStatus && <Loader2 className="w-5 h-5 text-pearl-400 animate-spin" />}
                 </div>
               </div>
 
