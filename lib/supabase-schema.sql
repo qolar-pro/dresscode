@@ -45,7 +45,8 @@ CREATE TABLE IF NOT EXISTS orders (
 -- Index for faster queries
 CREATE INDEX IF NOT EXISTS idx_orders_date ON orders(date DESC);
 CREATE INDEX IF NOT EXISTS idx_orders_payment_status ON orders(payment_status);
-CREATE INDEX IF NOT EXISTS idx_orders_customer_email ON (customer->>'email');
+-- Expression index on customer JSONB email field
+CREATE INDEX IF NOT EXISTS idx_orders_customer_email ON orders USING btree ((customer->>'email'));
 
 -- ==========================================
 -- 3. ROW LEVEL SECURITY (RLS) POLICIES
