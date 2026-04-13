@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Search, Trash2, Eye } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { Search, Trash2, Eye, Loader2 } from 'lucide-react';
 import { defaultImages } from '@/data/products';
 
 interface Order {
@@ -11,30 +11,67 @@ interface Order {
   total: number;
   date: string;
   paymentMethod: string;
+  paymentStatus?: string;
 }
 
 export default function AdminOrders() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const storedOrders = JSON.parse(localStorage.getItem('orders') || '[]');
-    setOrders(storedOrders);
+  const fetchOrders = useCallback(async () => {
+    try {
+      const res = await fetch('/api/orders');
+      const data = await res.json();
+      if (data.orders) {
+        const frontendOrders = data.orders.map((o: any) => ({
+          id: o.id,
+          items: o.items,
+          customer: o.customer,
+          total: o.total,
+          date: o.date,
+          paymentMethod: o.payment_method,
+          paymentStatus: o.payment_status,
+        }));
+        setOrders(frontendOrders);
+      }
+    } catch (error) {
+      console.error('Failed to fetch orders:', error);
+      // Fallback to localStorage
+      const stored = JSON.parse(localStorage.getItem('orders') || '[]');
+      setOrders(stored);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  const filteredOrders = orders.filter(order => 
+  useEffect(() => {
+    fetchOrders();
+  }, [fetchOrders]);
+
+  const filteredOrders = orders.filter(order =>
     order.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    order.customer.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    order.customer.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    order.customer.email.toLowerCase().includes(searchTerm.toLowerCase())
+    order.customer?.firstName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    order.customer?.lastName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    order.customer?.email?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const deleteOrder = (orderId: string) => {
-    if (confirm('Are you sure you want to delete this order?')) {
-      const updatedOrders = orders.filter(order => order.id !== orderId);
-      setOrders(updatedOrders);
-      localStorage.setItem('orders', JSON.stringify(updatedOrders));
+  const deleteOrder = async (orderId: string) => {
+    if (!confirm('Are you sure you want to delete this order?')) return;
+
+    try {
+      const res = await fetch('/api/orders', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: orderId }),
+      });
+
+      if (!res.ok) throw new Error('Failed to delete order');
+      await fetchOrders();
+    } catch (error) {
+      console.error('Error deleting order:', error);
+      alert('Failed to delete order');
     }
   };
 
@@ -46,6 +83,14 @@ export default function AdminOrders() {
     outerwear: '🧥',
     accessories: '👜',
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="w-8 h-8 text-pearl-400 animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -84,6 +129,7 @@ export default function AdminOrders() {
                   <th className="text-left px-6 py-4 text-xs tracking-wider uppercase text-neutral-400">Items</th>
                   <th className="text-left px-6 py-4 text-xs tracking-wider uppercase text-neutral-400">Total</th>
                   <th className="text-left px-6 py-4 text-xs tracking-wider uppercase text-neutral-400">Date</th>
+                  <th className="text-left px-6 py-4 text-xs tracking-wider uppercase text-neutral-400">Status</th>
                   <th className="text-right px-6 py-4 text-xs tracking-wider uppercase text-neutral-400">Actions</th>
                 </tr>
               </thead>
@@ -94,8 +140,8 @@ export default function AdminOrders() {
                       <span className="text-pearl-50 font-mono text-sm">{order.id}</span>
                     </td>
                     <td className="px-6 py-4">
-                      <p className="text-pearl-50 text-sm">{order.customer.firstName} {order.customer.lastName}</p>
-                      <p className="text-neutral-400 text-xs">{order.customer.email}</p>
+                      <p className="text-pearl-50 text-sm">{order.customer?.firstName} {order.customer?.lastName}</p>
+                      <p className="text-neutral-400 text-xs">{order.customer?.email}</p>
                     </td>
                     <td className="px-6 py-4">
                       <span className="text-pearl-50 text-sm">{order.items.length} items</span>
@@ -106,6 +152,15 @@ export default function AdminOrders() {
                     <td className="px-6 py-4">
                       <span className="text-neutral-400 text-sm">
                         {new Date(order.date).toLocaleDateString()}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className={`text-xs px-2 py-1 rounded ${
+                        order.paymentStatus === 'completed' ? 'bg-green-500/20 text-green-400' :
+                        order.paymentStatus === 'pending' ? 'bg-yellow-500/20 text-yellow-400' :
+                        'bg-neutral-500/20 text-neutral-400'
+                      }`}>
+                        {order.paymentStatus || 'pending'}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-right">
@@ -139,7 +194,7 @@ export default function AdminOrders() {
                   <span className="text-pearl-50 font-medium">${order.total.toFixed(2)}</span>
                 </div>
                 <p className="text-sm text-neutral-400 mb-2">
-                  {order.customer.firstName} {order.customer.lastName}
+                  {order.customer?.firstName} {order.customer?.lastName}
                 </p>
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-neutral-500">
@@ -207,11 +262,11 @@ export default function AdminOrders() {
               <div>
                 <h3 className="text-sm text-neutral-400 uppercase tracking-wider mb-3">Customer Information</h3>
                 <div className="bg-charcoal-800 rounded-lg p-4 space-y-2">
-                  <p className="text-pearl-50">{selectedOrder.customer.firstName} {selectedOrder.customer.lastName}</p>
-                  <p className="text-neutral-400 text-sm">{selectedOrder.customer.email}</p>
-                  <p className="text-neutral-400 text-sm">{selectedOrder.customer.phone}</p>
-                  <p className="text-neutral-400 text-sm">{selectedOrder.customer.address}</p>
-                  <p className="text-neutral-400 text-sm">{selectedOrder.customer.city}, {selectedOrder.customer.zipCode}</p>
+                  <p className="text-pearl-50">{selectedOrder.customer?.firstName} {selectedOrder.customer?.lastName}</p>
+                  <p className="text-neutral-400 text-sm">{selectedOrder.customer?.email}</p>
+                  <p className="text-neutral-400 text-sm">{selectedOrder.customer?.phone}</p>
+                  <p className="text-neutral-400 text-sm">{selectedOrder.customer?.address}</p>
+                  <p className="text-neutral-400 text-sm">{selectedOrder.customer?.city}, {selectedOrder.customer?.zipCode}</p>
                 </div>
               </div>
 

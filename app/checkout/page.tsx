@@ -36,10 +36,10 @@ export default function CheckoutPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     const newOrderId = `ORD-${Date.now()}`;
     setOrderId(newOrderId);
-    
+
     const order = {
       id: newOrderId,
       items: cart,
@@ -52,10 +52,29 @@ export default function CheckoutPage() {
       shipping: shipping,
       paymentFee: paymentFee,
     };
-    
-    const orders = JSON.parse(localStorage.getItem('orders') || '[]');
-    orders.push(order);
-    localStorage.setItem('orders', JSON.stringify(orders));
+
+    // Save to Supabase via API
+    try {
+      const res = await fetch('/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(order),
+      });
+
+      if (!res.ok) {
+        // Fallback to localStorage if Supabase fails
+        console.warn('Supabase save failed, falling back to localStorage');
+        const orders = JSON.parse(localStorage.getItem('orders') || '[]');
+        orders.push(order);
+        localStorage.setItem('orders', JSON.stringify(orders));
+      }
+    } catch (error) {
+      console.error('Failed to save order to Supabase:', error);
+      // Fallback to localStorage
+      const orders = JSON.parse(localStorage.getItem('orders') || '[]');
+      orders.push(order);
+      localStorage.setItem('orders', JSON.stringify(orders));
+    }
 
     // Send Email Notification
     try {

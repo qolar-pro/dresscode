@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { products as initialProducts, defaultImages } from '@/data/products';
-import { Plus, Edit, Trash2, Save, X, Package } from 'lucide-react';
+import { Plus, Edit, Trash2, Save, X, Package, Loader2 } from 'lucide-react';
 
 interface Product {
   id: number;
@@ -15,6 +15,7 @@ interface Product {
   colors: { name: string; hex: string; available: boolean }[];
   isNew?: boolean;
   isFeatured?: boolean;
+  stock?: number;
 }
 
 export default function AdminProducts() {
@@ -22,16 +23,45 @@ export default function AdminProducts() {
   const [isEditing, setIsEditing] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
-    const storedProducts = localStorage.getItem('products');
-    if (storedProducts) {
-      setProducts(JSON.parse(storedProducts));
-    } else {
+  // Fetch products from Supabase
+  const fetchProducts = useCallback(async () => {
+    try {
+      const res = await fetch('/api/products');
+      const data = await res.json();
+      if (data.products && data.products.length > 0) {
+        // Convert DB format to frontend format
+        const frontendProducts = data.products.map((p: any) => ({
+          id: p.id,
+          name: p.name,
+          price: p.price,
+          category: p.category,
+          description: p.description,
+          images: p.images || [],
+          sizes: p.sizes || [],
+          colors: p.colors || [],
+          isNew: p.is_new,
+          isFeatured: p.is_featured,
+          stock: p.stock,
+        }));
+        setProducts(frontendProducts);
+      } else {
+        // Fallback to default products if DB is empty
+        setProducts(initialProducts);
+      }
+    } catch (error) {
+      console.error('Failed to fetch products:', error);
       setProducts(initialProducts);
-      localStorage.setItem('products', JSON.stringify(initialProducts));
+    } finally {
+      setLoading(false);
     }
   }, []);
+
+  useEffect(() => {
+    fetchProducts();
+  }, [fetchProducts]);
 
   const filteredProducts = products.filter(product =>
     product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -43,28 +73,48 @@ export default function AdminProducts() {
     setIsEditing(true);
   };
 
-  const handleDelete = (productId: number) => {
-    if (confirm('Are you sure you want to delete this product?')) {
-      const updatedProducts = products.filter(p => p.id !== productId);
-      setProducts(updatedProducts);
-      localStorage.setItem('products', JSON.stringify(updatedProducts));
+  const handleDelete = async (productId: number) => {
+    if (!confirm('Are you sure you want to delete this product?')) return;
+
+    try {
+      const res = await fetch('/api/products', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: productId }),
+      });
+
+      if (!res.ok) throw new Error('Failed to delete product');
+      await fetchProducts();
+    } catch (error) {
+      console.error('Error deleting product:', error);
+      alert('Failed to delete product');
     }
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!editingProduct) return;
+    setSaving(true);
 
-    let updatedProducts: Product[];
-    if (products.find(p => p.id === editingProduct.id)) {
-      updatedProducts = products.map(p => p.id === editingProduct.id ? editingProduct : p);
-    } else {
-      updatedProducts = [...products, editingProduct];
+    try {
+      const isExisting = products.find(p => p.id === editingProduct.id);
+      const method = isExisting ? 'PUT' : 'POST';
+
+      const res = await fetch('/api/products', {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(editingProduct),
+      });
+
+      if (!res.ok) throw new Error('Failed to save product');
+      await fetchProducts();
+      setIsEditing(false);
+      setEditingProduct(null);
+    } catch (error) {
+      console.error('Error saving product:', error);
+      alert('Failed to save product');
+    } finally {
+      setSaving(false);
     }
-
-    setProducts(updatedProducts);
-    localStorage.setItem('products', JSON.stringify(updatedProducts));
-    setIsEditing(false);
-    setEditingProduct(null);
   };
 
   const handleNewProduct = () => {
@@ -86,6 +136,7 @@ export default function AdminProducts() {
         { name: 'Black', hex: '#171717', available: true },
       ],
       isNew: true,
+      stock: 100,
     };
     setEditingProduct(newProduct);
     setIsEditing(true);
@@ -99,6 +150,14 @@ export default function AdminProducts() {
     outerwear: '🧥',
     accessories: '👜',
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="w-8 h-8 text-pearl-400 animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -140,7 +199,6 @@ export default function AdminProducts() {
                   alt={product.name}
                   className="w-full h-full object-cover"
                   onError={(e) => {
-                    // Fallback to emoji if image fails to load
                     if (e.currentTarget.parentElement) {
                       e.currentTarget.style.display = 'none';
                       e.currentTarget.parentElement.innerHTML = `<span class="text-6xl">${emojiMap[product.category] || '👗'}</span>`;
@@ -168,6 +226,9 @@ export default function AdminProducts() {
                 )}
                 {product.isFeatured && (
                   <span className="text-xs bg-purple-500/20 text-purple-400 px-2 py-1 rounded">FEATURED</span>
+                )}
+                {product.stock !== undefined && product.stock < 10 && (
+                  <span className="text-xs bg-red-500/20 text-red-400 px-2 py-1 rounded">LOW STOCK</span>
                 )}
               </div>
 
@@ -225,8 +286,8 @@ export default function AdminProducts() {
                 />
               </div>
 
-              {/* Price & Category */}
-              <div className="grid grid-cols-2 gap-4">
+              {/* Price, Category, Stock */}
+              <div className="grid grid-cols-3 gap-4">
                 <div>
                   <label className="block text-xs text-neutral-400 uppercase tracking-wider mb-2">Price ($)</label>
                   <input
@@ -242,10 +303,9 @@ export default function AdminProducts() {
                     value={editingProduct.category}
                     onChange={(e) => {
                       const newCategory = e.target.value;
-                      // Update image to default for new category if current image is a default
                       const currentIsDefault = Object.values(defaultImages).includes(editingProduct.images[0]);
-                      setEditingProduct({ 
-                        ...editingProduct, 
+                      setEditingProduct({
+                        ...editingProduct,
                         category: newCategory,
                         images: currentIsDefault ? [defaultImages[newCategory]] : editingProduct.images
                       });
@@ -259,6 +319,15 @@ export default function AdminProducts() {
                     <option value="outerwear">Outerwear</option>
                     <option value="accessories">Accessories</option>
                   </select>
+                </div>
+                <div>
+                  <label className="block text-xs text-neutral-400 uppercase tracking-wider mb-2">Stock</label>
+                  <input
+                    type="number"
+                    value={editingProduct.stock ?? 100}
+                    onChange={(e) => setEditingProduct({ ...editingProduct, stock: parseInt(e.target.value) })}
+                    className="w-full px-4 py-3 bg-charcoal-800 border border-charcoal-700 rounded-lg text-pearl-50 focus:outline-none focus:border-pearl-50"
+                  />
                 </div>
               </div>
 
@@ -277,8 +346,7 @@ export default function AdminProducts() {
               <div>
                 <label className="block text-xs text-neutral-400 uppercase tracking-wider mb-2">Product Image</label>
                 <div className="space-y-4">
-                  {/* Image Preview */}
-                  {editingProduct.images[0] && editingProduct.images[0].startsWith('data:') ? (
+                  {editingProduct.images[0] && (
                     <div className="relative aspect-square bg-charcoal-800 rounded-lg overflow-hidden">
                       <img
                         src={editingProduct.images[0]}
@@ -286,41 +354,17 @@ export default function AdminProducts() {
                         className="w-full h-full object-cover"
                       />
                       <button
-                        onClick={() => setEditingProduct({ 
-                          ...editingProduct, 
-                          images: [defaultImages[editingProduct.category] || defaultImages.dresses] 
+                        onClick={() => setEditingProduct({
+                          ...editingProduct,
+                          images: [defaultImages[editingProduct.category] || defaultImages.dresses]
                         })}
                         className="absolute top-2 right-2 p-2 bg-red-500/80 hover:bg-red-500 rounded-lg transition-colors"
                       >
                         <X className="w-4 h-4 text-white" />
                       </button>
-                    </div>
-                  ) : editingProduct.images[0] && editingProduct.images[0].startsWith('http') ? (
-                    <div className="relative aspect-square bg-charcoal-800 rounded-lg overflow-hidden">
-                      <img
-                        src={editingProduct.images[0]}
-                        alt="Product preview"
-                        className="w-full h-full object-cover"
-                      />
-                      <button
-                        onClick={() => setEditingProduct({ 
-                          ...editingProduct, 
-                          images: [defaultImages[editingProduct.category] || defaultImages.dresses] 
-                        })}
-                        className="absolute top-2 right-2 p-2 bg-red-500/80 hover:bg-red-500 rounded-lg transition-colors"
-                      >
-                        <X className="w-4 h-4 text-white" />
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="border-2 border-dashed border-charcoal-700 rounded-lg p-8 text-center">
-                      <Package className="w-12 h-12 text-neutral-600 mx-auto mb-4" />
-                      <p className="text-neutral-400 mb-2">No custom image</p>
-                      <p className="text-sm text-neutral-500">Default category image will be used</p>
                     </div>
                   )}
 
-                  {/* Upload Button */}
                   <div className="flex gap-3">
                     <label className="flex-1">
                       <input
@@ -331,9 +375,9 @@ export default function AdminProducts() {
                           if (file) {
                             const reader = new FileReader();
                             reader.onloadend = () => {
-                              setEditingProduct({ 
-                                ...editingProduct, 
-                                images: [reader.result as string] 
+                              setEditingProduct({
+                                ...editingProduct,
+                                images: [reader.result as string]
                               });
                             };
                             reader.readAsDataURL(file);
@@ -342,19 +386,9 @@ export default function AdminProducts() {
                         className="hidden"
                       />
                       <div className="w-full px-4 py-3 bg-charcoal-800 border border-charcoal-700 rounded-lg text-center cursor-pointer hover:bg-charcoal-700 transition-colors">
-                        <span className="text-sm text-pearl-50">📁 Upload from Computer</span>
+                        <span className="text-sm text-pearl-50">Upload from Computer</span>
                       </div>
                     </label>
-                  </div>
-
-                  {/* Or URL Input */}
-                  <div className="relative">
-                    <div className="absolute inset-0 flex items-center">
-                      <div className="w-full border-t border-charcoal-700" />
-                    </div>
-                    <div className="relative flex justify-center text-xs uppercase">
-                      <span className="bg-charcoal-900 px-2 text-neutral-500">Or paste image URL</span>
-                    </div>
                   </div>
 
                   <input
@@ -374,7 +408,7 @@ export default function AdminProducts() {
                   {['XS', 'S', 'M', 'L', 'XL'].map((size) => {
                     const sizeObj = editingProduct.sizes.find(s => s.name === size);
                     const isAvailable = sizeObj?.available ?? true;
-                    
+
                     return (
                       <button
                         key={size}
@@ -436,10 +470,20 @@ export default function AdminProducts() {
               </button>
               <button
                 onClick={handleSave}
-                className="flex items-center gap-2 bg-pearl-50 text-charcoal-900 px-6 py-3 rounded-lg font-medium hover:bg-pearl-100 transition-colors"
+                disabled={saving}
+                className="flex items-center gap-2 bg-pearl-50 text-charcoal-900 px-6 py-3 rounded-lg font-medium hover:bg-pearl-100 transition-colors disabled:opacity-50"
               >
-                <Save className="w-4 h-4" />
-                Save Product
+                {saving ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4" />
+                    Save Product
+                  </>
+                )}
               </button>
             </div>
           </div>

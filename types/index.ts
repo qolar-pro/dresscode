@@ -9,6 +9,7 @@ export interface Product {
   colors: Color[];
   isNew?: boolean;
   isFeatured?: boolean;
+  stock?: number;
 }
 
 export interface Size {
@@ -30,10 +31,16 @@ export interface CartItem {
 }
 
 export interface Order {
+  id: string;
   items: CartItem[];
   customer: CustomerInfo;
   total: number;
   date: string;
+  paymentMethod: string;
+  paymentStatus?: string;
+  subtotal?: number;
+  shipping?: number;
+  paymentFee?: number;
 }
 
 export interface CustomerInfo {

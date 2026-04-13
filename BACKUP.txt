@@ -1,0 +1,169 @@
+# 📁 MASTER PROJECT DOSSIER: DRESS CODE E-COMMERCE
+*INSTRUCTIONS FOR NEXT SESSION: Type "preview the files and await for further instructions" to resume work.*
+
+---
+
+## 🟢 PROJECT STATUS (AS OF TODAY)
+| **Component** | **Status** | **Notes** |
+|---------------|------------|-----------|
+| **Codebase** | ✅ Complete & Pushed | GitHub: `qolar-pro/dresscode` (Branch: `main`) |
+| **Deployment** | ✅ Live | Vercel: `blancographics.xyz` (HTTPS/SSL active) |
+| **Frontend** | ✅ Production UI | Next.js 14, TypeScript, Tailwind, Luxury Aesthetic |
+| **Admin Panel** | ✅ Functional | Secure login, session timeout, product/order management |
+| **Email System** | ✅ Integrated | Resend API connected, domain TXT records verified, test emails working |
+| **Legal/SEO** | ✅ Complete | Privacy, Terms, Returns, Sitemap, Robots, Open Graph, Meta tags |
+| **Data Storage** | ⚠️ LocalStorage Only | **BLOCKER FOR SALE** – Needs migration to Supabase/Firebase |
+| **Payments** | ⚠️ COD Only + Stripe Shell | **BLOCKER FOR SALE** – Needs Stripe Checkout integration |
+| **Images** | ✅ Base64/URL Upload | Works locally, needs Cloud storage for production scale |
+
+---
+
+## ✅ COMPLETED FEATURES (DETAILED)
+
+### 🎨 **Frontend & UX**
+- [x] Luxury minimalist design system (Charcoal/Pearl palette, glassmorphism, kinetic typography)
+- [x] Light/Dark mode toggle with persistent preference
+- [x] Language switcher (English / Greek) with full translation context
+- [x] Mobile-first responsive layout + floating glass bottom navigation dock
+- [x] Bento-grid homepage with parallax scrolling & animated sections
+- [x] Product catalog with category filtering, sorting, size/color selectors
+- [x] Shopping cart with localStorage persistence & slide-out drawer
+- [x] Checkout flow with payment method selection (COD active, Stripe UI ready)
+- [x] Image upload system (Base64 fallback + URL paste) with category placeholder images
+- [x] Custom 404 handling, smooth transitions, hover effects, loading states
+
+### 🔐 **Admin Panel & Security**
+- [x] Secure login (`lib/admin-config.ts`) with SHA-256 password hashing
+- [x] 30-minute session timeout + brute-force lockout (5 attempts → 15 min cooldown)
+- [x] Activity logging (login, logout, session expiry stored in localStorage)
+- [x] Product management: Add/Edit/Delete with image upload & category-based defaults
+- [x] Order management: View all orders, search/filter, detailed order modal
+- [x] Dashboard stats: Total orders, revenue, customer count, product count
+- [x] Test email button (triggers Resend API for verification)
+
+### 📧 **Email & Notifications**
+- [x] Resend integration (`app/api/email/send-order/route.ts`)
+- [x] Automatic order confirmation emails to customer + admin
+- [x] Custom HTML email template (branded, responsive, order details)
+- [x] Domain verification completed (DKIM, SPF TXT records added to Namecheap)
+
+### ⚖️ **Legal, SEO & Compliance**
+- [x] Legal pages: `/legal/privacy-policy`, `/legal/terms-of-service`, `/legal/return-policy`
+- [x] Footer links updated to legal pages
+- [x] `sitemap.ts` & `robots.ts` auto-generated for search engines
+- [x] Open Graph & Twitter Card meta tags configured
+- [x] GDPR-ready privacy policy structure, cookie consent placeholder ready
+
+### ️ **Infrastructure & DevOps**
+- [x] GitHub repository initialized, `.gitignore` configured (node_modules, .next, env)
+- [x] Vercel deployment pipeline active (auto-builds on push)
+- [x] Custom domain `blancographics.xyz` connected via Namecheap DNS (A + CNAME records)
+- [x] SSL certificate auto-provisioned by Vercel
+- [x] Environment variables managed in Vercel Dashboard (`RESEND_API_KEY` added)
+
+---
+
+## 📁 CURRENT CODEBASE STRUCTURE
+```
+qwengame/
+├── app/
+│   ├── page.tsx              # Homepage (Bento grid, editorial, newsletter)
+│   ├── layout.tsx            # Root layout, metadata, providers
+│   ├── globals.css           # Tailwind imports, luxury utilities, animations
+│   ├── shop/page.tsx         # Product catalog + filters
+│   ├── product/[id]/page.tsx # Product detail + cart integration
+│   ├── checkout/page.tsx     # Checkout form + payment selection + email trigger
+│   ├── contact/page.tsx      # Contact form + map placeholder
+│   ├── admin/
+│   │   ├── page.tsx          # Admin login (SHA-256 auth)
+│   │   ├── layout.tsx        # Admin shell (sidebar, session guard, theme/lang)
+│   │   ├── dashboard/page.tsx# Stats, test email button, recent orders
+│   │   ├── orders/page.tsx   # Order table, search, detail modal
+│   │   └── products/page.tsx # Product grid, CRUD modal, image upload
+│   ├── legal/                # Privacy, Terms, Returns pages
+│   ├── api/email/send-order/ # Resend API route
+│   ├── sitemap.ts & robots.ts
+├── components/
+│   ├── Header.tsx, Footer.tsx, CartDrawer.tsx, BottomNav.tsx, MainContent.tsx
+├── context/
+│   ├── CartContext.tsx, LanguageContext.tsx, ThemeContext.tsx
+├── lib/
+│   ├── admin-config.ts       # Auth hash, session timeout, lockout logic
+│   └── payment-config.ts     # Payment gateway structure (COD + Stripe shell)
+├── data/products.ts          # Default products + placeholder images
+├── types/index.ts            # TypeScript interfaces
+└── package.json, tsconfig, tailwind, next.config, .gitignore
+```
+
+---
+
+## 🔄 WHAT'S LEFT: PRODUCTION-READY CHECKLIST
+
+### 🗄️ **1. Database Migration (CRITICAL)**
+- [ ] Replace `localStorage` with **Supabase (PostgreSQL)** or **Firebase Firestore**
+- [ ] Migrate Products table (id, name, price, category, description, images, sizes, colors, isNew, isFeatured)
+- [ ] Migrate Orders table (id, items, customer, total, date, paymentMethod, status)
+- [ ] Implement real-time sync across devices
+- [ ] Add server-side data fetching for Shop/Product pages
+
+### 💳 **2. Real Payment Integration**
+- [ ] Install `@stripe/stripe-js` & `stripe`
+- [ ] Create `/api/checkout/session` route to generate Stripe Checkout
+- [ ] Replace COD-only flow with dynamic payment selection
+- [ ] Handle webhook (`/api/webhooks/stripe`) for payment status updates
+- [ ] Update order status on successful payment
+- [ ] Test with Stripe test cards, then switch to live keys
+
+### 🖼️ **3. Image & Media Optimization**
+- [ ] Replace Base64 uploads with **Cloudinary** or **Supabase Storage**
+- [ ] Implement Next.js `<Image>` component with `sizes` & `priority`
+- [ ] Add image compression & lazy loading
+- [ ] Create blur placeholders for product cards
+
+### 🔒 **4. Security & Performance Hardening**
+- [ ] Add rate limiting to `/admin` login & API routes
+- [ ] Sanitize all user inputs (checkout, contact form, product editor)
+- [ ] Enable Vercel Security Headers (CSP, HSTS, X-Frame-Options)
+- [ ] Add global error boundary & custom 404 page
+- [ ] Run Lighthouse audit (target: 90+ Performance, Accessibility, SEO)
+- [ ] Cross-browser/device testing (iOS Safari, Android Chrome, Desktop)
+
+### 📦 **5. Deployment & Environment Polish**
+- [ ] Move all secrets to `.env.local` + Vercel Environment Variables
+- [ ] Add staging environment for testing before production pushes
+- [ ] Set up automatic backups (Supabase/Firebase or Vercel logs)
+
+---
+
+## 📈 WHAT'S LEFT: SALES-READY CHECKLIST
+
+### 📄 **Documentation & Handover**
+- [ ] Business Owner Manual (PDF): Admin login, adding products, processing orders, email setup
+- [ ] Setup/Deployment Guide: Git clone, install, env vars, Vercel deploy, domain connect
+- [ ] API/Env Reference: Required keys, Resend/Stripe setup steps, database config
+- [ ] Post-Sale Support Package (optional upsell: 30-day bug fixes + minor tweaks)
+
+### 🎥 **Demo & Sales Assets**
+- [ ] 3-minute screen recording: Homepage → Shop → Cart → Checkout → Admin Dashboard → Email receipt
+- [ ] Screenshot pack: Mobile/Desktop views, Admin panel, Checkout flow, Email template
+- [ ] Feature list one-pager (PDF)
+- [ ] Live demo URL + temporary admin credentials for buyers
+- [ ] Pricing tiers: Full sale ($1,000–1,200) vs Template license ($300–500)
+
+### 🤝 **Transfer & Legal**
+- [ ] Domain transfer guide (Namecheap → buyer)
+- [ ] Vercel project transfer steps
+- [ ] Resend domain handover checklist
+- [ ] Simple sales agreement template (escrow/payment terms)
+- [ ] Prepare listing draft (Acquire.com, Flippa, Greek business groups)
+
+---
+
+## 🚀 HOW TO CONTINUE NEXT SESSION
+1. **Save this document.** (You are looking at the file now)
+2. When you're ready, open a new chat and paste exactly:
+   > `"preview the files and await for further instructions"`
+3. I will:
+   - Load the current project state
+   - Resume exactly where we left off
+   - Start executing the next phase (Database Migration → Stripe → Polish → Sales Package)

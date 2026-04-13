@@ -1,22 +1,60 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useLanguage } from '@/context/LanguageContext';
-import { products as defaultProducts, categories, sortOptions, defaultImages } from '@/data/products';
+import { categories, sortOptions, defaultImages } from '@/data/products';
 import Link from 'next/link';
+import { Loader2 } from 'lucide-react';
+
+interface Product {
+  id: number;
+  name: string;
+  price: number;
+  category: string;
+  description: string;
+  images: string[];
+  sizes: { name: string; available: boolean }[];
+  colors: { name: string; hex: string; available: boolean }[];
+  isNew?: boolean;
+  isFeatured?: boolean;
+}
 
 export default function ShopPage() {
   const { t } = useLanguage();
-  const [products, setProducts] = useState(defaultProducts);
+  const [products, setProducts] = useState<Product[]>([]);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedSort, setSelectedSort] = useState('newest');
-  const [filteredProducts, setFilteredProducts] = useState(defaultProducts);
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
 
+  // Fetch products from Supabase API
   useEffect(() => {
-    const storedProducts = localStorage.getItem('products');
-    if (storedProducts) {
-      setProducts(JSON.parse(storedProducts));
+    async function fetchProducts() {
+      try {
+        const res = await fetch('/api/products');
+        const data = await res.json();
+        if (data.products && data.products.length > 0) {
+          const frontendProducts = data.products.map((p: any) => ({
+            id: p.id,
+            name: p.name,
+            price: p.price,
+            category: p.category,
+            description: p.description,
+            images: p.images || [],
+            sizes: p.sizes || [],
+            colors: p.colors || [],
+            isNew: p.is_new,
+            isFeatured: p.is_featured,
+          }));
+          setProducts(frontendProducts);
+        }
+      } catch (error) {
+        console.error('Failed to fetch products:', error);
+      } finally {
+        setLoading(false);
+      }
     }
+    fetchProducts();
   }, []);
 
   useEffect(() => {
@@ -52,6 +90,14 @@ export default function ShopPage() {
     return t(key);
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 text-neutral-400 animate-spin" />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-white dark:bg-neutral-950">
       {/* Page Header with Background Image */}
@@ -64,7 +110,7 @@ export default function ShopPage() {
           />
           <div className="absolute inset-0 bg-gradient-to-r from-white/95 via-white/80 to-white/60 dark:from-neutral-950/95 dark:via-neutral-950/80 dark:to-neutral-950/60" />
         </div>
-        
+
         <div className="container mx-auto px-4 py-24 relative z-10">
           <div className="inline-flex items-center gap-3 mb-6">
             <div className="w-8 h-[1px] bg-neutral-900 dark:bg-white" />
@@ -139,17 +185,8 @@ export default function ShopPage() {
   );
 }
 
-function ProductCard({ product }: { product: any }) {
+function ProductCard({ product }: { product: Product }) {
   const { t } = useLanguage();
-  
-  const emojiMap: Record<string, string> = {
-    dresses: '👗',
-    tops: '👚',
-    pants: '👖',
-    skirts: '👗',
-    outerwear: '🧥',
-    accessories: '👜',
-  };
 
   return (
     <Link href={`/product/${product.id}`} className="group">
@@ -177,7 +214,7 @@ function ProductCard({ product }: { product: any }) {
             {t('shop.new')}
           </span>
         )}
-        {!product.sizes.some((s: any) => s.available) && (
+        {!product.sizes.some(s => s.available) && (
           <div className="absolute inset-0 bg-neutral-900/60 dark:bg-white/60 flex items-center justify-center">
             <span className="text-white dark:text-neutral-900 text-xs tracking-[0.2em] uppercase font-medium">{t('shop.soldOut')}</span>
           </div>

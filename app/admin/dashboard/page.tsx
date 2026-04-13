@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { ShoppingBag, TrendingUp, Users, Package, Send, Mail } from 'lucide-react';
+import { ShoppingBag, TrendingUp, Users, Package, Send, Mail, Loader2 } from 'lucide-react';
 
 interface Order {
   id: string;
@@ -16,15 +16,41 @@ interface Order {
 export default function AdminDashboard() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [totalRevenue, setTotalRevenue] = useState(0);
+  const [productCount, setProductCount] = useState(0);
   const [emailStatus, setEmailStatus] = useState<'idle' | 'sending' | 'success' | 'error'>('idle');
+  const [loading, setLoading] = useState(true);
+
+  const fetchData = useCallback(async () => {
+    try {
+      // Fetch orders
+      const ordersRes = await fetch('/api/orders');
+      const ordersData = await ordersRes.json();
+      const fetchedOrders = ordersData.orders || [];
+      setOrders(fetchedOrders);
+
+      const revenue = fetchedOrders.reduce((sum: number, order: Order) => sum + order.total, 0);
+      setTotalRevenue(revenue);
+
+      // Fetch product count
+      const productsRes = await fetch('/api/products');
+      const productsData = await productsRes.json();
+      setProductCount(productsData.products?.length || 0);
+    } catch (error) {
+      console.error('Failed to fetch dashboard data:', error);
+      // Fallback to localStorage
+      const storedOrders = JSON.parse(localStorage.getItem('orders') || '[]');
+      setOrders(storedOrders);
+      const revenue = storedOrders.reduce((sum: number, order: Order) => sum + order.total, 0);
+      setTotalRevenue(revenue);
+      setProductCount(12);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    const storedOrders = JSON.parse(localStorage.getItem('orders') || '[]');
-    setOrders(storedOrders);
-    
-    const revenue = storedOrders.reduce((sum: number, order: Order) => sum + order.total, 0);
-    setTotalRevenue(revenue);
-  }, []);
+    fetchData();
+  }, [fetchData]);
 
   const handleSendTestEmail = async () => {
     setEmailStatus('sending');
@@ -70,18 +96,26 @@ export default function AdminDashboard() {
     {
       icon: Users,
       label: 'Customers',
-      value: new Set(orders.map(o => o.customer.email)).size,
+      value: new Set(orders.map(o => o.customer?.email)).size,
       color: 'bg-purple-500/10 text-purple-400',
     },
     {
       icon: Package,
       label: 'Products',
-      value: '12',
+      value: productCount,
       color: 'bg-orange-500/10 text-orange-400',
     },
   ];
 
   const recentOrders = orders.slice(-5).reverse();
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="w-8 h-8 text-pearl-400 animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">
@@ -91,7 +125,7 @@ export default function AdminDashboard() {
           <h1 className="font-display text-3xl text-pearl-50 mb-2">Dashboard</h1>
           <p className="text-neutral-400">Welcome back! Here's your store overview.</p>
         </div>
-        
+
         {/* Test Email Button */}
         <button
           onClick={handleSendTestEmail}
@@ -130,7 +164,7 @@ export default function AdminDashboard() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {stats.map((stat, index) => {
           const Icon = stat.icon;
-          
+
           return (
             <div key={index} className="bg-charcoal-900 rounded-xl p-6">
               <div className="flex items-center justify-between mb-4">
@@ -169,7 +203,7 @@ export default function AdminDashboard() {
                 <div>
                   <p className="text-pearl-50 font-medium mb-1">{order.id}</p>
                   <p className="text-sm text-neutral-400">
-                    {order.customer.firstName} {order.customer.lastName}
+                    {order.customer?.firstName} {order.customer?.lastName}
                   </p>
                 </div>
                 <div className="text-right">
@@ -186,8 +220,8 @@ export default function AdminDashboard() {
 
       {/* Quick Actions */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Link 
-          href="/admin/orders" 
+        <Link
+          href="/admin/orders"
           className="bg-charcoal-900 rounded-xl p-6 hover:bg-charcoal-800 transition-colors group"
         >
           <ShoppingBag className="w-8 h-8 text-pearl-400 mb-4 group-hover:text-pearl-50" />
@@ -195,8 +229,8 @@ export default function AdminDashboard() {
           <p className="text-sm text-neutral-400">View and manage all customer orders</p>
         </Link>
 
-        <Link 
-          href="/admin/products" 
+        <Link
+          href="/admin/products"
           className="bg-charcoal-900 rounded-xl p-6 hover:bg-charcoal-800 transition-colors group"
         >
           <Package className="w-8 h-8 text-pearl-400 mb-4 group-hover:text-pearl-50" />
