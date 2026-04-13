@@ -11,17 +11,50 @@ import Link from 'next/link';
 export default function ProductPage() {
   const params = useParams();
   const router = useRouter();
-  const [products, setProducts] = useState(defaultProducts);
-  
+  const [products, setProducts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch products from Supabase API
   useEffect(() => {
-    const storedProducts = localStorage.getItem('products');
-    if (storedProducts) {
-      setProducts(JSON.parse(storedProducts));
+    async function fetchProducts() {
+      try {
+        const res = await fetch('/api/products');
+        const data = await res.json();
+        if (data.products) {
+          const frontendProducts = data.products.map((p: any) => ({
+            id: p.id,
+            name: p.name,
+            price: p.price,
+            category: p.category,
+            description: p.description,
+            images: p.images || [],
+            sizes: p.sizes || [],
+            colors: p.colors || [],
+            isNew: p.is_new,
+            isFeatured: p.is_featured,
+          }));
+          setProducts(frontendProducts);
+        }
+      } catch (error) {
+        console.error('Failed to fetch product:', error);
+      } finally {
+        setLoading(false);
+      }
     }
+    fetchProducts();
   }, []);
 
-  const productId = parseInt(params.id as string);
-  const product = products.find(p => p.id === productId);
+  // Use string comparison to avoid issues with large IDs
+  const productId = params.id as string;
+  const product = products.find(p => String(p.id) === productId);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-neutral-950">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-neutral-900 dark:border-white"></div>
+      </div>
+    );
+  }
 
   if (!product) {
     return (

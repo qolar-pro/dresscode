@@ -6,7 +6,7 @@ import { supabaseAdmin } from './supabase';
  */
 export async function uploadImage(
   file: File,
-  bucketName: string = 'product-images'
+  bucketName: string = 'product_images'
 ): Promise<string> {
   // Sanitize filename to prevent collisions and illegal characters
   const timestamp = Date.now();
