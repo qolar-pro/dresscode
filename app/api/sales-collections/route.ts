@@ -12,7 +12,14 @@ export async function GET() {
       console.warn('Sales collections table error:', error.message);
       return NextResponse.json({ collections: [] });
     }
-    return NextResponse.json({ collections: data || [] });
+
+    // Ensure product_ids is always an array
+    const safeData = (data || []).map((c: any) => ({
+      ...c,
+      product_ids: Array.isArray(c.product_ids) ? c.product_ids : [],
+    }));
+
+    return NextResponse.json({ collections: safeData });
   } catch (error: any) {
     console.error('Sales Collections GET error:', error);
     return NextResponse.json({ collections: [] });
@@ -22,22 +29,29 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
+    
+    const collectionData = {
+      name: body.name || 'Unnamed Collection',
+      description: body.description || '',
+      discount_percentage: body.discount_percentage || 0,
+      image_url: body.image_url || '',
+      product_ids: body.product_ids || [],
+      is_active: body.is_active !== false,
+      start_date: body.start_date || null,
+      end_date: body.end_date || null,
+    };
+
     const { data, error } = await supabaseAdmin
       .from('sales_collections')
-      .insert([{
-        name: body.name,
-        description: body.description || '',
-        discount_percentage: body.discount_percentage || 0,
-        image_url: body.image_url || '',
-        product_ids: body.product_ids || [],
-        is_active: body.is_active ?? true,
-        start_date: body.start_date || null,
-        end_date: body.end_date || null,
-      }])
+      .insert([collectionData])
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error('Sales Collections insert error:', error);
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+    
     return NextResponse.json({ collection: data }, { status: 201 });
   } catch (error: any) {
     console.error('Sales Collections POST error:', error);
@@ -49,6 +63,7 @@ export async function PATCH(request: NextRequest) {
   try {
     const body = await request.json();
     const { id, ...updates } = body;
+    
     if (!id) {
       return NextResponse.json({ error: 'Collection ID is required' }, { status: 400 });
     }
@@ -72,6 +87,7 @@ export async function DELETE(request: NextRequest) {
   try {
     const body = await request.json();
     const { id } = body;
+    
     if (!id) {
       return NextResponse.json({ error: 'Collection ID is required' }, { status: 400 });
     }

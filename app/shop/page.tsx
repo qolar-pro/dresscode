@@ -63,13 +63,8 @@ export default function ShopPage() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const [productsRes, collectionsRes] = await Promise.all([
-          fetch('/api/products'),
-          fetch('/api/sales-collections'),
-        ]);
-
+        const productsRes = await fetch('/api/products');
         const productsData = await productsRes.json();
-        const collectionsData = await collectionsRes.json();
 
         if (productsData.products && Array.isArray(productsData.products)) {
           const frontendProducts = productsData.products.map((p: any) => ({
@@ -87,15 +82,24 @@ export default function ShopPage() {
           setProducts(frontendProducts);
         }
 
-        if (collectionsData.collections && Array.isArray(collectionsData.collections)) {
-          const activeCollections = collectionsData.collections.filter((c: any) => c.is_active);
-          setSalesCollections(activeCollections);
-          if (activeCollections.length > 0) {
-            setActiveCollection(activeCollections[0]);
+        // Fetch collections separately so it doesn't break if the API fails
+        try {
+          const collectionsRes = await fetch('/api/sales-collections');
+          const collectionsData = await collectionsRes.json();
+
+          if (collectionsData.collections && Array.isArray(collectionsData.collections)) {
+            const activeCollections = collectionsData.collections.filter((c: any) => c.is_active);
+            setSalesCollections(activeCollections);
+            if (activeCollections.length > 0) {
+              setActiveCollection(activeCollections[0]);
+            }
           }
+        } catch (collectionsError) {
+          console.warn('Sales collections not available yet:', collectionsError);
+          setSalesCollections([]);
         }
       } catch (error) {
-        console.error('Failed to fetch data:', error);
+        console.error('Failed to fetch products:', error);
       } finally {
         setLoading(false);
       }

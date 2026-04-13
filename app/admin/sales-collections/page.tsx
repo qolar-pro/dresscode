@@ -37,8 +37,16 @@ export default function AdminSalesCollections() {
       const collectionsData = await collectionsRes.json();
       const productsData = await productsRes.json();
 
-      if (collectionsData.collections) setCollections(collectionsData.collections);
-      if (productsData.products) setProducts(productsData.products);
+      if (collectionsData.collections && Array.isArray(collectionsData.collections)) {
+        setCollections(collectionsData.collections.map((c: any) => ({
+          ...c,
+          product_ids: Array.isArray(c.product_ids) ? c.product_ids : [],
+        })));
+      }
+      
+      if (productsData.products && Array.isArray(productsData.products)) {
+        setProducts(productsData.products);
+      }
     } catch (error) {
       console.error('Failed to fetch data:', error);
     } finally {
@@ -81,19 +89,34 @@ export default function AdminSalesCollections() {
       const isExisting = collections.find(c => c.id === editingCollection.id);
       const method = isExisting ? 'PATCH' : 'POST';
 
+      const payload = {
+        id: editingCollection.id,
+        name: editingCollection.name,
+        description: editingCollection.description,
+        discount_percentage: editingCollection.discount_percentage,
+        image_url: editingCollection.image_url,
+        product_ids: editingCollection.product_ids || [],
+        is_active: editingCollection.is_active,
+      };
+
       const res = await fetch('/api/sales-collections', {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(editingCollection),
+        body: JSON.stringify(payload),
       });
 
-      if (!res.ok) throw new Error('Failed to save collection');
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to save collection');
+      }
+
       await fetchData();
       setIsEditing(false);
       setEditingCollection(null);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving collection:', error);
-      alert('Failed to save collection');
+      alert('Error: ' + error.message);
     } finally {
       setSaving(false);
     }
