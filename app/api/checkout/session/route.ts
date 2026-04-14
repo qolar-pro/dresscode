@@ -84,12 +84,12 @@ export async function POST(request: NextRequest) {
             images: productImages?.[0] ? [productImages[0]] : [],
           },
           unit_amount: Math.round(usePrice * 100),
-          metadata: {
-            productId: String(productId),
-            size: item.size || '',
-          },
         },
         quantity: item.quantity || 1,
+        metadata: {
+          productId: String(productId),
+          size: item.size || '',
+        },
       });
     }
 
