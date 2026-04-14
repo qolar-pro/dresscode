@@ -17,8 +17,26 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [showLangDropdown, setShowLangDropdown] = useState(false);
 
   // Check authentication via server-side cookie verification
+  const [secretSlug, setSecretSlug] = useState<string>('admin');
+
   useEffect(() => {
-    if (pathname === '/admin') {
+    // Fetch the secret slug from config endpoint on mount
+    async function fetchSlug() {
+      try {
+        const res = await fetch('/api/admin/config');
+        if (res.ok) {
+          const data = await res.json();
+          setSecretSlug(data.secretUrl || 'admin');
+        }
+      } catch {
+        // Use default
+      }
+    }
+    fetchSlug();
+  }, []);
+
+  useEffect(() => {
+    if (pathname === `/${secretSlug}`) {
       setIsLoading(false);
       return;
     }
@@ -29,10 +47,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         if (res.ok) {
           setIsAuthenticated(true);
         } else {
-          router.push('/admin');
+          router.push(`/${secretSlug}`);
         }
       } catch {
-        router.push('/admin');
+        router.push(`/${secretSlug}`);
       } finally {
         setIsLoading(false);
       }
@@ -43,7 +61,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     // Check session every minute
     const interval = setInterval(checkAuth, 60000);
     return () => clearInterval(interval);
-  }, [router, pathname]);
+  }, [router, pathname, secretSlug]);
 
   const handleLogout = async () => {
     try {
@@ -51,11 +69,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     } catch {
       // Logout anyway
     }
-    router.push('/admin');
+    router.push(`/${secretSlug}`);
   };
 
   // Show login page without layout
-  if (pathname === '/admin') {
+  if (pathname === `/${secretSlug}`) {
     return <>{children}</>;
   }
 
@@ -77,10 +95,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   const navItems = [
-    { href: '/admin/dashboard', icon: Package, label: 'Dashboard' },
-    { href: '/admin/orders', icon: ShoppingBag, label: 'Orders' },
-    { href: '/admin/products', icon: Package, label: 'Products' },
-    { href: '/admin/sales-collections', icon: Tag, label: 'Sales Collections' },
+    { href: `/${secretSlug}/dashboard`, icon: Package, label: 'Dashboard' },
+    { href: `/${secretSlug}/orders`, icon: ShoppingBag, label: 'Orders' },
+    { href: `/${secretSlug}/products`, icon: Package, label: 'Products' },
+    { href: `/${secretSlug}/sales-collections`, icon: Tag, label: 'Sales Collections' },
   ];
 
   return (

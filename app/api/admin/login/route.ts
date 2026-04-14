@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { serialize } from 'cookie';
 import { sessions, SESSION_TTL, generateSessionToken } from '@/lib/admin-sessions';
+import { getClientIP, isIPAllowed } from '@/lib/ip-whitelist';
 
 // Password hash read from environment variable at request time (not module load)
 
@@ -40,6 +41,12 @@ function checkLoginRateLimit(ip: string): { allowed: boolean; retryAfter?: numbe
 
 export async function POST(request: NextRequest) {
   try {
+    // IP whitelist check
+    const ip = getClientIP(request);
+    if (!isIPAllowed(ip, process.env.ADMIN_ALLOWED_IPS)) {
+      return NextResponse.json({ error: 'Not Found' }, { status: 404 });
+    }
+
     const { password } = await request.json();
 
     if (!password) {
@@ -84,7 +91,7 @@ export async function POST(request: NextRequest) {
       path: '/',
     });
 
-    const response = NextResponse.json({ success: true });
+    const response = NextResponse.json({ success: true, secretUrl: process.env.ADMIN_SECRET_URL || 'admin' });
     response.headers.set('Set-Cookie', cookie);
 
     return response;

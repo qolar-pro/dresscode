@@ -14,6 +14,11 @@
  * - Sessions stored in-memory (Map). For production, use Redis or database.
  * - Session TTL: 30 minutes (configurable in lib/admin-sessions.ts)
  * - Rate limiting: 5 attempts per 15 min window, then 15 min lockout
+ *
+ * IP WHITELISTING:
+ * - Set ADMIN_ALLOWED_IPS in .env.local (comma-separated)
+ * - Secret admin URL slug set via ADMIN_SECRET_URL
+ * - Emergency master password via ADMIN_MASTER_PASSWORD
  */
 
 export const ADMIN_CONFIG = {
@@ -31,4 +36,13 @@ export const ADMIN_CONFIG = {
 
   // Admin email for notifications
   ADMIN_EMAIL: process.env.ADMIN_EMAIL || 'admin@dresscode.com',
+
+  // Secret admin URL slug (generated at runtime)
+  ADMIN_SECRET_URL: process.env.ADMIN_SECRET_URL || '',
+
+  // IP whitelist
+  ADMIN_ALLOWED_IPS: process.env.ADMIN_ALLOWED_IPS || '',
+
+  // Emergency master password (fallback access)
+  ADMIN_MASTER_PASSWORD: process.env.ADMIN_MASTER_PASSWORD || '',
 };

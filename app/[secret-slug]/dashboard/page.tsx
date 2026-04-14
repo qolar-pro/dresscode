@@ -19,6 +19,23 @@ export default function AdminDashboard() {
   const [productCount, setProductCount] = useState(0);
   const [emailStatus, setEmailStatus] = useState<'idle' | 'sending' | 'success' | 'error'>('idle');
   const [loading, setLoading] = useState(true);
+  const [slug, setSlug] = useState<string>('admin');
+
+  // Fetch secret slug on mount
+  useEffect(() => {
+    async function fetchSlug() {
+      try {
+        const res = await fetch('/api/admin/config');
+        if (res.ok) {
+          const data = await res.json();
+          setSlug(data.secretUrl || 'admin');
+        }
+      } catch {
+        // Use default
+      }
+    }
+    fetchSlug();
+  }, []);
 
   const fetchData = useCallback(async () => {
     try {
@@ -183,7 +200,7 @@ export default function AdminDashboard() {
       <div className="bg-charcoal-900 rounded-xl p-6">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-display text-pearl-50">Recent Orders</h2>
-          <Link href="/admin/orders" className="text-sm text-pearl-400 hover:text-pearl-50">
+          <Link href={`/${slug}/orders`} className="text-sm text-pearl-400 hover:text-pearl-50">
             View All →
           </Link>
         </div>

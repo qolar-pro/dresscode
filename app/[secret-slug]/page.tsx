@@ -20,7 +20,9 @@ export default function AdminLogin() {
     try {
       const res = await fetch('/api/admin/verify');
       if (res.ok) {
-        router.push('/admin/dashboard');
+        const data = await res.json();
+        const slug = data.secretUrl || 'admin';
+        router.push(`/${slug}/dashboard`);
       }
     } catch {
       // Not authenticated, stay on login
@@ -52,8 +54,9 @@ export default function AdminLogin() {
       const data = await res.json();
 
       if (res.ok) {
-        // Successful login - redirect
-        router.push('/admin/dashboard');
+        // Successful login - redirect to secret URL
+        const slug = data.secretUrl || 'admin';
+        router.push(`/${slug}/dashboard`);
       } else if (res.status === 429) {
         // Rate limited
         const retryAfter = parseInt(res.headers.get('Retry-After') || '900');

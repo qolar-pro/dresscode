@@ -1,0 +1,92 @@
+# Task: Implement Maximum Security for Admin Panel (IP Restriction + Hidden URL)
+
+## Context
+- Project is deployed on Vercel at: blancographics.xyz
+- Admin panel currently accessible at: /admin (with login page visible to everyone)
+- Need to implement IP whitelisting + hidden admin URL
+
+## What to Implement
+
+### 1. Generate Secret Admin URL
+- Use `crypto.randomBytes(12).toString('hex')` to generate a random slug
+- Example: `bd62fc87509ca` (will become blancographics.xyz/bd62fc87509ca)
+- This will replace the current `/admin` route
+
+### 2. Create IP Whitelist Middleware
+- Create `middleware.ts` in the project root (same level as `app/`)
+- Only allow specific IPs to access the secret admin URL
+- All other IPs should get a FAKE 404 (Page Not Found) for BOTH:
+  - The old `/admin` route
+  - The secret admin URL (if they somehow discover it but aren't whitelisted)
+
+### 3. Move Admin Routes
+- Rename `/app/admin/` to `/app/[secret-slug]/`
+- Update all API routes: `/app/api/admin/*` should verify IP whitelist
+- Update the admin-config.ts to use the new secret URL
+
+### 4. IP Whitelist Configuration
+- Store whitelisted IPs in environment variable: `ADMIN_ALLOWED_IPS`
+- Format: comma-separated string, e.g., `"123.456.78.90,987.65.43.21"`
+- Add to `.env.local.example` with clear instructions
+
+### 5. Security Requirements
+- Middleware should check:
+  - `X-Forwarded-For` header (for Vercel/Cloudflare)
+  - `X-Real-IP` header (fallback)
+  - `req.socket.remoteAddress` (last resort)
+- Return fake 404 for blocked IPs (don't reveal admin exists)
+- Add rate limiting to prevent brute force attempts
+- Keep existing password auth (bcrypt + HttpOnly cookies)
+
+### 6. Update All Internal Links
+- Find all references to `/admin` in:
+  - Components (like `/components/admin/admin-panel.tsx`)
+  - API routes
+  - Config files
+  - Documentation files
+- Update to use the secret URL or a configurable path from environment
+
+### 7. Fallback System
+- Create `/app/admin-emergency/route.ts` that allows:
+  - Emergency access via a master password stored in env vars
+  - IP whitelist updates from admin panel
+  - Add as hidden route for disaster recovery
+
+## Environment Variables to Add
+```env
+# IP addresses allowed to access admin (comma-separated)
+# Get your IP from: https://whatismyipaddress.com
+ADMIN_ALLOWED_IPS="123.456.78.90"
+
+# Secret admin URL slug (generated at setup)
+ADMIN_SECRET_URL="generate-this-at-runtime"
+
+# Emergency master password for fallback access
+ADMIN_MASTER_PASSWORD="generate-this-at-runtime"
+```
+
+## Files to Create/Modify
+1. ✅ Create: `middleware.ts` (root level)
+2. ✅ Create: `lib/ip-whitelist.ts` (IP validation utilities)
+3. ✅ Modify: All `/app/admin/**/*` → `/app/[secret-slug]/**/*`
+4. ✅ Modify: `lib/admin-config.ts` (add secret URL config)
+5. ✅ Modify: All API routes under `/app/api/admin/` (add IP checks)
+6. ✅ Update: `.env.local.example` (add new vars)
+7. ✅ Create: `/app/admin-emergency/route.ts` (emergency access)
+8. ✅ Update: `ADMIN-GUIDE.md` (document new security)
+
+## Deliverables
+- Working middleware with IP filtering
+- All admin routes moved to secret URL
+- Fake 404 for unauthorized users
+- Environment variables configured
+- Updated documentation with setup instructions
+- Instructions for adding/removing IPs
+- Emergency fallback system
+
+## Important Notes
+- Must work on Vercel (production)
+- Test locally with `ADMIN_ALLOWED_IPS="127.0.0.1,::1"`
+- Don't break existing admin functionality
+- Keep current password auth intact
+- Return realistic 404 pages (not just JSON errors)
