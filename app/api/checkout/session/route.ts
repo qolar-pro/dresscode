@@ -3,20 +3,25 @@ import Stripe from 'stripe';
 import { supabaseAdmin } from '@/lib/supabase';
 
 export async function POST(request: NextRequest) {
+  console.log('[CHECKOUT] Request received');
+  
   try {
-    // Validate Stripe env var at request time
     const stripeKey = process.env.STRIPE_SECRET_KEY;
+    console.log('[CHECKOUT] Stripe key exists:', !!stripeKey);
+    
     if (!stripeKey) {
-      console.error('STRIPE_SECRET_KEY is not set in environment variables');
+      console.error('[CHECKOUT] STRIPE_SECRET_KEY is not set');
       return NextResponse.json({ error: 'Stripe is not configured' }, { status: 500 });
     }
 
     const stripe = new Stripe(stripeKey, {});
+    console.log('[CHECKOUT] Stripe client created');
 
     const body = await request.json();
+    console.log('[CHECKOUT] Body parsed, items count:', body.items?.length);
+    
     const { items, customer } = body;
 
-    // Validate required fields
     if (!items || !Array.isArray(items) || items.length === 0) {
       return NextResponse.json({ error: 'Cart is empty' }, { status: 400 });
     }
@@ -34,13 +39,13 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Missing product ID in cart item' }, { status: 400 });
       }
 
-      // Try to get price from DB, fall back to client price if DB lookup fails
       let usePrice = item.product?.price;
       let productName = item.product?.name || 'Unknown';
       let productImages = item.product?.images || [];
       let productSizes: any[] = [];
 
       try {
+        console.log('[CHECKOUT] Looking up product', productId, 'from Supabase');
         const { data: dbProduct, error: productError } = await supabaseAdmin
           .from('products')
           .select('id, name, images, sizes, price')
@@ -48,30 +53,21 @@ export async function POST(request: NextRequest) {
           .single();
 
         if (productError) {
-          console.warn(`Checkout: Supabase error for product ${productId}:`, productError.message, 'Code:', productError.code);
+          console.warn('[CHECKOUT] Supabase error:', productError.message, 'Code:', productError.code);
         } else if (dbProduct) {
+          console.log('[CHECKOUT] Product found:', dbProduct.name, 'price:', dbProduct.price);
           productName = dbProduct.name || productName;
           productImages = dbProduct.images || productImages;
           productSizes = dbProduct.sizes || [];
 
-          // Use server price if available and positive
           if (dbProduct.price !== null && dbProduct.price !== undefined && dbProduct.price > 0) {
             usePrice = dbProduct.price;
           }
-
-          // Soft stock check
-          const selectedSize = item.size;
-          if (selectedSize && productSizes.length > 0) {
-            const sizeObj = productSizes.find((s: any) => s.name === selectedSize);
-            if (sizeObj && sizeObj.stock !== undefined && sizeObj.stock <= 0) {
-              console.warn(`Checkout: Size ${selectedSize} for product ${productId} is out of stock, allowing checkout anyway`);
-            }
-          }
         } else {
-          console.warn(`Checkout: Product ${productId} not found in Supabase, using client data`);
+          console.warn('[CHECKOUT] Product not found in DB');
         }
       } catch (dbError: any) {
-        console.warn('Checkout: Supabase lookup exception:', dbError?.message || dbError);
+        console.warn('[CHECKOUT] Supabase exception:', dbError?.message);
       }
 
       if (!usePrice || usePrice <= 0) {
@@ -79,7 +75,6 @@ export async function POST(request: NextRequest) {
       }
 
       serverSubtotal += usePrice * (item.quantity || 1);
-      const selectedSize = item.size || '';
 
       validatedLineItems.push({
         price_data: {
@@ -91,15 +86,16 @@ export async function POST(request: NextRequest) {
           unit_amount: Math.round(usePrice * 100),
           metadata: {
             productId: String(productId),
-            size: selectedSize,
+            size: item.size || '',
           },
         },
         quantity: item.quantity || 1,
       });
     }
 
-    // Calculate shipping
     const shippingCost = serverSubtotal >= 100 ? 0 : 9.99;
+    console.log('[CHECKOUT] Subtotal:', serverSubtotal, 'Shipping:', shippingCost, 'Line items:', validatedLineItems.length);
+    
     if (shippingCost > 0) {
       validatedLineItems.push({
         price_data: {
@@ -112,6 +108,7 @@ export async function POST(request: NextRequest) {
     }
 
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || request.headers.get('origin') || 'http://localhost:3000';
+    console.log('[CHECKOUT] Creating Stripe session for', siteUrl);
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
@@ -123,14 +120,15 @@ export async function POST(request: NextRequest) {
       metadata: {
         orderId: customer.orderId,
         customerName: `${customer.firstName} ${customer.lastName}`,
-        serverSubtotal: serverSubtotal.toFixed(2),
-        shipping: shippingCost.toFixed(2),
       },
     });
 
+    console.log('[CHECKOUT] Session created:', session.id);
     return NextResponse.json({ url: session.url });
   } catch (error: any) {
-    console.error('Stripe Session Error:', error);
+    console.error('[CHECKOUT] Fatal error:', error);
+    console.error('[CHECKOUT] Error stack:', error?.stack);
+    console.error('[CHECKOUT] Error name:', error?.name);
     return NextResponse.json({ error: error.message || 'Failed to create Stripe session' }, { status: 500 });
   }
 }
