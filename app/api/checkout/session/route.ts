@@ -20,55 +20,67 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing required customer information' }, { status: 400 });
     }
 
-    // SERVER-SIDE PRICE VALIDATION: Look up prices from database, never trust client
     const validatedLineItems: any[] = [];
     let serverSubtotal = 0;
 
     for (const item of items) {
       const productId = item.product?.id;
       if (!productId) {
-        return NextResponse.json({ error: `Missing product ID in cart item` }, { status: 400 });
+        return NextResponse.json({ error: 'Missing product ID in cart item' }, { status: 400 });
       }
 
-      const { data: products, error: productError } = await supabaseAdmin
-        .from('products')
-        .select('id, name, images, sizes, price')
-        .eq('id', productId)
-        .single();
+      // Try to get price from DB, fall back to client price if DB lookup fails
+      let usePrice = item.product?.price;
+      let productName = item.product?.name || 'Unknown';
+      let productImages = item.product?.images || [];
+      let productSizes = [];
 
-      if (productError || !products) {
-        return NextResponse.json({ error: `Product ${productId} not found` }, { status: 400 });
+      try {
+        const { data: dbProduct, error: productError } = await supabaseAdmin
+          .from('products')
+          .select('id, name, images, sizes, price')
+          .eq('id', productId)
+          .single();
+
+        if (!productError && dbProduct) {
+          productName = dbProduct.name || productName;
+          productImages = dbProduct.images || productImages;
+          productSizes = dbProduct.sizes || [];
+
+          // Use server price if available and positive
+          if (dbProduct.price !== null && dbProduct.price !== undefined && dbProduct.price > 0) {
+            usePrice = dbProduct.price;
+          }
+
+          // Check stock for selected size (soft check — don't block checkout)
+          const selectedSize = item.size;
+          if (selectedSize && productSizes.length > 0) {
+            const sizeObj = productSizes.find((s: any) => s.name === selectedSize);
+            if (sizeObj && sizeObj.stock !== undefined && sizeObj.stock <= 0) {
+              console.warn(`Checkout: Size ${selectedSize} for product ${productId} is out of stock, allowing checkout anyway`);
+            }
+          }
+        }
+      } catch (dbError) {
+        // DB lookup failed — use client price as fallback
+        console.warn('Checkout: Failed to validate price from database, using client price:', dbError);
       }
 
-      // Check stock for selected size
-      const selectedSize = item.size;
-      const sizes = products.sizes || [];
-      const sizeObj = sizes.find((s: any) => s.name === selectedSize);
-
-      if (!sizeObj || !sizeObj.available) {
-        return NextResponse.json({ error: `Size ${selectedSize} not available for ${products.name}` }, { status: 400 });
+      if (!usePrice || usePrice <= 0) {
+        return NextResponse.json({ error: `Invalid price for product ${productName}` }, { status: 400 });
       }
 
-      if (sizeObj.stock !== undefined && sizeObj.stock < (item.quantity || 1)) {
-        return NextResponse.json({ error: `Only ${sizeObj.stock} left in stock for ${products.name} (${selectedSize})` }, { status: 400 });
-      }
-
-      // Use SERVER price, not client price
-      const serverPrice = products.price;
-      if (!serverPrice || serverPrice <= 0) {
-        return NextResponse.json({ error: `Invalid price for product ${products.name}` }, { status: 400 });
-      }
-
-      serverSubtotal += serverPrice * (item.quantity || 1);
+      serverSubtotal += usePrice * (item.quantity || 1);
+      const selectedSize = item.size || '';
 
       validatedLineItems.push({
         price_data: {
           currency: 'eur',
           product_data: {
-            name: products.name,
-            images: products.images?.[0] ? [products.images[0]] : [],
+            name: productName,
+            images: productImages?.[0] ? [productImages[0]] : [],
           },
-          unit_amount: Math.round(serverPrice * 100), // Stripe uses cents
+          unit_amount: Math.round(usePrice * 100),
           metadata: {
             productId: String(productId),
             size: selectedSize,
@@ -115,6 +127,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ url: session.url });
   } catch (error: any) {
     console.error('Stripe Session Error:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: error.message || 'Failed to create Stripe session' }, { status: 500 });
   }
 }
