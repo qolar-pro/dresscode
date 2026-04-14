@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
     }
 
     const stripe = new Stripe(stripeKey, {
-      apiVersion: '2026-03-25.dahlia',
+      apiVersion: '2024-04-10.acacia',
     });
 
     const body = await request.json();
