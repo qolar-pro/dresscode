@@ -118,12 +118,21 @@
 
   /* Input Fields 2026 */
   .input-luxury {
-    @apply w-full px-0 py-4 border-0 border-b-2 border-neutral-300 
-           dark:border-charcoal-700 bg-transparent 
-           focus:border-charcoal-900 dark:focus:border-pearl-50 
-           focus:ring-0 outline-none transition-all duration-500 
-           rounded-none text-lg placeholder:text-neutral-400 
+    @apply w-full px-0 py-4 border-0 border-b-2 border-neutral-300
+           dark:border-charcoal-700 bg-transparent
+           focus:border-charcoal-900 dark:focus:border-pearl-50
+           focus:ring-0 outline-none transition-all duration-500
+           rounded-none text-lg placeholder:text-neutral-400
            dark:placeholder:text-charcoal-600;
+  }
+
+  .input-field {
+    @apply w-full px-4 py-3 border border-neutral-300 dark:border-charcoal-700
+           bg-white dark:bg-charcoal-800 rounded-lg
+           focus:border-charcoal-900 dark:focus:border-pearl-50
+           focus:ring-1 focus:ring-charcoal-900 dark:focus:ring-pearl-50
+           outline-none transition-all duration-300
+           placeholder:text-neutral-400 dark:placeholder:text-charcoal-600;
   }
 
   /* Typography Utilities */

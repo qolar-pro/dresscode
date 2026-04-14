@@ -8,6 +8,7 @@ import { Check, ShoppingBag, CreditCard, Banknote, Wallet, Loader2 } from 'lucid
 import { PAYMENT_CONFIG, getEnabledPaymentMethods, calculatePaymentFee, PaymentMethod } from '@/lib/payment-config';
 import { defaultImages } from '@/data/products';
 import Link from 'next/link';
+import Image from 'next/image';
 import { loadStripe } from '@stripe/stripe-js';
 
 // Initialize Stripe
@@ -34,6 +35,7 @@ function CheckoutContent() {
   const [orderId, setOrderId] = useState('');
   const [selectedPayment, setSelectedPayment] = useState<PaymentMethod>('cash_on_delivery');
   const [processing, setProcessing] = useState(false);
+  const [usedPaymentMethod, setUsedPaymentMethod] = useState<string>('cash_on_delivery');
 
   // Check for successful Stripe payment redirect
   useEffect(() => {
@@ -47,7 +49,8 @@ function CheckoutContent() {
           // Get the Order ID from Stripe metadata
           const recoveredOrderId = data.metadata?.orderId || 'STRIPE-PAID';
           setOrderId(recoveredOrderId);
-          
+          setUsedPaymentMethod('stripe');
+
           // Clear the cart only after we confirm the session
           clearCart();
           setOrderPlaced(true);
@@ -129,6 +132,7 @@ function CheckoutContent() {
 
         const data = await res.json();
         if (data.url) {
+          setUsedPaymentMethod('stripe');
           window.location.href = data.url; // Redirect to Stripe Checkout
         } else {
           alert('Failed to initialize Stripe checkout');
@@ -141,6 +145,7 @@ function CheckoutContent() {
       }
     } else {
       // COD: Finish here
+      setUsedPaymentMethod(selectedPayment);
       try {
         await fetch('/api/email/send-order', {
           method: 'POST',
@@ -207,7 +212,9 @@ function CheckoutContent() {
               </div>
               <div className="flex justify-between">
                 <span className="text-neutral-600 dark:text-neutral-400">{t('checkout.paymentMethod')}</span>
-                <span className="font-medium text-neutral-900 dark:text-white">{t('checkout.cashOnDelivery')}</span>
+                <span className="font-medium text-neutral-900 dark:text-white">
+                  {usedPaymentMethod === 'stripe' ? 'Credit/Debit Card (Stripe)' : t('checkout.cashOnDelivery')}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-neutral-600 dark:text-neutral-400">{t('checkout.items')}</span>
@@ -454,14 +461,13 @@ function CheckoutContent() {
               <div className="space-y-6 mb-8 pb-8 border-b border-neutral-200 dark:border-neutral-800">
                 {cart.map((item, index) => (
                   <div key={index} className="flex gap-4">
-                    <div className="w-16 h-20 bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center text-2xl flex-shrink-0 overflow-hidden rounded-lg">
-                      <img
+                    <div className="w-16 h-20 relative flex-shrink-0 overflow-hidden rounded-lg bg-neutral-100 dark:bg-neutral-800">
+                      <Image
                         src={item.product.images?.[0] || defaultImages[item.product.category] || defaultImages.dresses}
                         alt={item.product.name}
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          e.currentTarget.src = defaultImages[item.product.category] || defaultImages.dresses;
-                        }}
+                        fill
+                        className="object-cover"
+                        sizes="64px"
                       />
                     </div>
                     <div className="flex-1 min-w-0">

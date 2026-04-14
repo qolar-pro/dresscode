@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { serialize } from 'cookie';
-import { randomBytes } from 'crypto';
-import { sessions, SESSION_TTL } from '@/lib/admin-sessions';
+import { sessions, SESSION_TTL, generateSessionToken } from '@/lib/admin-sessions';
 
 // Password hash stored in environment variable ONLY (never in client code)
 const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH;
@@ -77,7 +76,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create secure session token
-    const sessionToken = randomBytes(32).toString('hex');
+    const sessionToken = generateSessionToken();
     sessions.set(sessionToken, { createdAt: Date.now() });
 
     // Set HttpOnly, Secure, SameSite cookie

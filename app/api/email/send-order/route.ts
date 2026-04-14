@@ -1,10 +1,25 @@
 import { Resend } from 'resend';
+import { requireAdmin } from '@/lib/auth-middleware';
+import { NextRequest, NextResponse } from 'next/server';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
+  // Only admin or webhook can trigger this endpoint
+  const auth = await requireAdmin(request);
+  if (auth) return auth;
+
   try {
     const { order } = await request.json();
+
+    // Validate order object structure
+    if (!order || !order.customer?.email || !order.id) {
+      return NextResponse.json({ error: 'Invalid order data: missing customer email or order ID' }, { status: 400 });
+    }
+
+    if (!order.items || !Array.isArray(order.items)) {
+      return NextResponse.json({ error: 'Invalid order data: missing items array' }, { status: 400 });
+    }
 
     // FIX: Changed 'from' address to match the verified domain 'blancographics.xyz'
     // Previously it was 'onboarding@resend.dev' which causes a 500 error on custom domains.
@@ -45,12 +60,12 @@ export async function POST(request: Request) {
 
     if (error) {
       console.error('Resend API Error:', error);
-      return Response.json({ error: error.message }, { status: 500 });
+      return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    return Response.json({ data });
+    return NextResponse.json({ data });
   } catch (error) {
     console.error('Server Error:', error);
-    return Response.json({ error: 'Internal Server Error' }, { status: 500 });
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

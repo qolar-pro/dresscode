@@ -7,6 +7,7 @@ import { useCart } from '@/context/CartContext';
 import { useState, useEffect } from 'react';
 import { Minus, Plus, ShoppingBag, ArrowLeft, Star } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function ProductPage() {
   const params = useParams();
@@ -14,14 +15,21 @@ export default function ProductPage() {
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Fetch products from Supabase API
+  // Use string comparison to avoid issues with large IDs
+  const productId = params.id as string;
+
+  // Fetch product by ID from API
   useEffect(() => {
-    async function fetchProducts() {
+    if (!productId) return;
+
+    async function fetchProduct() {
       try {
-        const res = await fetch('/api/products');
+        const res = await fetch(`/api/products/${productId}`);
         const data = await res.json();
-        if (data.products) {
-          const frontendProducts = data.products.map((p: any) => ({
+
+        if (data.product) {
+          const p = data.product;
+          const frontendProduct = {
             id: p.id,
             name: p.name,
             price: p.price,
@@ -32,8 +40,8 @@ export default function ProductPage() {
             colors: p.colors || [],
             isNew: p.is_new,
             isFeatured: p.is_featured,
-          }));
-          setProducts(frontendProducts);
+          };
+          setProducts([frontendProduct]);
         }
       } catch (error) {
         console.error('Failed to fetch product:', error);
@@ -41,11 +49,9 @@ export default function ProductPage() {
         setLoading(false);
       }
     }
-    fetchProducts();
-  }, []);
+    fetchProduct();
+  }, [productId]);
 
-  // Use string comparison to avoid issues with large IDs
-  const productId = params.id as string;
   const product = products.find(p => String(p.id) === productId);
 
   if (loading) {
@@ -146,19 +152,22 @@ function ProductDetail({ product }: { product: any }) {
             {/* Product Image */}
             <div className="aspect-[4/5] bg-neutral-100 dark:bg-neutral-800 relative overflow-hidden">
               {product.images?.[0] ? (
-                <img
+                <Image
                   src={product.images[0]}
                   alt={product.name}
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    e.currentTarget.src = defaultImages[product.category] || defaultImages.dresses;
-                  }}
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 1024px) 100vw, 50vw"
+                  priority
                 />
               ) : (
-                <img
+                <Image
                   src={defaultImages[product.category] || defaultImages.dresses}
                   alt={product.name}
-                  className="w-full h-full object-cover"
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 1024px) 100vw, 50vw"
+                  priority
                 />
               )}
               {product.isNew && (

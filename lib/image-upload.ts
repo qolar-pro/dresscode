@@ -37,7 +37,7 @@ export async function uploadImage(
  */
 export async function deleteImage(
   fileName: string,
-  bucketName: string = 'product-images'
+  bucketName: string = 'product_images'
 ): Promise<void> {
   const { error } = await supabaseAdmin.storage
     .from(bucketName)

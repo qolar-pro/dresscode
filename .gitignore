@@ -33,5 +33,10 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# Sensitive files
+cookies.txt
+BACKUP.txt
+*.env
+
 # Admin Config (Keep this private if you ever push real keys)
 # lib/admin-config.ts

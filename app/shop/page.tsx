@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useLanguage } from '@/context/LanguageContext';
 import { categories, sortOptions, defaultImages } from '@/data/products';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Loader2 } from 'lucide-react';
 
 interface Product {
@@ -168,8 +169,33 @@ export default function ShopPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-8 h-8 text-neutral-400 animate-spin" />
+      <div className="min-h-screen">
+        {/* Page Header Skeleton */}
+        <div className="relative overflow-hidden h-64 bg-neutral-200 dark:bg-neutral-800 animate-pulse" />
+        <div className="container mx-auto px-4 py-12">
+          {/* Filters Skeleton */}
+          <div className="flex flex-wrap items-center justify-between gap-6 mb-12 pb-8 border-b border-neutral-200 dark:border-neutral-800">
+            <div className="flex flex-wrap gap-2">
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className="w-24 h-9 bg-neutral-200 dark:bg-neutral-800 animate-pulse" />
+              ))}
+            </div>
+            <div className="w-40 h-9 bg-neutral-200 dark:bg-neutral-800 animate-pulse" />
+          </div>
+          {/* Products Grid Skeleton */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-8 gap-y-16">
+            {[...Array(8)].map((_, i) => (
+              <div key={i} className="animate-pulse">
+                <div className="aspect-[3/4] bg-neutral-200 dark:bg-neutral-800 mb-6" />
+                <div className="space-y-2">
+                  <div className="h-3 w-16 bg-neutral-200 dark:bg-neutral-800" />
+                  <div className="h-4 w-32 bg-neutral-200 dark:bg-neutral-800" />
+                  <div className="h-4 w-12 bg-neutral-200 dark:bg-neutral-800" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     );
   }
@@ -280,21 +306,20 @@ function ProductCard({ product, activeCollection }: { product: Product; activeCo
     <Link href={`/product/${product.id}`} className="group">
       <div className="aspect-[3/4] bg-neutral-100 dark:bg-charcoal-700 relative overflow-hidden mb-6">
         {(product.images && product.images[0]) ? (
-          <img
+          <Image
             src={product.images[0]}
             alt={product.name}
-            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-            loading="lazy"
-            onError={(e) => {
-              e.currentTarget.src = defaultImages[product.category] || defaultImages.dresses;
-            }}
+            fill
+            className="object-cover transition-transform duration-700 group-hover:scale-105"
+            sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 25vw"
           />
         ) : (
-          <img
+          <Image
             src={defaultImages[product.category] || defaultImages.dresses}
             alt={product.name}
-            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-            loading="lazy"
+            fill
+            className="object-cover transition-transform duration-700 group-hover:scale-105"
+            sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 25vw"
           />
         )}
         

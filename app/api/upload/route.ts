@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { uploadImage } from '@/lib/image-upload';
+import { uploadImage, deleteImage } from '@/lib/image-upload';
 import { requireAdmin } from '@/lib/auth-middleware';
 
 export async function POST(request: NextRequest) {
@@ -56,6 +56,34 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ url: publicUrl });
   } catch (error: any) {
     console.error('Image upload error:', error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  const auth = await requireAdmin(request);
+  if (auth) return auth;
+
+  try {
+    const body = await request.json();
+    const { imageUrl } = body;
+
+    if (!imageUrl || typeof imageUrl !== 'string') {
+      return NextResponse.json({ error: 'imageUrl is required' }, { status: 400 });
+    }
+
+    // Extract filename from URL
+    const urlParts = imageUrl.split('/');
+    const fileName = urlParts[urlParts.length - 1];
+
+    if (!fileName || fileName.includes('..') || fileName.includes('\\')) {
+      return NextResponse.json({ error: 'Invalid file path' }, { status: 400 });
+    }
+
+    await deleteImage(fileName);
+    return NextResponse.json({ success: true });
+  } catch (error: any) {
+    console.error('Image delete error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

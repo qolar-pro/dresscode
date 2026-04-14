@@ -3,6 +3,37 @@ import { supabaseAdmin } from '@/lib/supabase';
 import { sanitizeOrderData } from '@/lib/sanitize';
 import { requireAdmin } from '@/lib/auth-middleware';
 
+// Rate limiting for order creation (IP-based, in-memory)
+const orderAttempts = new Map<string, { count: number; resetTime: number; blockedUntil: number }>();
+
+function checkOrderRateLimit(ip: string): { allowed: boolean; retryAfter?: number } {
+  const now = Date.now();
+  const entry = orderAttempts.get(ip) || { count: 0, resetTime: now, blockedUntil: 0 };
+
+  if (entry.blockedUntil > now) {
+    return { allowed: false, retryAfter: Math.ceil((entry.blockedUntil - now) / 1000) };
+  }
+
+  if (now > entry.resetTime) {
+    entry.count = 0;
+    entry.resetTime = now + 10 * 60 * 1000; // 10 minute window
+    entry.blockedUntil = 0;
+  }
+
+  entry.count += 1;
+
+  // Block for 10 minutes after 3 orders
+  if (entry.count >= 3) {
+    entry.blockedUntil = now + 10 * 60 * 1000;
+    entry.count = 0;
+    orderAttempts.set(ip, entry);
+    return { allowed: false, retryAfter: 600 };
+  }
+
+  orderAttempts.set(ip, entry);
+  return { allowed: true };
+}
+
 export async function GET(request: NextRequest) {
   const auth = await requireAdmin(request);
   if (auth) return auth;
@@ -23,10 +54,34 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   // NOTE: This endpoint is used by checkout, so we don't require auth here.
-  // But we validate prices server-side (see price validation below).
+  // But we validate prices server-side and rate limit to prevent abuse.
+
+  // Rate limiting
+  const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown';
+  const rateLimit = checkOrderRateLimit(ip);
+  if (!rateLimit.allowed) {
+    return NextResponse.json(
+      { error: 'Too many order attempts. Please try again later.' },
+      {
+        status: 429,
+        headers: { 'Retry-After': String(rateLimit.retryAfter || 600) },
+      }
+    );
+  }
+
   try {
     const body = await request.json();
-    const sanitized = sanitizeOrderData(body);
+
+    // Sanitize with try/catch to handle invalid email gracefully
+    let sanitized;
+    try {
+      sanitized = sanitizeOrderData(body);
+    } catch (sanitizeError: any) {
+      return NextResponse.json(
+        { error: `Invalid input: ${sanitizeError.message}` },
+        { status: 400 }
+      );
+    }
 
     // VALIDATE PRICES: Recalculate total from database prices
     let serverTotal = 0;
@@ -70,7 +125,7 @@ export async function POST(request: NextRequest) {
 
     if (error) throw error;
 
-    // 2. Decrement Stock PER SIZE for each item
+    // 2. Decrement Stock PER SIZE for each item with optimistic retry
     if (sanitized.items && sanitized.items.length > 0) {
       for (const item of sanitized.items) {
         const productId = item.product?.id;
@@ -82,13 +137,23 @@ export async function POST(request: NextRequest) {
           continue;
         }
 
-        const { data: products, error: prodError } = await supabaseAdmin
-          .from('products')
-          .select('id, sizes')
-          .eq('id', productId);
+        // Optimistic retry loop to handle concurrent stock updates
+        const MAX_RETRIES = 3;
+        let stockUpdated = false;
 
-        if (!prodError && products && products.length > 0) {
-          const currentSizes = products[0].sizes || [];
+        for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+          const { data: products, error: prodError } = await supabaseAdmin
+            .from('products')
+            .select('id, sizes')
+            .eq('id', productId)
+            .single();
+
+          if (prodError || !products) {
+            console.error(`Failed to fetch product ${productId} for stock update:`, prodError?.message);
+            break;
+          }
+
+          const currentSizes = products.sizes || [];
 
           const updatedSizes = currentSizes.map((s: any) => {
             if (s.name === selectedSize) {
@@ -100,10 +165,24 @@ export async function POST(request: NextRequest) {
             return s;
           });
 
-          await supabaseAdmin
+          const { error: updateError } = await supabaseAdmin
             .from('products')
             .update({ sizes: updatedSizes })
             .eq('id', productId);
+
+          if (!updateError) {
+            stockUpdated = true;
+            break;
+          }
+
+          // If update failed, retry with small delay
+          if (attempt < MAX_RETRIES - 1) {
+            await new Promise(resolve => setTimeout(resolve, 50 * (attempt + 1)));
+          }
+        }
+
+        if (!stockUpdated) {
+          console.error(`Failed to update stock for product ${productId}, size ${selectedSize} after ${MAX_RETRIES} retries`);
         }
       }
     }

@@ -1,13 +1,16 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { useLanguage } from '@/context/LanguageContext';
-import { Instagram, Facebook, Twitter, Mail, Phone, MapPin } from 'lucide-react';
+import { Instagram, Facebook, Twitter, Mail, Phone, MapPin, X, Ruler } from 'lucide-react';
 
 export default function Footer() {
   const { t } = useLanguage();
+  const [showSizeGuide, setShowSizeGuide] = useState(false);
 
   return (
+    <>
     <footer className="relative bg-charcoal-900 dark:bg-charcoal-950 text-pearl-50 overflow-hidden">
       {/* Background Image */}
       <div className="absolute inset-0">
@@ -79,19 +82,22 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <a href="#" className="text-neutral-400 hover:text-pearl-50 transition-colors font-light">
+                <button
+                  onClick={() => setShowSizeGuide(true)}
+                  className="text-neutral-400 hover:text-pearl-50 transition-colors font-light"
+                >
                   {t('footer.sizeGuide')}
-                </a>
+                </button>
               </li>
               <li>
-                <a href="#" className="text-neutral-400 hover:text-pearl-50 transition-colors font-light">
+                <Link href="/contact#shipping" className="text-neutral-400 hover:text-pearl-50 transition-colors font-light">
                   {t('footer.shippingInfo')}
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#" className="text-neutral-400 hover:text-pearl-50 transition-colors font-light">
+                <Link href="/legal/return-policy" className="text-neutral-400 hover:text-pearl-50 transition-colors font-light">
                   {t('footer.returns')}
-                </a>
+                </Link>
               </li>
             </ul>
           </div>
@@ -143,5 +149,88 @@ export default function Footer() {
         </div>
       </div>
     </footer>
+
+    {showSizeGuide && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+        <div className="bg-white dark:bg-charcoal-900 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+          <div className="sticky top-0 bg-white dark:bg-charcoal-900 border-b border-neutral-200 dark:border-charcoal-800 p-6 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Ruler className="w-5 h-5 text-neutral-600 dark:text-neutral-400" />
+              <h3 className="font-display text-xl text-charcoal-900 dark:text-pearl-50">Size Guide</h3>
+            </div>
+            <button
+              onClick={() => setShowSizeGuide(false)}
+              className="p-2 hover:bg-neutral-100 dark:hover:bg-charcoal-800 rounded-full transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+
+          <div className="p-8 space-y-8">
+            <div>
+              <h4 className="font-display text-lg text-charcoal-900 dark:text-pearl-50 mb-4">Women{"'"}s Clothing (US)</h4>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-neutral-300 dark:border-charcoal-700">
+                      <th className="py-3 px-4 text-left font-medium text-neutral-600 dark:text-neutral-400">Size</th>
+                      <th className="py-3 px-4 text-left font-medium text-neutral-600 dark:text-neutral-400">Bust (in)</th>
+                      <th className="py-3 px-4 text-left font-medium text-neutral-600 dark:text-neutral-400">Waist (in)</th>
+                      <th className="py-3 px-4 text-left font-medium text-neutral-600 dark:text-neutral-400">Hip (in)</th>
+                    </tr>
+                  </thead>
+                  <tbody className="text-neutral-700 dark:text-neutral-300">
+                    <tr className="border-b border-neutral-200 dark:border-charcoal-800">
+                      <td className="py-3 px-4 font-medium">XS</td>
+                      <td className="py-3 px-4">31-32</td>
+                      <td className="py-3 px-4">24-25</td>
+                      <td className="py-3 px-4">34-35</td>
+                    </tr>
+                    <tr className="border-b border-neutral-200 dark:border-charcoal-800">
+                      <td className="py-3 px-4 font-medium">S</td>
+                      <td className="py-3 px-4">33-34</td>
+                      <td className="py-3 px-4">26-27</td>
+                      <td className="py-3 px-4">36-37</td>
+                    </tr>
+                    <tr className="border-b border-neutral-200 dark:border-charcoal-800">
+                      <td className="py-3 px-4 font-medium">M</td>
+                      <td className="py-3 px-4">35-36</td>
+                      <td className="py-3 px-4">28-29</td>
+                      <td className="py-3 px-4">38-39</td>
+                    </tr>
+                    <tr className="border-b border-neutral-200 dark:border-charcoal-800">
+                      <td className="py-3 px-4 font-medium">L</td>
+                      <td className="py-3 px-4">37-39</td>
+                      <td className="py-3 px-4">30-32</td>
+                      <td className="py-3 px-4">40-42</td>
+                    </tr>
+                    <tr>
+                      <td className="py-3 px-4 font-medium">XL</td>
+                      <td className="py-3 px-4">40-42</td>
+                      <td className="py-3 px-4">33-35</td>
+                      <td className="py-3 px-4">43-45</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div className="bg-neutral-50 dark:bg-charcoal-800 p-6 rounded-xl">
+              <h4 className="font-medium text-charcoal-900 dark:text-pearl-50 mb-3">How to Measure</h4>
+              <ul className="space-y-2 text-sm text-neutral-600 dark:text-neutral-400 font-light">
+                <li>{"\u2022"} <strong>Bust:</strong> Measure around the fullest part of your chest</li>
+                <li>{"\u2022"} <strong>Waist:</strong> Measure around the narrowest part of your waist</li>
+                <li>{"\u2022"} <strong>Hip:</strong> Measure around the fullest part of your hips</li>
+              </ul>
+            </div>
+
+            <p className="text-xs text-neutral-500 dark:text-neutral-400 text-center">
+              If you{"'"}re between sizes, we recommend sizing up for a more comfortable fit.
+            </p>
+          </div>
+        </div>
+      </div>
+    )}
+    </>
   );
 }

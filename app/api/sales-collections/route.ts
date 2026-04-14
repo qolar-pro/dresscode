@@ -3,14 +3,28 @@ import { supabaseAdmin } from '@/lib/supabase';
 import { requireAdmin } from '@/lib/auth-middleware';
 
 export async function GET(request: NextRequest) {
-  const auth = await requireAdmin(request);
-  if (auth) return auth;
-
   try {
-    const { data, error } = await supabaseAdmin
+    const { searchParams } = new URL(request.url);
+    const adminView = searchParams.get('admin') === 'true';
+
+    // If admin view is requested, require admin authentication
+    if (adminView) {
+      const auth = await requireAdmin(request);
+      if (auth) return auth;
+    }
+
+    let query = supabaseAdmin
       .from('sales_collections')
-      .select('*')
-      .order('created_at', { ascending: false });
+      .select('*');
+
+    // Public users only see active collections
+    if (!adminView) {
+      query = query.eq('is_active', true);
+    }
+
+    query = query.order('created_at', { ascending: false });
+
+    const { data, error } = await query;
 
     if (error) {
       console.warn('Sales collections table error:', error.message);
@@ -36,12 +50,21 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
 
+    // Validate discount percentage
+    const discount = parseFloat(body.discount_percentage);
+    if (isNaN(discount) || discount < 0 || discount > 100) {
+      return NextResponse.json(
+        { error: 'Discount percentage must be between 0 and 100' },
+        { status: 400 }
+      );
+    }
+
     const collectionData = {
       name: body.name || 'Unnamed Collection',
       description: body.description || '',
-      discount_percentage: body.discount_percentage || 0,
+      discount_percentage: discount,
       image_url: body.image_url || '',
-      product_ids: body.product_ids || [],
+      product_ids: Array.isArray(body.product_ids) ? body.product_ids : [],
       is_active: body.is_active !== false,
       start_date: body.start_date || null,
       end_date: body.end_date || null,
@@ -75,6 +98,18 @@ export async function PATCH(request: NextRequest) {
 
     if (!id) {
       return NextResponse.json({ error: 'Collection ID is required' }, { status: 400 });
+    }
+
+    // Validate discount percentage if being updated
+    if (updates.discount_percentage !== undefined) {
+      const discount = parseFloat(updates.discount_percentage);
+      if (isNaN(discount) || discount < 0 || discount > 100) {
+        return NextResponse.json(
+          { error: 'Discount percentage must be between 0 and 100' },
+          { status: 400 }
+        );
+      }
+      updates.discount_percentage = discount;
     }
 
     const { data, error } = await supabaseAdmin

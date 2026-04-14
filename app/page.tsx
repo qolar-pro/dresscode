@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useLanguage } from '@/context/LanguageContext';
 import { ArrowRight, Star, Sparkles, ArrowDownRight, Tag } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
@@ -21,6 +22,9 @@ export default function Home() {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [salesCollections, setSalesCollections] = useState<SalesCollection[]>([]);
   const [loadingSales, setLoadingSales] = useState(true);
+  const [featuredProducts, setFeaturedProducts] = useState<any[]>([]);
+  const [newsletterEmail, setNewsletterEmail] = useState('');
+  const [newsletterStatus, setNewsletterStatus] = useState<'idle' | 'success' | 'error'>('idle');
 
   // Fetch active sales collections
   useEffect(() => {
@@ -39,6 +43,74 @@ export default function Home() {
     }
     fetchSales();
   }, []);
+
+  // Fetch featured products from database
+  useEffect(() => {
+    async function fetchFeatured() {
+      try {
+        const res = await fetch('/api/products');
+        const data = await res.json();
+        if (data.products && Array.isArray(data.products)) {
+          const featured = data.products
+            .filter((p: any) => p.is_featured)
+            .slice(0, 4)
+            .map((p: any) => ({
+              id: p.id,
+              name: p.name,
+              price: p.price,
+              category: p.category,
+              isNew: p.is_new,
+              image: p.images?.[0] || '',
+            }));
+
+          // If no featured products in DB, fallback to newest
+          if (featured.length === 0) {
+            const newest = data.products
+              .filter((p: any) => p.is_new)
+              .slice(0, 4)
+              .map((p: any) => ({
+                id: p.id,
+                name: p.name,
+                price: p.price,
+                category: p.category,
+                isNew: p.is_new,
+                image: p.images?.[0] || '',
+              }));
+            setFeaturedProducts(newest);
+          } else {
+            setFeaturedProducts(featured);
+          }
+        }
+      } catch (error) {
+        console.warn('Failed to fetch featured products:', error);
+      }
+    }
+    fetchFeatured();
+  }, []);
+
+  const handleNewsletterSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newsletterEmail) return;
+
+    try {
+      const res = await fetch('/api/newsletter/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: newsletterEmail }),
+      });
+
+      if (res.ok) {
+        setNewsletterStatus('success');
+        setNewsletterEmail('');
+        setTimeout(() => setNewsletterStatus('idle'), 5000);
+      } else {
+        setNewsletterStatus('error');
+      }
+    } catch (error) {
+      console.error('Newsletter subscription error:', error);
+      setNewsletterStatus('error');
+    }
+  };
 
   useEffect(() => {
     const handleScroll = () => setScrollY(window.scrollY);
@@ -414,37 +486,56 @@ export default function Home() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            {featuredProducts.map((product, index) => (
-              <Link 
-                key={product.id} 
-                href={`/product/${product.id}`} 
-                className="group"
-              >
-                <div className="aspect-[3/4] bg-neutral-100 dark:bg-charcoal-700 relative overflow-hidden mb-6 rounded-sm">
-                  <img
-                    src={product.image}
-                    alt={product.name}
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                    loading="lazy"
-                  />
-                  {product.isNew && (
-                    <span className="absolute top-4 left-4 text-[10px] tracking-[0.2em] uppercase font-medium bg-white dark:bg-charcoal-900 text-charcoal-900 dark:text-pearl-50 px-3 py-2">
-                      {t('common.new')}
-                    </span>
-                  )}
-                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 dark:group-hover:bg-white/5 transition-colors duration-500" />
+            {featuredProducts.length === 0 ? (
+              // Loading skeletons
+              [...Array(4)].map((_, i) => (
+                <div key={i} className="group animate-pulse">
+                  <div className="aspect-[3/4] bg-neutral-200 dark:bg-charcoal-700 mb-6 rounded-sm" />
+                  <div className="space-y-2">
+                    <div className="h-3 w-16 bg-neutral-200 dark:bg-charcoal-700" />
+                    <div className="h-4 w-32 bg-neutral-200 dark:bg-charcoal-700" />
+                    <div className="h-4 w-12 bg-neutral-200 dark:bg-charcoal-700" />
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <p className="text-[10px] tracking-[0.2em] uppercase text-neutral-500 dark:text-neutral-400">
-                    {product.category}
-                  </p>
-                  <h3 className="font-medium tracking-wide text-charcoal-900 dark:text-pearl-50 group-hover:text-neutral-600 dark:group-hover:text-neutral-400 transition-colors duration-300">
-                    {product.name}
-                  </h3>
-                  <p className="font-light text-charcoal-900 dark:text-pearl-50">${product.price.toFixed(2)}</p>
-                </div>
-              </Link>
-            ))}
+              ))
+            ) : (
+              featuredProducts.map((product) => (
+                <Link
+                  key={product.id}
+                  href={`/product/${product.id}`}
+                  className="group"
+                >
+                  <div className="aspect-[3/4] bg-neutral-100 dark:bg-charcoal-700 relative overflow-hidden mb-6 rounded-sm">
+                    {product.image ? (
+                      <Image
+                        src={product.image}
+                        alt={product.name}
+                        fill
+                        className="object-cover transition-transform duration-700 group-hover:scale-105"
+                        sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-neutral-200 dark:bg-charcoal-700" />
+                    )}
+                    {product.isNew && (
+                      <span className="absolute top-4 left-4 text-[10px] tracking-[0.2em] uppercase font-medium bg-white dark:bg-charcoal-900 text-charcoal-900 dark:text-pearl-50 px-3 py-2">
+                        {t('common.new')}
+                      </span>
+                    )}
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 dark:group-hover:bg-white/5 transition-colors duration-500" />
+                  </div>
+                  <div className="space-y-2">
+                    <p className="text-[10px] tracking-[0.2em] uppercase text-neutral-500 dark:text-neutral-400">
+                      {product.category}
+                    </p>
+                    <h3 className="font-medium tracking-wide text-charcoal-900 dark:text-pearl-50 group-hover:text-neutral-600 dark:group-hover:text-neutral-400 transition-colors duration-300">
+                      {product.name}
+                    </h3>
+                    <p className="font-light text-charcoal-900 dark:text-pearl-50">${product.price.toFixed(2)}</p>
+                  </div>
+                </Link>
+              ))
+            )}
           </div>
         </div>
       </section>
@@ -492,54 +583,34 @@ export default function Home() {
           <p className="text-neutral-600 dark:text-neutral-400 mb-12 font-light text-lg">
             {t('home.newsletterDesc')}
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 max-w-xl mx-auto">
+          <form onSubmit={handleNewsletterSubmit} className="flex flex-col sm:flex-row gap-4 max-w-xl mx-auto">
             <input
               type="email"
               placeholder={t('home.emailPlaceholder')}
+              value={newsletterEmail}
+              onChange={(e) => {
+                setNewsletterEmail(e.target.value);
+                setNewsletterStatus('idle');
+              }}
               className="input-luxury flex-1"
+              required
             />
-            <button className="btn-luxury whitespace-nowrap">
+            <button type="submit" className="btn-luxury whitespace-nowrap">
               {t('home.subscribe')}
             </button>
-          </div>
+          </form>
+          {newsletterStatus === 'success' && (
+            <p className="mt-4 text-green-600 dark:text-green-400 text-sm">
+              ✓ Thanks for subscribing! Check your inbox for a confirmation.
+            </p>
+          )}
+          {newsletterStatus === 'error' && (
+            <p className="mt-4 text-red-600 dark:text-red-400 text-sm">
+              Something went wrong. Please try again.
+            </p>
+          )}
         </div>
       </section>
     </div>
   );
 }
-
-// Featured Products Data
-const featuredProducts = [
-  {
-    id: 1,
-    name: "Floral Summer Dress",
-    price: 89.99,
-    category: "dresses",
-    isNew: true,
-    image: "https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?w=400&q=80",
-  },
-  {
-    id: 2,
-    name: "Classic Black Blazer",
-    price: 129.99,
-    category: "outerwear",
-    isNew: false,
-    image: "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=400&q=80",
-  },
-  {
-    id: 3,
-    name: "Silk Blouse",
-    price: 69.99,
-    category: "tops",
-    isNew: true,
-    image: "https://images.unsplash.com/photo-1564257631407-4deb1f99d992?w=400&q=80",
-  },
-  {
-    id: 4,
-    name: "Leather Crossbody Bag",
-    price: 119.99,
-    category: "accessories",
-    isNew: false,
-    image: "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=400&q=80",
-  },
-];
