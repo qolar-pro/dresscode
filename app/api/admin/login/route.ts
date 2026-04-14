@@ -58,8 +58,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
     }
 
-    // Rate limiting
-    const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown';
+    // Rate limiting (reuse ip from whitelist check above)
     const rateLimit = checkLoginRateLimit(ip);
     if (!rateLimit.allowed) {
       return NextResponse.json(
