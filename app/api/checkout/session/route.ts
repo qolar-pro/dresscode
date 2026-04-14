@@ -2,12 +2,19 @@ import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { supabaseAdmin } from '@/lib/supabase';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2026-03-25.dahlia',
-});
-
 export async function POST(request: NextRequest) {
   try {
+    // Validate Stripe env var at request time
+    const stripeKey = process.env.STRIPE_SECRET_KEY;
+    if (!stripeKey) {
+      console.error('STRIPE_SECRET_KEY is not set in environment variables');
+      return NextResponse.json({ error: 'Stripe is not configured' }, { status: 500 });
+    }
+
+    const stripe = new Stripe(stripeKey, {
+      apiVersion: '2026-03-25.dahlia',
+    });
+
     const body = await request.json();
     const { items, customer } = body;
 
@@ -33,7 +40,7 @@ export async function POST(request: NextRequest) {
       let usePrice = item.product?.price;
       let productName = item.product?.name || 'Unknown';
       let productImages = item.product?.images || [];
-      let productSizes = [];
+      let productSizes: any[] = [];
 
       try {
         const { data: dbProduct, error: productError } = await supabaseAdmin
@@ -54,7 +61,7 @@ export async function POST(request: NextRequest) {
             usePrice = dbProduct.price;
           }
 
-          // Check stock for selected size (soft check — don't block checkout)
+          // Soft stock check
           const selectedSize = item.size;
           if (selectedSize && productSizes.length > 0) {
             const sizeObj = productSizes.find((s: any) => s.name === selectedSize);
@@ -93,25 +100,21 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Calculate shipping based on SERVER subtotal
+    // Calculate shipping
     const shippingCost = serverSubtotal >= 100 ? 0 : 9.99;
     if (shippingCost > 0) {
       validatedLineItems.push({
         price_data: {
           currency: 'eur',
-          product_data: {
-            name: 'Shipping',
-          },
+          product_data: { name: 'Shipping' },
           unit_amount: Math.round(shippingCost * 100),
         },
         quantity: 1,
       });
     }
 
-    // Use environment variable for site URL, fallback to origin header
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || request.headers.get('origin') || 'http://localhost:3000';
 
-    // Create Checkout Session
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items: validatedLineItems,
