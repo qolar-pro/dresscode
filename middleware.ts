@@ -14,6 +14,13 @@ import { getClientIP, isIPAllowed } from '@/lib/ip-whitelist';
 const OLD_ADMIN_PATH = '/admin';
 const EMERGENCY_PATH = '/admin-emergency';
 
+function rewriteTo404(request: NextRequest) {
+  const url = request.nextUrl.clone();
+  url.pathname = '/not-found';
+  url.search = '';
+  return NextResponse.rewrite(url);
+}
+
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
@@ -22,24 +29,7 @@ export function middleware(request: NextRequest) {
     pathname === OLD_ADMIN_PATH ||
     pathname.startsWith(OLD_ADMIN_PATH + '/')
   ) {
-    return NextResponse.rewrite(new URL('/not-found', request.url));
-  }
-
-  // --- Protect secret admin URL ---
-  const secretSlug = process.env.ADMIN_SECRET_URL || '';
-  if (secretSlug && pathname === `/${secretSlug}`) {
-    const ip = getClientIP(request);
-    if (!isIPAllowed(ip, process.env.ADMIN_ALLOWED_IPS)) {
-      return NextResponse.rewrite(new URL('/not-found', request.url));
-    }
-  }
-
-  // --- Protect all sub-routes under the secret admin URL ---
-  if (secretSlug && pathname.startsWith(`/${secretSlug}/`)) {
-    const ip = getClientIP(request);
-    if (!isIPAllowed(ip, process.env.ADMIN_ALLOWED_IPS)) {
-      return NextResponse.rewrite(new URL('/not-found', request.url));
-    }
+    return rewriteTo404(request);
   }
 
   // --- Protect emergency fallback route ---
@@ -49,7 +39,18 @@ export function middleware(request: NextRequest) {
   ) {
     const ip = getClientIP(request);
     if (!isIPAllowed(ip, process.env.ADMIN_ALLOWED_IPS)) {
-      return NextResponse.rewrite(new URL('/not-found', request.url));
+      return rewriteTo404(request);
+    }
+  }
+
+  // --- Protect secret admin URL ---
+  const secretSlug = process.env.ADMIN_SECRET_URL || '';
+  if (secretSlug) {
+    if (pathname === `/${secretSlug}` || pathname.startsWith(`/${secretSlug}/`)) {
+      const ip = getClientIP(request);
+      if (!isIPAllowed(ip, process.env.ADMIN_ALLOWED_IPS)) {
+        return rewriteTo404(request);
+      }
     }
   }
 
@@ -68,17 +69,8 @@ export function middleware(request: NextRequest) {
 }
 
 // Run middleware on all paths so the secret slug can be matched at runtime.
-// The secret slug is only known at runtime via env var, so we can't
-// statically list it in the matcher array.
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - public files (images, fonts, etc.)
-     */
-    '/((?!_next/static|_next/image|favicon.ico|.*\\..*|images).*)',
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:css|js|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot|map)$|images).*)',
   ],
 };

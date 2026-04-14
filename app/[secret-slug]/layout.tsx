@@ -15,27 +15,30 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [showLangDropdown, setShowLangDropdown] = useState(false);
+  const [secretSlug, setSecretSlug] = useState<string | null>(null);
 
-  // Check authentication via server-side cookie verification
-  const [secretSlug, setSecretSlug] = useState<string>('admin');
-
+  // Fetch the secret slug from config endpoint on mount
   useEffect(() => {
-    // Fetch the secret slug from config endpoint on mount
     async function fetchSlug() {
       try {
         const res = await fetch('/api/admin/config');
         if (res.ok) {
           const data = await res.json();
           setSecretSlug(data.secretUrl || 'admin');
+        } else {
+          setSecretSlug('admin');
         }
       } catch {
-        // Use default
+        setSecretSlug('admin');
       }
     }
     fetchSlug();
   }, []);
 
+  // Check authentication AFTER we have the secret slug
   useEffect(() => {
+    if (secretSlug === null) return; // Wait for slug
+
     if (pathname === `/${secretSlug}`) {
       setIsLoading(false);
       return;
@@ -69,16 +72,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     } catch {
       // Logout anyway
     }
-    router.push(`/${secretSlug}`);
+    if (secretSlug) {
+      router.push(`/${secretSlug}`);
+    }
   };
 
-  // Show login page without layout
-  if (pathname === `/${secretSlug}`) {
-    return <>{children}</>;
-  }
-
-  // Loading state
-  if (isLoading) {
+  // Show loading state while fetching slug or verifying session
+  if (secretSlug === null || isLoading) {
     return (
       <div className="min-h-screen bg-charcoal-950 flex items-center justify-center">
         <div className="text-center">
@@ -87,6 +87,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
       </div>
     );
+  }
+
+  // Show login page without layout
+  if (pathname === `/${secretSlug}`) {
+    return <>{children}</>;
   }
 
   // Redirect if not authenticated
