@@ -25,10 +25,8 @@ const nextConfig = {
             key: 'X-Content-Type-Options',
             value: 'nosniff',
           },
-          {
-            key: 'X-Frame-Options',
-            value: 'DENY',
-          },
+          // REMOVED X-Frame-Options: DENY — conflicts with CSP frame-src for Stripe iframes
+          // CSP frame-src below restricts frames to Stripe only.
           {
             key: 'X-XSS-Protection',
             value: '0',
@@ -39,7 +37,7 @@ const nextConfig = {
           },
           {
             key: 'Content-Security-Policy',
-            value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com; style-src 'self' 'unsafe-inline'; img-src 'self' https: data:; font-src 'self' data:; connect-src 'self' https://nbiwnwkszvsopmtakcpb.supabase.co https://api.stripe.com https://blancographics.xyz; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self'",
+            value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com; style-src 'self' 'unsafe-inline'; img-src 'self' https: data:; font-src 'self' data:; connect-src 'self' https://nbiwnwkszvsopmtakcpb.supabase.co https://api.stripe.com https://blancographics.xyz; frame-src https://js.stripe.com https://hooks.stripe.com; object-src 'none'; base-uri 'self'; form-action 'self'",
           },
           {
             key: 'Permissions-Policy',

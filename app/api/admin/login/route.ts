@@ -3,12 +3,7 @@ import bcrypt from 'bcryptjs';
 import { serialize } from 'cookie';
 import { sessions, SESSION_TTL, generateSessionToken } from '@/lib/admin-sessions';
 
-// Password hash stored in environment variable ONLY (never in client code)
-const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH;
-
-if (!ADMIN_PASSWORD_HASH) {
-  console.error('WARNING: ADMIN_PASSWORD_HASH environment variable is not set');
-}
+// Password hash read from environment variable at request time (not module load)
 
 // Rate limiting for login attempts (IP-based, in-memory)
 const loginAttempts = new Map<string, { count: number; resetTime: number; blockedUntil: number }>();
@@ -51,6 +46,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Password is required' }, { status: 400 });
     }
 
+    const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH;
     if (!ADMIN_PASSWORD_HASH) {
       return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
     }

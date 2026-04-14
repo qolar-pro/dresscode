@@ -8,10 +8,16 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 
 export async function POST(request: NextRequest) {
   try {
-    const { items, customer } = await request.json();
+    const body = await request.json();
+    const { items, customer } = body;
 
+    // Validate required fields
     if (!items || !Array.isArray(items) || items.length === 0) {
       return NextResponse.json({ error: 'Cart is empty' }, { status: 400 });
+    }
+
+    if (!customer || !customer.email || !customer.firstName || !customer.lastName || !customer.orderId) {
+      return NextResponse.json({ error: 'Missing required customer information' }, { status: 400 });
     }
 
     // SERVER-SIDE PRICE VALIDATION: Look up prices from database, never trust client
