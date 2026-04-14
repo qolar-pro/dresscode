@@ -42,7 +42,9 @@ export async function POST(request: NextRequest) {
           .eq('id', productId)
           .single();
 
-        if (!productError && dbProduct) {
+        if (productError) {
+          console.warn(`Checkout: Supabase error for product ${productId}:`, productError.message, 'Code:', productError.code);
+        } else if (dbProduct) {
           productName = dbProduct.name || productName;
           productImages = dbProduct.images || productImages;
           productSizes = dbProduct.sizes || [];
@@ -60,10 +62,11 @@ export async function POST(request: NextRequest) {
               console.warn(`Checkout: Size ${selectedSize} for product ${productId} is out of stock, allowing checkout anyway`);
             }
           }
+        } else {
+          console.warn(`Checkout: Product ${productId} not found in Supabase, using client data`);
         }
-      } catch (dbError) {
-        // DB lookup failed — use client price as fallback
-        console.warn('Checkout: Failed to validate price from database, using client price:', dbError);
+      } catch (dbError: any) {
+        console.warn('Checkout: Supabase lookup exception:', dbError?.message || dbError);
       }
 
       if (!usePrice || usePrice <= 0) {
