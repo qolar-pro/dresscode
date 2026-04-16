@@ -242,15 +242,15 @@ export default function Home() {
                 <div className="inline-flex items-center gap-3 mb-4">
                   <Tag className="w-4 h-4 text-red-500" />
                   <span className="text-xs tracking-[0.3em] uppercase text-red-600 dark:text-red-400 font-semibold">
-                    Active Sales
+                    {t('home.activeSales')}
                   </span>
                 </div>
                 <h2 className="font-display text-4xl md:text-5xl font-light tracking-tight text-charcoal-900 dark:text-pearl-50">
-                  Don't Miss Out
+                  {t('home.dontMissOut')}
                 </h2>
               </div>
               <Link href="/shop" className="btn-luxury mt-4 md:mt-0 text-sm">
-                Shop All Sales →
+                {t('home.shopAllSales')} →
               </Link>
             </div>
 
@@ -296,10 +296,10 @@ export default function Home() {
                     )}
                     <div className="flex items-center justify-between">
                       <span className="text-xs text-neutral-500 dark:text-neutral-400">
-                        {(collection.product_ids || []).length} products included
+                        {(collection.product_ids || []).length} {t('home.productsIncluded')}
                       </span>
                       <span className="text-xs tracking-[0.15em] uppercase text-red-500 font-medium group-hover:translate-x-1 transition-transform duration-300">
-                        Shop Now →
+                        {t('home.shopNow')} →
                       </span>
                     </div>
                   </div>
