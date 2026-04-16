@@ -133,7 +133,11 @@ export async function DELETE(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { id } = body;
+    let id = body?.id;
+  if (!id && request.method === 'DELETE') {
+    const queryId = request.nextUrl.searchParams.get('id');
+    if (queryId) id = queryId;
+  }
 
     if (!id) {
       return NextResponse.json({ error: 'Collection ID is required' }, { status: 400 });

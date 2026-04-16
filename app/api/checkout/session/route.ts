@@ -14,7 +14,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Stripe is not configured' }, { status: 500 });
     }
 
-    const stripe = new Stripe(stripeKey, {});
+    const stripe = new Stripe(stripeKey, {
+      apiVersion: '2026-03-25.dahlia' as any,
+    });
     console.log('[CHECKOUT] Stripe client created');
 
     const body = await request.json();
@@ -39,10 +41,9 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Missing product ID in cart item' }, { status: 400 });
       }
 
-      let usePrice = item.product?.price;
-      let productName = item.product?.name || 'Unknown';
-      let productImages = item.product?.images || [];
-      let productSizes: any[] = [];
+      let usePrice = 0;
+      let productName = 'Unknown';
+      let productImages: string[] = [];
 
       try {
         console.log('[CHECKOUT] Looking up product', productId, 'from Supabase');
@@ -52,26 +53,23 @@ export async function POST(request: NextRequest) {
           .eq('id', productId)
           .single();
 
-        if (productError) {
-          console.warn('[CHECKOUT] Supabase error:', productError.message, 'Code:', productError.code);
-        } else if (dbProduct) {
-          console.log('[CHECKOUT] Product found:', dbProduct.name, 'price:', dbProduct.price);
-          productName = dbProduct.name || productName;
-          productImages = dbProduct.images || productImages;
-          productSizes = dbProduct.sizes || [];
-
-          if (dbProduct.price !== null && dbProduct.price !== undefined && dbProduct.price > 0) {
-            usePrice = dbProduct.price;
-          }
-        } else {
-          console.warn('[CHECKOUT] Product not found in DB');
+        if (productError || !dbProduct) {
+          console.error('[CHECKOUT] Product validation failed:', productError?.message || 'Product not found in DB');
+          return NextResponse.json({ error: `Product not found or unavailable: ${item.product?.name || productId}` }, { status: 404 });
         }
-      } catch (dbError: any) {
-        console.warn('[CHECKOUT] Supabase exception:', dbError?.message);
-      }
 
-      if (!usePrice || usePrice <= 0) {
-        return NextResponse.json({ error: `Invalid price for product ${productName}` }, { status: 400 });
+        console.log('[CHECKOUT] Product verified:', dbProduct.name, 'price:', dbProduct.price);
+        productName = dbProduct.name;
+        productImages = dbProduct.images || [];
+        
+        if (dbProduct.price === null || dbProduct.price === undefined || dbProduct.price <= 0) {
+          return NextResponse.json({ error: `Invalid price for product ${productName}` }, { status: 400 });
+        }
+        
+        usePrice = dbProduct.price;
+      } catch (dbError: any) {
+        console.error('[CHECKOUT] Database exception during validation:', dbError?.message);
+        return NextResponse.json({ error: 'Failed to verify product information' }, { status: 500 });
       }
 
       serverSubtotal += usePrice * (item.quantity || 1);

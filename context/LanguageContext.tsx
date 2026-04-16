@@ -16,7 +16,7 @@ const translations: Record<Language, Record<string, string>> = {
     'nav.home': 'Home',
     'nav.shop': 'Shop',
     'nav.contact': 'Contact',
-    'header.freeShipping': 'Free shipping on orders over $100',
+    'header.freeShipping': 'Free shipping on orders over €100',
     
     // Homepage
     'home.newCollection': 'New Collection 2026',
@@ -83,8 +83,10 @@ const translations: Record<Language, Record<string, string>> = {
     'product.addedToCart': 'Added to Cart',
     'product.selectSize': 'Please select a size',
     'product.selectColor': 'Please select a color',
-    'product.complimentaryShipping': 'Complimentary shipping on orders over $100',
+    'product.complimentaryShipping': 'Complimentary shipping on orders over €100',
     'product.cashOnDelivery': 'Cash on Delivery available',
+    'product.available': '${stock} available',
+    'product.leftInStock': '${stock} left in stock',
     'product.easyReturns': 'Easy returns within 30 days',
     'product.details': 'Details',
     'product.description': 'Description',
@@ -197,7 +199,7 @@ const translations: Record<Language, Record<string, string>> = {
     'nav.home': 'Αρχική',
     'nav.shop': 'Κατάστημα',
     'nav.contact': 'Επικοινωνία',
-    'header.freeShipping': 'Δωρεάν αποστολή σε παραγγελίες άνω των $100',
+    'header.freeShipping': 'Δωρεάν αποστολή σε παραγγελίες άνω των €100',
     
     // Homepage
     'home.newCollection': 'Νέα Συλλογή 2026',
@@ -264,8 +266,10 @@ const translations: Record<Language, Record<string, string>> = {
     'product.addedToCart': 'Προστέθηκε στο Καλάθι',
     'product.selectSize': 'Παρακαλώ επιλέξτε μέγεθος',
     'product.selectColor': 'Παρακαλώ επιλέξτε χρώμα',
-    'product.complimentaryShipping': 'Δωρεάν αποστολή σε παραγγελίες άνω των $100',
+    'product.complimentaryShipping': 'Δωρεάν αποστολή σε παραγγελίες άνω των €100',
     'product.cashOnDelivery': 'Διαθέσιμη αντικαταβολή',
+    'product.available': '${stock} διαθέσιμα',
+    'product.leftInStock': '${stock} απομένουν στο απόθεμα',
     'product.easyReturns': 'Εύκολες επιστροφές εντός 30 ημερών',
     'product.details': 'Λεπτομέρειες',
     'product.description': 'Περιγραφή',

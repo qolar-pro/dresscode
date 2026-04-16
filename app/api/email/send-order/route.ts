@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
             <h2 style="margin-top: 0;">Order Details</h2>
             <p><strong>Order ID:</strong> ${order.id}</p>
             <p><strong>Date:</strong> ${new Date(order.date).toLocaleDateString()}</p>
-            <p><strong>Total:</strong> $${order.total.toFixed(2)}</p>
+            <p><strong>Total:</strong> €${order.total.toFixed(2)}</p>
             <p><strong>Payment Method:</strong> ${order.paymentMethod}</p>
           </div>
 
@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
             ${order.items.map((item: any) => `
               <li style="border-bottom: 1px solid #e5e5e5; padding: 10px 0; display: flex; justify-content: space-between;">
                 <span>${item.product.name} (x${item.quantity})</span>
-                <span>$${(item.product.price * item.quantity).toFixed(2)}</span>
+                <span>€${(item.product.price * item.quantity).toFixed(2)}</span>
               </li>
             `).join('')}
           </ul>

@@ -92,25 +92,28 @@ function CheckoutContent() {
       paymentFee: paymentFee,
     };
 
-    // 1. Save Order to Supabase (always save first)
-    try {
-      const res = await fetch('/api/orders', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(order),
-      });
+    // 1. Save Order to Supabase ONLY for non-Stripe methods
+    // Stripe orders are created via webhook ONLY to prevent ghost orders
+    if (selectedPayment !== 'stripe') {
+      try {
+        const res = await fetch('/api/orders', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(order),
+        });
 
-      if (!res.ok) {
-        console.warn('Supabase save failed, falling back to localStorage');
+        if (!res.ok) {
+          console.warn('Supabase save failed, falling back to localStorage');
+          const orders = JSON.parse(localStorage.getItem('orders') || '[]');
+          orders.push(order);
+          localStorage.setItem('orders', JSON.stringify(orders));
+        }
+      } catch (error) {
+        console.error('Failed to save order to Supabase:', error);
         const orders = JSON.parse(localStorage.getItem('orders') || '[]');
         orders.push(order);
         localStorage.setItem('orders', JSON.stringify(orders));
       }
-    } catch (error) {
-      console.error('Failed to save order to Supabase:', error);
-      const orders = JSON.parse(localStorage.getItem('orders') || '[]');
-      orders.push(order);
-      localStorage.setItem('orders', JSON.stringify(orders));
     }
 
     // 2. Handle Payment Method
@@ -208,7 +211,7 @@ function CheckoutContent() {
             <div className="space-y-3 text-sm">
               <div className="flex justify-between">
                 <span className="text-neutral-600 dark:text-neutral-400">{t('cart.total')}</span>
-                <span className="font-medium text-xl text-neutral-900 dark:text-white">${grandTotal.toFixed(2)}</span>
+                <span className="font-medium text-xl text-neutral-900 dark:text-white">€{grandTotal.toFixed(2)}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-neutral-600 dark:text-neutral-400">{t('checkout.paymentMethod')}</span>
@@ -446,7 +449,7 @@ function CheckoutContent() {
                   </>
                 ) : (
                   <>
-                    {t('checkout.placeOrder')} — ${grandTotal.toFixed(2)}
+                    {t('checkout.placeOrder')} — €{grandTotal.toFixed(2)}
                   </>
                 )}
               </button>
@@ -487,21 +490,21 @@ function CheckoutContent() {
               <div className="space-y-3">
                 <div className="flex justify-between text-sm">
                   <span className="text-neutral-600 dark:text-neutral-400">{t('cart.subtotal')}</span>
-                  <span className="font-medium text-neutral-900 dark:text-white">${total.toFixed(2)}</span>
+                  <span className="font-medium text-neutral-900 dark:text-white">€{total.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-neutral-600 dark:text-neutral-400">{t('cart.shipping')}</span>
-                  <span className="font-medium text-neutral-900 dark:text-white">{shipping === 0 ? t('cart.complimentary') : `$${shipping.toFixed(2)}`}</span>
+                  <span className="font-medium text-neutral-900 dark:text-white">{shipping === 0 ? t('cart.complimentary') : `€${shipping.toFixed(2)}`}</span>
                 </div>
                 {paymentFee > 0 && (
                   <div className="flex justify-between text-sm">
                     <span className="text-neutral-600 dark:text-neutral-400">Payment Processing</span>
-                    <span className="font-medium text-neutral-900 dark:text-white">${paymentFee.toFixed(2)}</span>
+                    <span className="font-medium text-neutral-900 dark:text-white">€{paymentFee.toFixed(2)}</span>
                   </div>
                 )}
                 <div className="border-t border-neutral-300 dark:border-neutral-700 pt-3 flex justify-between">
                   <span className="font-medium text-neutral-900 dark:text-white">{t('cart.total')}</span>
-                  <span className="text-xl font-display text-neutral-900 dark:text-white">${grandTotal.toFixed(2)}</span>
+                  <span className="text-xl font-display text-neutral-900 dark:text-white">€{grandTotal.toFixed(2)}</span>
                 </div>
               </div>
 

@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { useLanguage } from '@/context/LanguageContext';
-import { ArrowRight, Star, Sparkles, ArrowDownRight, Tag } from 'lucide-react';
+import { ArrowRight, Star, Sparkles, ArrowDownRight, Tag, Shirt, Footprints, Sun, Wind, Briefcase, Gem } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 
 interface SalesCollection {
@@ -197,7 +197,7 @@ export default function Home() {
                 {/* Floating Price Tag */}
                 <div className="absolute bottom-6 left-6 glass px-4 py-3 rounded-xl">
                   <p className="text-xs tracking-wider uppercase text-neutral-600 dark:text-neutral-400">Starting from</p>
-                  <p className="text-2xl font-display text-charcoal-900 dark:text-pearl-50">$89</p>
+                  <p className="text-2xl font-display text-charcoal-900 dark:text-pearl-50">€89</p>
                 </div>
               </div>
             </div>
@@ -356,7 +356,7 @@ export default function Home() {
             <Link href="/shop?category=tops" className="bento-card-small group">
               <div className="absolute inset-0 bg-gradient-to-br from-rose-100 to-pink-100 dark:from-rose-900/30 dark:to-pink-900/30" />
               <div className="absolute inset-0 flex flex-col items-center justify-center p-6">
-                <span className="text-5xl mb-3 group-hover:scale-110 transition-transform duration-500">👚</span>
+                <Shirt className="w-10 h-10 mb-3 text-rose-500 group-hover:scale-110 transition-transform duration-500" />
                 <h3 className="text-lg font-display text-charcoal-900 dark:text-pearl-50 font-light">
                   {t('home.tops')}
                 </h3>
@@ -368,7 +368,7 @@ export default function Home() {
             <Link href="/shop?category=pants" className="bento-card-small group">
               <div className="absolute inset-0 bg-gradient-to-br from-neutral-100 to-neutral-200 dark:from-neutral-800 dark:to-neutral-700" />
               <div className="absolute inset-0 flex flex-col items-center justify-center p-6">
-                <span className="text-5xl mb-3 group-hover:scale-110 transition-transform duration-500">👖</span>
+                <Wind className="w-10 h-10 mb-3 text-neutral-500 group-hover:scale-110 transition-transform duration-500" />
                 <h3 className="text-lg font-display text-charcoal-900 dark:text-pearl-50 font-light">
                   {t('home.pants')}
                 </h3>
@@ -380,7 +380,7 @@ export default function Home() {
             <Link href="/shop?category=skirts" className="bento-card-small group">
               <div className="absolute inset-0 bg-gradient-to-br from-amber-100 to-orange-100 dark:from-amber-900/30 dark:to-orange-900/30" />
               <div className="absolute inset-0 flex flex-col items-center justify-center p-6">
-                <span className="text-5xl mb-3 group-hover:scale-110 transition-transform duration-500">👗</span>
+                <Sun className="w-10 h-10 mb-3 text-amber-500 group-hover:scale-110 transition-transform duration-500" />
                 <h3 className="text-lg font-display text-charcoal-900 dark:text-pearl-50 font-light">
                   {t('home.skirts')}
                 </h3>
@@ -392,7 +392,7 @@ export default function Home() {
             <Link href="/shop?category=accessories" className="bento-card-small group">
               <div className="absolute inset-0 bg-gradient-to-br from-emerald-100 to-teal-100 dark:from-emerald-900/30 dark:to-teal-900/30" />
               <div className="absolute inset-0 flex flex-col items-center justify-center p-6">
-                <span className="text-5xl mb-3 group-hover:scale-110 transition-transform duration-500">👜</span>
+                <Gem className="w-10 h-10 mb-3 text-emerald-500 group-hover:scale-110 transition-transform duration-500" />
                 <h3 className="text-lg font-display text-charcoal-900 dark:text-pearl-50 font-light">
                   {t('home.accessories')}
                 </h3>
@@ -531,7 +531,7 @@ export default function Home() {
                     <h3 className="font-medium tracking-wide text-charcoal-900 dark:text-pearl-50 group-hover:text-neutral-600 dark:group-hover:text-neutral-400 transition-colors duration-300">
                       {product.name}
                     </h3>
-                    <p className="font-light text-charcoal-900 dark:text-pearl-50">${product.price.toFixed(2)}</p>
+                    <p className="font-light text-charcoal-900 dark:text-pearl-50">€{product.price.toFixed(2)}</p>
                   </div>
                 </Link>
               ))

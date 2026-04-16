@@ -107,7 +107,7 @@ export default function AdminDashboard() {
     {
       icon: TrendingUp,
       label: 'Total Revenue',
-      value: `$${totalRevenue.toFixed(2)}`,
+      value: `€${totalRevenue.toFixed(2)}`,
       color: 'bg-green-500/10 text-green-400',
     },
     {
@@ -224,7 +224,7 @@ export default function AdminDashboard() {
                   </p>
                 </div>
                 <div className="text-right">
-                  <p className="text-pearl-50 font-medium">${order.total.toFixed(2)}</p>
+                  <p className="text-pearl-50 font-medium">€{order.total.toFixed(2)}</p>
                   <p className="text-xs text-neutral-400">
                     {new Date(order.date).toLocaleDateString()}
                   </p>

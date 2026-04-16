@@ -196,7 +196,7 @@ function ProductDetail({ product }: { product: any }) {
                   <span className="text-xs text-neutral-500 dark:text-neutral-400">(48 reviews)</span>
                 </div>
 
-                <p className="text-3xl font-light text-neutral-900 dark:text-white mb-8">${product.price.toFixed(2)}</p>
+                <p className="text-3xl font-light text-neutral-900 dark:text-white mb-8">€{product.price.toFixed(2)}</p>
                 
                 <p className="text-neutral-600 dark:text-neutral-400 leading-relaxed mb-10 font-light">{product.description}</p>
 

@@ -4,8 +4,9 @@ import Link from 'next/link';
 import { useCart } from '@/context/CartContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { useTheme } from '@/context/ThemeContext';
-import { ShoppingBag, Sun, Moon, Globe } from 'lucide-react';
+import { ShoppingBag, Sun, Moon, Globe, ChevronDown } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { categories } from '@/data/products';
 
 export default function Header() {
   const { getCartCount, setIsCartOpen } = useCart();
@@ -66,13 +67,36 @@ export default function Header() {
                 {t('nav.home')}
                 <span className="absolute -bottom-1 left-0 w-0 h-[1px] bg-charcoal-900 dark:bg-pearl-50 group-hover:w-full transition-all duration-500" />
               </Link>
-              <Link
-                href="/shop"
-                className="text-xs tracking-[0.2em] uppercase font-medium text-neutral-600 dark:text-neutral-400 hover:text-charcoal-900 dark:hover:text-pearl-50 transition-colors relative group"
-              >
-                {t('nav.shop')}
-                <span className="absolute -bottom-1 left-0 w-0 h-[1px] bg-charcoal-900 dark:bg-pearl-50 group-hover:w-full transition-all duration-500" />
-              </Link>
+              {/* Categories Dropdown */}
+              <div className="relative group/categories">
+                <Link
+                  href="/shop"
+                  className="flex items-center gap-1 text-xs tracking-[0.2em] uppercase font-medium text-neutral-600 dark:text-neutral-400 group-hover/categories:text-charcoal-900 dark:group-hover/categories:text-pearl-50 transition-colors"
+                >
+                  {t('nav.shop')}
+                  <ChevronDown className="w-3 h-3 transition-transform duration-300 group-hover/categories:rotate-180" />
+                </Link>
+                
+                <div className="absolute top-full left-1/2 -translate-x-1/2 pt-4 opacity-0 invisible group-hover/categories:opacity-100 group-hover/categories:visible transition-all duration-300 z-50">
+                  <div className="bg-white dark:bg-charcoal-900 border border-neutral-200 dark:border-charcoal-800 shadow-2xl rounded-xl overflow-hidden min-w-[200px] p-2">
+                    <Link
+                      href="/shop"
+                      className="block px-4 py-3 text-[10px] tracking-[0.2em] uppercase font-medium text-neutral-600 dark:text-neutral-400 hover:bg-neutral-50 dark:hover:bg-charcoal-800 hover:text-charcoal-900 dark:hover:text-pearl-50 rounded-lg transition-all"
+                    >
+                      {t('shop.all')}
+                    </Link>
+                    {categories.filter(c => c.id !== 'all').map((cat) => (
+                      <Link
+                        key={cat.id}
+                        href={`/shop?category=${cat.id}`}
+                        className="block px-4 py-3 text-[10px] tracking-[0.2em] uppercase font-medium text-neutral-600 dark:text-neutral-400 hover:bg-neutral-50 dark:hover:bg-charcoal-800 hover:text-charcoal-900 dark:hover:text-pearl-50 rounded-lg transition-all"
+                      >
+                        {t(`home.${cat.id}`) || cat.name}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              </div>
               <Link
                 href="/contact"
                 className="text-xs tracking-[0.2em] uppercase font-medium text-neutral-600 dark:text-neutral-400 hover:text-charcoal-900 dark:hover:text-pearl-50 transition-colors relative group"

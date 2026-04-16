@@ -358,17 +358,17 @@ function ProductCard({ product, activeCollection }: { product: Product; activeCo
         <div className="flex items-center gap-2">
           {isInCollection && activeCollection ? (
             <>
-              <p className="font-light text-red-500">${discountedPrice.toFixed(2)}</p>
-              <p className="font-light text-neutral-400 line-through">${product.price.toFixed(2)}</p>
+              <p className="font-light text-red-500">€{discountedPrice.toFixed(2)}</p>
+              <p className="font-light text-neutral-400 line-through">€{product.price.toFixed(2)}</p>
             </>
           ) : (
-            <p className="font-light text-neutral-900 dark:text-white">${product.price.toFixed(2)}</p>
+            <p className="font-light text-neutral-900 dark:text-white">€{product.price.toFixed(2)}</p>
           )}
         </div>
         {/* Stock indicator */}
         {!isSoldOut && totalStock > 0 && (
           <p className="text-[10px] text-neutral-400">
-            {totalStock > 20 ? `${totalStock} available` : `${totalStock} left in stock`}
+            {totalStock > 20 ? t('product.available').replace('${stock}', totalStock.toString()) : t('product.leftInStock').replace('${stock}', totalStock.toString())}
           </p>
         )}
       </div>

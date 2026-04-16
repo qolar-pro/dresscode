@@ -106,7 +106,7 @@ export default function CartDrawer() {
                           </button>
                         </div>
                         <p className="font-medium text-charcoal-900 dark:text-pearl-50">
-                          ${(item.product.price * item.quantity).toFixed(2)}
+                          €{(item.product.price * item.quantity).toFixed(2)}
                         </p>
                       </div>
                     </div>

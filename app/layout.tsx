@@ -21,7 +21,7 @@ export const metadata: Metadata = {
     default: "DRESS CODE - Modern Fashion Boutique",
     template: "%s | DRESS CODE"
   },
-  description: "Discover the latest trends in women's fashion. Shop dresses, tops, pants, and more with cash on delivery. Free shipping on orders over $100.",
+  description: "Discover the latest trends in women's fashion. Shop dresses, tops, pants, and more with cash on delivery. Free shipping on orders over €100.",
   openGraph: {
     title: "DRESS CODE - Modern Fashion Boutique",
     description: "Discover the latest trends in women's fashion. Shop dresses, tops, pants, and more.",

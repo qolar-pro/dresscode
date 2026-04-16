@@ -61,24 +61,6 @@ export function parseWhitelist(env: string | undefined): string[] {
  * (empty whitelist = allow all, useful for local dev).
  */
 export function isIPAllowed(ip: string, whitelistEnv: string | undefined): boolean {
-  const whitelist = parseWhitelist(whitelistEnv);
-
-  // Empty whitelist = allow everything (dev mode)
-  if (whitelist.length === 0) return true;
-
-  const normalized = normalizeIP(ip);
-
-  // Always allow localhost
-  if (
-    normalized === '127.0.0.1' ||
-    normalized === '::1' ||
-    normalized === 'localhost' ||
-    normalized.startsWith('192.168.') ||
-    normalized.startsWith('10.') ||
-    normalized === 'unknown'
-  ) {
-    return true;
-  }
-
-  return whitelist.includes(normalized);
+  // IP Whitelisting temporarily disabled as requested
+  return true;
 }
