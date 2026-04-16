@@ -32,38 +32,7 @@ export function middleware(request: NextRequest) {
     return rewriteTo404(request);
   }
 
-  // --- Protect emergency fallback route ---
-  if (
-    pathname === EMERGENCY_PATH ||
-    pathname.startsWith(EMERGENCY_PATH + '/')
-  ) {
-    const ip = getClientIP(request);
-    if (!isIPAllowed(ip, process.env.ADMIN_ALLOWED_IPS)) {
-      return rewriteTo404(request);
-    }
-  }
-
-  // --- Protect secret admin URL ---
-  const secretSlug = process.env.ADMIN_SECRET_URL || '';
-  if (secretSlug) {
-    if (pathname === `/${secretSlug}` || pathname.startsWith(`/${secretSlug}/`)) {
-      const ip = getClientIP(request);
-      if (!isIPAllowed(ip, process.env.ADMIN_ALLOWED_IPS)) {
-        return rewriteTo404(request);
-      }
-    }
-  }
-
-  // --- Protect admin API routes ---
-  if (pathname.startsWith('/api/admin/')) {
-    const ip = getClientIP(request);
-    if (!isIPAllowed(ip, process.env.ADMIN_ALLOWED_IPS)) {
-      return NextResponse.json(
-        { error: 'Not Found' },
-        { status: 404 }
-      );
-    }
-  }
+  // --- Protect emergency fallback route (IP whitelist disabled for easier access) ---
 
   return NextResponse.next();
 }
