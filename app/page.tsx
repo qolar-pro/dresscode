@@ -360,7 +360,7 @@ export default function Home() {
                 <h3 className="text-lg font-display text-charcoal-900 dark:text-pearl-50 font-light">
                   {t('home.tops')}
                 </h3>
-                <p className="text-xs text-neutral-600 dark:text-neutral-400 mt-1">38 items</p>
+                <p className="text-xs text-neutral-600 dark:text-neutral-400 mt-1">38 {t('home.items')}</p>
               </div>
             </Link>
 
@@ -372,7 +372,7 @@ export default function Home() {
                 <h3 className="text-lg font-display text-charcoal-900 dark:text-pearl-50 font-light">
                   {t('home.pants')}
                 </h3>
-                <p className="text-xs text-neutral-600 dark:text-neutral-400 mt-1">32 items</p>
+                <p className="text-xs text-neutral-600 dark:text-neutral-400 mt-1">32 {t('home.items')}</p>
               </div>
             </Link>
 
@@ -384,7 +384,7 @@ export default function Home() {
                 <h3 className="text-lg font-display text-charcoal-900 dark:text-pearl-50 font-light">
                   {t('home.skirts')}
                 </h3>
-                <p className="text-xs text-neutral-600 dark:text-neutral-400 mt-1">28 items</p>
+                <p className="text-xs text-neutral-600 dark:text-neutral-400 mt-1">28 {t('home.items')}</p>
               </div>
             </Link>
 
@@ -396,7 +396,7 @@ export default function Home() {
                 <h3 className="text-lg font-display text-charcoal-900 dark:text-pearl-50 font-light">
                   {t('home.accessories')}
                 </h3>
-                <p className="text-xs text-neutral-600 dark:text-neutral-400 mt-1">33 items</p>
+                <p className="text-xs text-neutral-600 dark:text-neutral-400 mt-1">33 {t('home.items')}</p>
               </div>
             </Link>
 
@@ -412,7 +412,7 @@ export default function Home() {
                 <div className="absolute inset-0 bg-gradient-to-t from-charcoal-900/60 to-transparent" />
               </div>
               <div className="absolute bottom-0 left-0 right-0 p-6">
-                <p className="text-xs tracking-[0.3em] uppercase text-pearl-50/70 mb-2">24 items</p>
+                <p className="text-xs tracking-[0.3em] uppercase text-pearl-50/70 mb-2">24 {t('home.items')}</p>
                 <h3 className="text-2xl font-display text-pearl-50 font-light">
                   {t('home.outerwear')}
                 </h3>
