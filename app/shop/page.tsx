@@ -358,7 +358,9 @@ function ProductCard({ product, activeCollection }: { product: Product; activeCo
       </div>
       
       <div className="space-y-2">
-        <p className="text-[10px] tracking-[0.2em] uppercase text-neutral-500 dark:text-neutral-400">{product.category}</p>
+        <p className="text-[10px] tracking-[0.2em] uppercase text-neutral-500 dark:text-neutral-400">
+          {t(`home.${product.category}`) !== `home.${product.category}` ? t(`home.${product.category}`) : product.category}
+        </p>
         <h3 className="font-medium tracking-wide text-neutral-900 dark:text-white group-hover:text-neutral-600 dark:group-hover:text-neutral-400 transition-colors duration-300">{product.name}</h3>
         <div className="flex items-center gap-2">
           {isInCollection && activeCollection ? (
