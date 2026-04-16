@@ -80,6 +80,10 @@ const translations: Record<Language, Record<string, string>> = {
     'shop.clearFilters': 'Clear Filters',
     'shop.new': 'New',
     'shop.soldOut': 'Sold Out',
+    'shop.sort.newest': 'Newest',
+    'shop.sort.priceLow': 'Price: Low to High',
+    'shop.sort.priceHigh': 'Price: High to Low',
+    'shop.sort.name': 'Name: A-Z',
     
     // Product
     'product.back': 'Back',
@@ -269,6 +273,10 @@ const translations: Record<Language, Record<string, string>> = {
     'shop.clearFilters': 'Καθαρισμός Φίλτρων',
     'shop.new': 'Νέο',
     'shop.soldOut': 'Εξαντλημένο',
+    'shop.sort.newest': 'Νεότερα',
+    'shop.sort.priceLow': 'Τιμή: Χαμηλή σε Υψηλή',
+    'shop.sort.priceHigh': 'Τιμή: Υψηλή σε Χαμηλή',
+    'shop.sort.name': 'Όνομα: Α-Ω',
     
     // Product
     'product.back': 'Πίσω',

@@ -238,7 +238,7 @@ export default function ShopPage() {
                     : 'bg-transparent text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white border border-neutral-300 dark:border-neutral-700 hover:border-neutral-900 dark:hover:border-white'
                 }`}
               >
-                {cat.id === 'all' ? t('shop.all') : cat.name}
+                {cat.id === 'all' ? t('shop.all') : (t(`home.${cat.id}`) !== `home.${cat.id}` ? t(`home.${cat.id}`) : cat.name)}
               </button>
             ))}
           </div>
@@ -250,7 +250,12 @@ export default function ShopPage() {
             className="px-4 py-2 border border-neutral-300 dark:border-neutral-700 text-xs tracking-[0.15em] uppercase font-medium focus:outline-none focus:border-neutral-900 dark:focus:border-white bg-transparent dark:bg-neutral-900 text-neutral-900 dark:text-white cursor-pointer"
           >
             {sortOptions.map(opt => (
-              <option key={opt.id} value={opt.id}>{opt.name}</option>
+              <option key={opt.id} value={opt.id}>
+                {opt.id === 'newest' && t('shop.sort.newest')}
+                {opt.id === 'price-low' && t('shop.sort.priceLow')}
+                {opt.id === 'price-high' && t('shop.sort.priceHigh')}
+                {opt.id === 'name' && t('shop.sort.name')}
+              </option>
             ))}
           </select>
         </div>
