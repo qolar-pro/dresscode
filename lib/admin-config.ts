@@ -1,14 +1,13 @@
 /**
- * DRESS CODE - Admin Security Configuration
+ * Sneaker Air - Admin Security Configuration
  *
  * IMPORTANT: This file no longer stores credentials.
  * All authentication uses bcrypt + HttpOnly cookies via /api/admin/login.
  *
  * PASSWORD MANAGEMENT:
  * 1. Set ADMIN_PASSWORD_HASH in your .env.local file (bcrypt hash)
- * 2. To generate a bcrypt hash:
- *    - npm install bcrypt
- *    - Run: node -e "const bcrypt=require('bcrypt'); bcrypt.hash('YourPassword', 12).then(h => console.log(h))"
+ * 2. To generate a bcrypt hash (the project uses bcryptjs):
+ *    - Run: node -e "const bcrypt=require('bcryptjs'); bcrypt.hash('YourPassword', 12).then(h => console.log(h))"
  *
  * SESSION CONFIGURATION:
  * - Sessions stored in-memory (Map). For production, use Redis or database.
@@ -18,7 +17,10 @@
  * IP WHITELISTING:
  * - Set ADMIN_ALLOWED_IPS in .env.local (comma-separated)
  * - Secret admin URL slug set via ADMIN_SECRET_URL
- * - Emergency master password via ADMIN_MASTER_PASSWORD
+ *
+ * NOTE: The old "emergency master password" backdoor (ADMIN_MASTER_PASSWORD /
+ * /admin-emergency) has been removed. It minted a full admin session from a
+ * plaintext password with no IP gating or auth — do not reintroduce it.
  */
 
 export const ADMIN_CONFIG = {
@@ -35,14 +37,11 @@ export const ADMIN_CONFIG = {
   LOCKOUT_DURATION: 15 * 60 * 1000,
 
   // Admin email for notifications
-  ADMIN_EMAIL: process.env.ADMIN_EMAIL || 'admin@dresscode.com',
+  ADMIN_EMAIL: process.env.ADMIN_EMAIL || 'hello@sneakerair.com',
 
   // Secret admin URL slug (generated at runtime)
   ADMIN_SECRET_URL: process.env.ADMIN_SECRET_URL || '',
 
   // IP whitelist
   ADMIN_ALLOWED_IPS: process.env.ADMIN_ALLOWED_IPS || '',
-
-  // Emergency master password (fallback access)
-  ADMIN_MASTER_PASSWORD: process.env.ADMIN_MASTER_PASSWORD || '',
 };

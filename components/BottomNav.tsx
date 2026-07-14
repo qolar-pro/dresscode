@@ -12,7 +12,7 @@ export default function BottomNav() {
   const navItems = [
     { href: '/', icon: Home, label: t('nav.home') },
     { href: '/shop', icon: ShoppingBag, label: t('nav.shop') },
-    { href: '/shop?category=accessories', icon: Heart, label: t('home.accessories') },
+    { href: '/shop?category=limited', icon: Heart, label: t('home.accessories') },
     { href: '/contact', icon: User, label: t('nav.contact') },
   ];
 

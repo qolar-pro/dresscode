@@ -239,12 +239,12 @@ function CheckoutContent() {
   }
 
   const emojiMap: Record<string, string> = {
-    dresses: '👗',
-    tops: '👚',
-    pants: '👖',
-    skirts: '👗',
-    outerwear: '🧥',
-    accessories: '👜',
+    running: '🏃',
+    basketball: '🏀',
+    lifestyle: '👟',
+    skate: '🛹',
+    training: '🏋️',
+    limited: '✨',
   };
 
   return (
@@ -418,7 +418,7 @@ function CheckoutContent() {
                               <p className="font-medium text-neutral-900 dark:text-white">{method.name}</p>
                               {fee > 0 && (
                                 <p className="text-xs text-neutral-500 dark:text-neutral-400">
-                                  +${fee.toFixed(2)} processing fee
+                                  +€{fee.toFixed(2)} processing fee
                                 </p>
                               )}
                             </div>
@@ -466,7 +466,7 @@ function CheckoutContent() {
                   <div key={index} className="flex gap-4">
                     <div className="w-16 h-20 relative flex-shrink-0 overflow-hidden rounded-lg bg-neutral-100 dark:bg-neutral-800">
                       <Image
-                        src={item.product.images?.[0] || defaultImages[item.product.category] || defaultImages.dresses}
+                        src={item.product.images?.[0] || defaultImages[item.product.category] || defaultImages.lifestyle}
                         alt={item.product.name}
                         fill
                         className="object-cover"
@@ -481,7 +481,7 @@ function CheckoutContent() {
                       <p className="text-xs text-neutral-600 dark:text-neutral-400">Qty: {item.quantity}</p>
                     </div>
                     <p className="font-medium text-sm text-neutral-900 dark:text-white">
-                      ${(item.product.price * item.quantity).toFixed(2)}
+                      €{(item.product.price * item.quantity).toFixed(2)}
                     </p>
                   </div>
                 ))}

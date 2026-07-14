@@ -78,13 +78,13 @@ export async function POST(request: NextRequest) {
 
     if (error) {
       console.error('Sales Collections insert error:', error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json({ error: 'Request failed' }, { status: 500 });
     }
 
     return NextResponse.json({ collection: data }, { status: 201 });
   } catch (error: any) {
     console.error('Sales Collections POST error:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: 'Request failed' }, { status: 500 });
   }
 }
 
@@ -123,7 +123,7 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ collection: data });
   } catch (error: any) {
     console.error('Sales Collections PATCH error:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: 'Request failed' }, { status: 500 });
   }
 }
 
@@ -152,6 +152,6 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ success: true });
   } catch (error: any) {
     console.error('Sales Collections DELETE error:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: 'Request failed' }, { status: 500 });
   }
 }

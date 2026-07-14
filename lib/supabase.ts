@@ -6,14 +6,28 @@
  */
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-// Browser client (RLS-protected)
+// Fail loudly with a clear message instead of passing `undefined` into
+// createClient (which yields cryptic runtime errors deep in a request).
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error(
+    'Supabase not configured: set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in your environment (.env.local).'
+  );
+}
+if (!supabaseServiceKey) {
+  throw new Error(
+    'Supabase not configured: set SUPABASE_SERVICE_ROLE_KEY in your environment (.env.local). This key is server-only.'
+  );
+}
+
+// Browser client (RLS-protected, read-only catalog per RLS policies)
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-// Server client (admin access, use only in API routes)
+// Server client (service role, bypasses RLS — use ONLY in API routes, never in
+// a 'use client' component).
 export const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
 /**

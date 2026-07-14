@@ -18,7 +18,7 @@ export default function PrivacyPolicy() {
             
             <section>
               <h2 className="text-2xl font-semibold text-charcoal-900 dark:text-pearl-50 mb-4">1. Introduction</h2>
-              <p>DRESS CODE ("we," "our," or "us") respects your privacy and is committed to protecting your personal data. This privacy policy will inform you about how we look after your personal data when you visit our website and tell you about your privacy rights and how the law protects you.</p>
+              <p>Sneaker Air ("we," "our," or "us") respects your privacy and is committed to protecting your personal data. This privacy policy will inform you about how we look after your personal data when you visit our website and tell you about your privacy rights and how the law protects you.</p>
             </section>
 
             <section>
@@ -57,8 +57,8 @@ export default function PrivacyPolicy() {
               <h2 className="text-2xl font-semibold text-charcoal-900 dark:text-pearl-50 mb-4">6. Contact Us</h2>
               <p>If you have any questions about this privacy policy or our privacy practices, please contact us at:</p>
               <p className="font-medium text-charcoal-900 dark:text-pearl-50">
-                Email: privacy@blancographics.xyz<br />
-                Phone: (555) 123-4567
+                Email: privacy@sneakerair.com<br />
+                Phone: +30 210 555 0199
               </p>
             </section>
           </div>

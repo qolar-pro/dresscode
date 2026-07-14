@@ -1,22 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { randomUUID } from 'crypto';
 import Stripe from 'stripe';
 import { supabaseAdmin } from '@/lib/supabase';
 
+// Lazy Stripe init: constructing `new Stripe(...)` at module load time throws
+// if STRIPE_SECRET_KEY is missing, which crashes the build/deploy. Deferring
+// construction into the handler means a missing key only fails the request.
+function getStripe() {
+  const key = process.env.STRIPE_SECRET_KEY;
+  if (!key) throw new Error('Stripe not configured');
+  return new Stripe(key, { apiVersion: '2026-03-25.dahlia' as any });
+}
+
 export async function POST(request: NextRequest) {
   console.log('[CHECKOUT] Request received');
-  
+
   try {
-    const stripeKey = process.env.STRIPE_SECRET_KEY;
-    console.log('[CHECKOUT] Stripe key exists:', !!stripeKey);
-    
-    if (!stripeKey) {
+    let stripe: Stripe;
+    try {
+      stripe = getStripe();
+    } catch {
       console.error('[CHECKOUT] STRIPE_SECRET_KEY is not set');
       return NextResponse.json({ error: 'Stripe is not configured' }, { status: 500 });
     }
-
-    const stripe = new Stripe(stripeKey, {
-      apiVersion: '2026-03-25.dahlia' as any,
-    });
     console.log('[CHECKOUT] Stripe client created');
 
     const body = await request.json();
@@ -28,9 +34,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Cart is empty' }, { status: 400 });
     }
 
-    if (!customer || !customer.email || !customer.firstName || !customer.lastName || !customer.orderId) {
+    if (!customer || !customer.email || !customer.firstName || !customer.lastName) {
       return NextResponse.json({ error: 'Missing required customer information' }, { status: 400 });
     }
+
+    // Server-authoritative, unguessable order ID. Never trust a client-supplied
+    // orderId (client used to send `ORD-${Date.now()}`, which is guessable).
+    const orderId = 'ORD-' + randomUUID();
 
     const validatedLineItems: any[] = [];
     let serverSubtotal = 0;
@@ -116,13 +126,13 @@ export async function POST(request: NextRequest) {
       cancel_url: `${siteUrl}/checkout`,
       customer_email: customer.email,
       metadata: {
-        orderId: customer.orderId,
+        orderId,
         customerName: `${customer.firstName} ${customer.lastName}`,
       },
     });
 
     console.log('[CHECKOUT] Session created:', session.id);
-    return NextResponse.json({ url: session.url });
+    return NextResponse.json({ url: session.url, orderId });
   } catch (error: any) {
     console.error('[CHECKOUT] Fatal error:', error);
     console.error('[CHECKOUT] Error stack:', error?.stack);

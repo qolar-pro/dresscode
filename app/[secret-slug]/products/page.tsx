@@ -44,6 +44,7 @@ export default function AdminProducts() {
           colors: p.colors || [],
           isNew: p.is_new,
           isFeatured: p.is_featured,
+          stock: p.stock,
         }));
         setProducts(frontendProducts);
       } else {
@@ -121,33 +122,29 @@ export default function AdminProducts() {
       id: Date.now(),
       name: 'New Product',
       price: 0,
-      category: 'dresses',
+      category: 'lifestyle',
       description: 'Product description',
-      images: [defaultImages.dresses],
-      sizes: [
-        { name: 'XS', available: true },
-        { name: 'S', available: true },
-        { name: 'M', available: true },
-        { name: 'L', available: true },
-        { name: 'XL', available: true },
-      ],
-      colors: [
-        { name: 'Black', hex: '#171717', available: true },
-      ],
+      images: [],
+      sizes: ['38', '39', '40', '41', '42', '43', '44', '45', '46'].map((size) => ({
+        name: size,
+        available: true,
+        stock: 0,
+      })),
+      colors: [],
       isNew: true,
-      stock: 100,
+      stock: 0,
     };
     setEditingProduct(newProduct);
     setIsEditing(true);
   };
 
   const emojiMap: Record<string, string> = {
-    dresses: '👗',
-    tops: '👚',
-    pants: '👖',
-    skirts: '👗',
-    outerwear: '🧥',
-    accessories: '👜',
+    running: '👟',
+    basketball: '👟',
+    lifestyle: '👟',
+    skate: '👟',
+    training: '👟',
+    limited: '👟',
   };
 
   if (loading) {
@@ -200,12 +197,12 @@ export default function AdminProducts() {
                   onError={(e) => {
                     if (e.currentTarget.parentElement) {
                       e.currentTarget.style.display = 'none';
-                      e.currentTarget.parentElement.innerHTML = `<span class="text-6xl">${emojiMap[product.category] || '👗'}</span>`;
+                      e.currentTarget.parentElement.innerHTML = `<span class="text-6xl">${emojiMap[product.category] || '👟'}</span>`;
                     }
                   }}
                 />
               ) : (
-                <span className="text-6xl">{emojiMap[product.category] || '👗'}</span>
+                <span className="text-6xl">{emojiMap[product.category] || '👟'}</span>
               )}
             </div>
 
@@ -216,7 +213,7 @@ export default function AdminProducts() {
                   <h3 className="text-pearl-50 font-medium mb-1">{product.name}</h3>
                   <p className="text-xs text-neutral-400 uppercase tracking-wider">{product.category}</p>
                 </div>
-                <p className="text-pearl-50 font-medium">${product.price.toFixed(2)}</p>
+                <p className="text-pearl-50 font-medium">€{product.price.toFixed(2)}</p>
               </div>
 
               <div className="flex items-center gap-2 mb-4">
@@ -292,7 +289,7 @@ export default function AdminProducts() {
               {/* Price & Category */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs text-neutral-400 uppercase tracking-wider mb-2">Price ($)</label>
+                  <label className="block text-xs text-neutral-400 uppercase tracking-wider mb-2">Price (€)</label>
                   <input
                     type="number"
                     value={editingProduct.price}
@@ -315,12 +312,12 @@ export default function AdminProducts() {
                     }}
                     className="w-full px-4 py-3 bg-charcoal-800 border border-charcoal-700 rounded-lg text-pearl-50 focus:outline-none focus:border-pearl-50"
                   >
-                    <option value="dresses">Dresses</option>
-                    <option value="tops">Tops</option>
-                    <option value="pants">Pants</option>
-                    <option value="skirts">Skirts</option>
-                    <option value="outerwear">Outerwear</option>
-                    <option value="accessories">Accessories</option>
+                    <option value="running">Running</option>
+                    <option value="basketball">Basketball</option>
+                    <option value="lifestyle">Lifestyle</option>
+                    <option value="skate">Skate</option>
+                    <option value="training">Training</option>
+                    <option value="limited">Limited</option>
                   </select>
                 </div>
               </div>
@@ -350,7 +347,7 @@ export default function AdminProducts() {
                       <button
                         onClick={() => setEditingProduct({
                           ...editingProduct,
-                          images: [defaultImages[editingProduct.category] || defaultImages.dresses]
+                          images: [defaultImages[editingProduct.category] || defaultImages.lifestyle]
                         })}
                         className="absolute top-2 right-2 p-2 bg-red-500/80 hover:bg-red-500 rounded-lg transition-colors"
                       >
@@ -416,7 +413,7 @@ export default function AdminProducts() {
               <div>
                 <label className="block text-xs text-neutral-400 uppercase tracking-wider mb-3">Sizes & Stock</label>
                 <div className="space-y-3">
-                  {['XS', 'S', 'M', 'L', 'XL'].map((size) => {
+                  {['38', '39', '40', '41', '42', '43', '44', '45', '46'].map((size) => {
                     const sizeObj = editingProduct.sizes.find(s => s.name === size);
                     const isAvailable = sizeObj?.available ?? true;
                     const stock = sizeObj?.stock ?? 0;

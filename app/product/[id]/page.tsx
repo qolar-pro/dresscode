@@ -5,9 +5,11 @@ import { useLanguage } from '@/context/LanguageContext';
 import { products as defaultProducts, defaultImages } from '@/data/products';
 import { useCart } from '@/context/CartContext';
 import { useState, useEffect } from 'react';
-import { Minus, Plus, ShoppingBag, ArrowLeft, Star } from 'lucide-react';
+import { Minus, Plus, ShoppingBag, ArrowLeft, Star, Box, ImageIcon } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
+import SneakerViewer3D from '@/components/three/SneakerViewer3D';
+import { variantForColorwayIndex } from '@/lib/sneaker-models';
 
 export default function ProductPage() {
   const params = useParams();
@@ -84,16 +86,17 @@ function ProductDetail({ product }: { product: any }) {
   const { addToCart } = useCart();
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
+  const [view, setView] = useState<'3d' | 'photo'>('3d');
   const [quantity, setQuantity] = useState(1);
   const [addedToCart, setAddedToCart] = useState(false);
 
   const emojiMap: Record<string, string> = {
-    dresses: '👗',
-    tops: '👚',
-    pants: '👖',
-    skirts: '👗',
-    outerwear: '🧥',
-    accessories: '👜',
+    running: '🏃',
+    basketball: '🏀',
+    lifestyle: '👟',
+    skate: '🛹',
+    training: '🏋️',
+    limited: '✨',
   };
 
   const handleAddToCart = () => {
@@ -149,20 +152,25 @@ function ProductDetail({ product }: { product: any }) {
 
         <div className="container mx-auto px-4 py-12">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 mb-24">
-            {/* Product Image */}
-            <div className="aspect-[4/5] bg-neutral-100 dark:bg-neutral-800 relative overflow-hidden">
-              {product.images?.[0] ? (
-                <Image
-                  src={product.images[0]}
+            {/* Product Image / Live 3D */}
+            <div className="aspect-[4/5] bg-neutral-100 dark:bg-charcoal-800 relative overflow-hidden rounded-sm">
+              {view === '3d' ? (
+                <SneakerViewer3D
+                  variant={variantForColorwayIndex(
+                    Math.max(
+                      0,
+                      (product.colors || []).findIndex((c: any) => c.name === selectedColor)
+                    )
+                  )}
+                  autoRotate
+                  interactive
+                  fallbackImage={product.images?.[0] || defaultImages[product.category] || defaultImages.running}
                   alt={product.name}
-                  fill
-                  className="object-cover"
-                  sizes="(max-width: 1024px) 100vw, 50vw"
-                  priority
+                  className="h-full w-full"
                 />
               ) : (
                 <Image
-                  src={defaultImages[product.category] || defaultImages.dresses}
+                  src={product.images?.[0] || defaultImages[product.category] || defaultImages.running}
                   alt={product.name}
                   fill
                   className="object-cover"
@@ -170,8 +178,29 @@ function ProductDetail({ product }: { product: any }) {
                   priority
                 />
               )}
+
+              {/* 3D / Photo toggle */}
+              <div className="absolute bottom-4 left-1/2 z-10 flex -translate-x-1/2 gap-1 rounded-full aura-glass p-1">
+                <button
+                  onClick={() => setView('3d')}
+                  className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.15em] transition ${
+                    view === '3d' ? 'aura-gradient text-white' : 'text-neutral-500 dark:text-pearl-50/70'
+                  }`}
+                >
+                  <Box className="h-3.5 w-3.5" /> 3D
+                </button>
+                <button
+                  onClick={() => setView('photo')}
+                  className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.15em] transition ${
+                    view === 'photo' ? 'aura-gradient text-white' : 'text-neutral-500 dark:text-pearl-50/70'
+                  }`}
+                >
+                  <ImageIcon className="h-3.5 w-3.5" /> Photo
+                </button>
+              </div>
+
               {product.isNew && (
-                <span className="absolute top-6 left-6 text-[10px] tracking-[0.2em] uppercase font-medium bg-white dark:bg-neutral-900 text-neutral-900 dark:text-white px-4 py-2">
+                <span className="absolute top-6 left-6 z-10 text-[10px] tracking-[0.2em] uppercase font-medium bg-white dark:bg-neutral-900 text-neutral-900 dark:text-white px-4 py-2">
                   {t('common.newArrival')}
                 </span>
               )}

@@ -102,12 +102,12 @@ export default function AdminOrders() {
   };
 
   const emojiMap: Record<string, string> = {
-    dresses: '👗',
-    tops: '👚',
-    pants: '👖',
-    skirts: '👗',
-    outerwear: '🧥',
-    accessories: '👜',
+    running: '👟',
+    basketball: '👟',
+    lifestyle: '👟',
+    skate: '👟',
+    training: '👟',
+    limited: '👟',
   };
 
   if (loading) {
@@ -173,7 +173,7 @@ export default function AdminOrders() {
                       <span className="text-pearl-50 text-sm">{order.items.length} items</span>
                     </td>
                     <td className="px-6 py-4">
-                      <span className="text-pearl-50 font-medium">${order.total.toFixed(2)}</span>
+                      <span className="text-pearl-50 font-medium">€{order.total.toFixed(2)}</span>
                     </td>
                     <td className="px-6 py-4">
                       <span className="text-neutral-400 text-sm">
@@ -219,7 +219,7 @@ export default function AdminOrders() {
               <div key={order.id} className="p-4">
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-pearl-50 font-mono text-sm">{order.id}</span>
-                  <span className="text-pearl-50 font-medium">${order.total.toFixed(2)}</span>
+                  <span className="text-pearl-50 font-medium">€{order.total.toFixed(2)}</span>
                 </div>
                 <p className="text-sm text-neutral-400 mb-2">
                   {order.customer?.firstName} {order.customer?.lastName}
@@ -282,7 +282,7 @@ export default function AdminOrders() {
                 </div>
                 <div>
                   <p className="text-xs text-neutral-400 uppercase tracking-wider mb-1">Total</p>
-                  <p className="text-pearl-50 font-medium">${selectedOrder.total.toFixed(2)}</p>
+                  <p className="text-pearl-50 font-medium">€{selectedOrder.total.toFixed(2)}</p>
                 </div>
               </div>
 
@@ -326,11 +326,11 @@ export default function AdminOrders() {
                     <div key={index} className="flex items-center gap-4 bg-charcoal-800 rounded-lg p-4">
                       <div className="w-12 h-12 bg-charcoal-700 rounded flex items-center justify-center text-2xl overflow-hidden flex-shrink-0">
                         <img
-                          src={item.product.images?.[0] || defaultImages[item.product.category] || defaultImages.dresses}
+                          src={item.product.images?.[0] || defaultImages[item.product.category] || defaultImages.lifestyle}
                           alt={item.product.name}
                           className="w-full h-full object-cover"
                           onError={(e) => {
-                            e.currentTarget.src = defaultImages[item.product.category] || defaultImages.dresses;
+                            e.currentTarget.src = defaultImages[item.product.category] || defaultImages.lifestyle;
                           }}
                         />
                       </div>
@@ -339,7 +339,7 @@ export default function AdminOrders() {
                         <p className="text-neutral-400 text-xs">Size: {item.size} | Color: {item.color}</p>
                         <p className="text-neutral-400 text-xs">Qty: {item.quantity}</p>
                       </div>
-                      <p className="text-pearl-50 font-medium">${(item.product.price * item.quantity).toFixed(2)}</p>
+                      <p className="text-pearl-50 font-medium">€{(item.product.price * item.quantity).toFixed(2)}</p>
                     </div>
                   ))}
                 </div>

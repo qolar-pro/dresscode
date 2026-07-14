@@ -1,5 +1,5 @@
 /**
- * DRESS CODE - IP Whitelist Utilities
+ * Sneaker Air - IP Whitelist Utilities
  *
  * Used by middleware.ts and admin API routes to restrict access
  * to only whitelisted IP addresses.
@@ -7,19 +7,23 @@
 
 /**
  * Extract the real client IP from the request.
- * Handles proxies (Vercel, Cloudflare) and fallbacks.
+ *
+ * SECURITY NOTE: `x-forwarded-for` is client-settable and therefore spoofable
+ * unless a trusted proxy is guaranteed to overwrite it. On Vercel the platform
+ * sets a trustworthy `x-real-ip` (and prepends the real client to XFF), so we
+ * prefer `x-real-ip` first. Do not rely on this value for anything security
+ * critical without a trusted reverse proxy in front.
  */
 export function getClientIP(request: Request): string {
-  const forwarded = request.headers.get('x-forwarded-for');
   const realIP = request.headers.get('x-real-ip');
-
-  if (forwarded) {
-    // x-forwarded-for can be comma-separated list; first entry is the client
-    return forwarded.split(',')[0].trim();
+  if (realIP) {
+    return normalizeIP(realIP.trim());
   }
 
-  if (realIP) {
-    return realIP.trim();
+  const forwarded = request.headers.get('x-forwarded-for');
+  if (forwarded) {
+    // x-forwarded-for can be comma-separated list; first entry is the client
+    return normalizeIP(forwarded.split(',')[0].trim());
   }
 
   // Fallback: use the socket remote address (Node.js runtime)
@@ -61,6 +65,11 @@ export function parseWhitelist(env: string | undefined): string[] {
  * (empty whitelist = allow all, useful for local dev).
  */
 export function isIPAllowed(ip: string, whitelistEnv: string | undefined): boolean {
-  // IP Whitelisting temporarily disabled as requested
-  return true;
+  const whitelist = parseWhitelist(whitelistEnv);
+
+  // Empty whitelist => allow all (local dev convenience). Set ADMIN_ALLOWED_IPS
+  // in production to actually restrict admin access to known IPs.
+  if (whitelist.length === 0) return true;
+
+  return whitelist.includes(normalizeIP(ip));
 }

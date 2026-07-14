@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { randomUUID } from 'crypto';
 import { supabaseAdmin } from '@/lib/supabase';
 import { sanitizeOrderData } from '@/lib/sanitize';
 import { requireAdmin } from '@/lib/auth-middleware';
@@ -48,7 +49,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ orders: data || [] });
   } catch (error: any) {
     console.error('Orders GET error:', error);
-    return NextResponse.json({ error: error.message || 'Failed to fetch orders' }, { status: 500 });
+    return NextResponse.json({ error: 'Request failed' }, { status: 500 });
   }
 }
 
@@ -104,11 +105,16 @@ export async function POST(request: NextRequest) {
     // Use server-calculated total (never trust client-side price)
     const finalTotal = serverTotal + (sanitized.shipping || 0) + (sanitized.paymentFee || 0);
 
+    // Server-authoritative, unguessable order ID.
+    // Never trust a client-supplied id (client used to send `ORD-${Date.now()}`,
+    // which is trivially guessable/enumerable).
+    const orderId = 'ORD-' + randomUUID();
+
     // 1. Insert Order with server-validated total
     const { data, error } = await supabaseAdmin
       .from('orders')
       .insert([{
-        id: sanitized.id,
+        id: orderId,
         items: sanitized.items || [],
         customer: sanitized.customer,
         total: finalTotal,
@@ -190,7 +196,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ order: data }, { status: 201 });
   } catch (error: any) {
     console.error('Orders POST error:', error);
-    return NextResponse.json({ error: error.message || 'Failed to create order' }, { status: 500 });
+    return NextResponse.json({ error: 'Request failed' }, { status: 500 });
   }
 }
 
@@ -214,6 +220,6 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ success: true });
   } catch (error: any) {
     console.error('Orders DELETE error:', error);
-    return NextResponse.json({ error: error.message || 'Failed to delete order' }, { status: 500 });
+    return NextResponse.json({ error: 'Request failed' }, { status: 500 });
   }
 }

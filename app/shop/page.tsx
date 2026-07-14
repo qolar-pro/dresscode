@@ -320,7 +320,7 @@ function ProductCard({ product, activeCollection }: { product: Product; activeCo
           />
         ) : (
           <Image
-            src={defaultImages[product.category] || defaultImages.dresses}
+            src={defaultImages[product.category] || defaultImages.running}
             alt={product.name}
             fill
             className="object-cover transition-transform duration-700 group-hover:scale-105"

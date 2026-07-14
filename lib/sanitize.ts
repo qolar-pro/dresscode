@@ -67,15 +67,82 @@ export function sanitizeOrderData(order: any): any {
 }
 
 /**
- * Sanitize a product object
+ * Allowed sneaker categories. Anything else falls back to 'lifestyle'.
+ */
+export const ALLOWED_CATEGORIES = [
+  'running',
+  'basketball',
+  'lifestyle',
+  'skate',
+  'training',
+  'limited',
+] as const;
+
+function sanitizeCategory(input: any): string {
+  const c = sanitizeString(input || '').toLowerCase();
+  return (ALLOWED_CATEGORIES as readonly string[]).includes(c) ? c : 'lifestyle';
+}
+
+/**
+ * Sanitize an image URL: must be an http(s) URL, else dropped.
+ */
+function sanitizeImageUrl(input: any): string | null {
+  if (typeof input !== 'string') return null;
+  const trimmed = input.trim();
+  return /^https?:\/\//i.test(trimmed) ? trimmed : null;
+}
+
+/**
+ * Sanitize the sizes array ([{ name, available, stock? }]).
+ */
+function sanitizeSizes(input: any): any[] {
+  if (!Array.isArray(input)) return [];
+  return input
+    .filter((s) => s && typeof s === 'object')
+    .map((s) => ({
+      name: sanitizeString(String(s.name ?? '')),
+      available: !!s.available,
+      stock: sanitizeNumber(s.stock, 0),
+    }))
+    .filter((s) => s.name !== '');
+}
+
+/**
+ * Sanitize the colors array ([{ name, hex, available }]).
+ */
+function sanitizeColors(input: any): any[] {
+  if (!Array.isArray(input)) return [];
+  return input
+    .filter((c) => c && typeof c === 'object')
+    .map((c) => {
+      const hex = sanitizeString(String(c.hex ?? ''));
+      return {
+        name: sanitizeString(String(c.name ?? '')),
+        hex: /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(hex) ? hex : '#000000',
+        available: c.available !== false,
+      };
+    })
+    .filter((c) => c.name !== '');
+}
+
+/**
+ * Sanitize a product object (incl. images / sizes / colors, which were
+ * previously spread through unsanitized).
  */
 export function sanitizeProductData(product: any): any {
+  const images = Array.isArray(product.images)
+    ? product.images.map(sanitizeImageUrl).filter((u: string | null): u is string => !!u)
+    : [];
+
   return {
     ...product,
-    name: sanitizeString(product.name || 'Unnamed Product'),
+    name: sanitizeString(product.name || 'Unnamed Sneaker'),
     description: sanitizeString(product.description || ''),
-    category: sanitizeString(product.category || 'dresses'),
+    category: sanitizeCategory(product.category),
     price: sanitizeNumber(product.price, 0),
     stock: sanitizeNumber(product.stock, 0),
+    images,
+    sizes: sanitizeSizes(product.sizes),
+    colors: sanitizeColors(product.colors),
   };
 }

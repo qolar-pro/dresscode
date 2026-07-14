@@ -81,7 +81,7 @@ export default function AdminLogin() {
             <Lock className="w-8 h-8 text-pearl-50" />
           </div>
           <h1 className="font-display text-3xl text-pearl-50 mb-2">Admin Portal</h1>
-          <p className="text-neutral-400 text-sm">DRESS CODE Management System</p>
+          <p className="text-neutral-400 text-sm">Sneaker Air Management System</p>
         </div>
 
         {/* Login Form */}

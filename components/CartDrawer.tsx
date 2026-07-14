@@ -18,12 +18,12 @@ export default function CartDrawer() {
   const grandTotal = total + shipping;
 
   const emojiMap: Record<string, string> = {
-    dresses: '👗',
-    tops: '👚',
-    pants: '👖',
-    skirts: '👗',
-    outerwear: '🧥',
-    accessories: '👜',
+    running: '🏃',
+    basketball: '🏀',
+    lifestyle: '👟',
+    skate: '🛹',
+    training: '🏋️',
+    limited: '✨',
   };
 
   return (
@@ -76,7 +76,7 @@ export default function CartDrawer() {
                   <div key={index} className="flex gap-6 pb-8 border-b border-neutral-200 dark:border-charcoal-800">
                     <div className="w-24 h-28 relative flex-shrink-0 overflow-hidden rounded-lg bg-neutral-100 dark:bg-charcoal-800">
                       <Image
-                        src={item.product.images?.[0] || defaultImages[item.product.category] || defaultImages.dresses}
+                        src={item.product.images?.[0] || defaultImages[item.product.category] || defaultImages.running}
                         alt={item.product.name}
                         fill
                         className="object-cover"
@@ -128,15 +128,15 @@ export default function CartDrawer() {
               <div className="space-y-3">
                 <div className="flex justify-between text-sm">
                   <span className="text-neutral-600 dark:text-neutral-400">{t('cart.subtotal')}</span>
-                  <span className="font-medium text-charcoal-900 dark:text-pearl-50">${total.toFixed(2)}</span>
+                  <span className="font-medium text-charcoal-900 dark:text-pearl-50">€{total.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-neutral-600 dark:text-neutral-400">{t('cart.shipping')}</span>
-                  <span className="font-medium text-charcoal-900 dark:text-pearl-50">{shipping === 0 ? t('cart.complimentary') : `$${shipping.toFixed(2)}`}</span>
+                  <span className="font-medium text-charcoal-900 dark:text-pearl-50">{shipping === 0 ? t('cart.complimentary') : `€${shipping.toFixed(2)}`}</span>
                 </div>
                 <div className="border-t border-neutral-300 dark:border-charcoal-700 pt-3 flex justify-between">
                   <span className="font-medium text-charcoal-900 dark:text-pearl-50">{t('cart.total')}</span>
-                  <span className="text-xl font-display text-charcoal-900 dark:text-pearl-50">${grandTotal.toFixed(2)}</span>
+                  <span className="text-xl font-display text-charcoal-900 dark:text-pearl-50">€{grandTotal.toFixed(2)}</span>
                 </div>
               </div>
               

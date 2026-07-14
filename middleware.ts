@@ -4,7 +4,10 @@
  * - Blocks ALL access to the old /admin route with a fake 404
  * - Blocks access to the secret admin URL for non-whitelisted IPs
  * - Allowed IPs proceed normally; everyone else sees "Page Not Found"
- * - Also blocks /admin-emergency for non-whitelisted IPs
+ *
+ * NOTE: The /admin-emergency backdoor (master-password login, unauthenticated
+ * and not IP-gated) has been removed entirely — there is no emergency route
+ * to protect here anymore.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -12,7 +15,6 @@ import { getClientIP, isIPAllowed } from '@/lib/ip-whitelist';
 
 // Paths to protect
 const OLD_ADMIN_PATH = '/admin';
-const EMERGENCY_PATH = '/admin-emergency';
 
 function rewriteTo404(request: NextRequest) {
   const url = request.nextUrl.clone();
@@ -30,16 +32,6 @@ export function middleware(request: NextRequest) {
     pathname.startsWith(OLD_ADMIN_PATH + '/')
   ) {
     return rewriteTo404(request);
-  }
-
-  // --- Protect emergency fallback route ---
-  if (
-    pathname === EMERGENCY_PATH ||
-    pathname.startsWith(EMERGENCY_PATH + '/')) {
-    const ip = getClientIP(request);
-    if (!isIPAllowed(ip, process.env.ADMIN_ALLOWED_IPS)) {
-      return rewriteTo404(request);
-    }
   }
 
   // --- Protect secret admin URL ---

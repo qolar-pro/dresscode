@@ -6,6 +6,11 @@ export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  // Order records contain full customer PII (name, address, phone, email).
+  // Require admin auth so order IDs can't be brute-forced/guessed to read PII.
+  const auth = await requireAdmin(request);
+  if (auth) return auth;
+
   try {
     const { id } = params;
 
@@ -26,7 +31,7 @@ export async function GET(
     return NextResponse.json({ order: data });
   } catch (error: any) {
     console.error('Order GET error:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: 'Request failed' }, { status: 500 });
   }
 }
 
@@ -62,6 +67,6 @@ export async function PATCH(
     return NextResponse.json({ order: data });
   } catch (error: any) {
     console.error('Order status update error:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: 'Request failed' }, { status: 500 });
   }
 }

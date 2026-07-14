@@ -117,7 +117,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <span className="hidden md:inline text-sm">Back to Store</span>
             </Link>
             <div className="h-6 w-px bg-charcoal-700" />
-            <h1 className="font-display text-xl text-pearl-50">DRESS CODE</h1>
+            <h1 className="font-display text-xl text-pearl-50">SNEAKER AIR</h1>
             <span className="text-xs bg-charcoal-800 text-neutral-400 px-2 py-1 rounded flex items-center gap-1">
               <Shield className="w-3 h-3" />
               Admin

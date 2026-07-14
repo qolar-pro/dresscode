@@ -1,9 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2026-03-25.dahlia',
-});
+// Lazy Stripe init: constructing `new Stripe(...)` at module load time throws
+// if STRIPE_SECRET_KEY is missing, which crashes the build/deploy. Deferring
+// construction into the handler means a missing key only fails the request.
+function getStripe() {
+  const key = process.env.STRIPE_SECRET_KEY;
+  if (!key) throw new Error('Stripe not configured');
+  return new Stripe(key, { apiVersion: '2026-03-25.dahlia' });
+}
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
@@ -14,6 +19,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
+    const stripe = getStripe();
     const session = await stripe.checkout.sessions.retrieve(sessionId);
     return NextResponse.json({
       metadata: session.metadata,
@@ -22,6 +28,6 @@ export async function GET(request: NextRequest) {
     });
   } catch (error: any) {
     console.error('Session retrieval error:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: 'Request failed' }, { status: 500 });
   }
 }

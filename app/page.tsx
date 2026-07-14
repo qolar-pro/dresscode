@@ -3,8 +3,9 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { useLanguage } from '@/context/LanguageContext';
-import { ArrowRight, Star, Sparkles, ArrowDownRight, Tag, Shirt, Footprints, Sun, Wind, Briefcase, Gem } from 'lucide-react';
+import { ArrowRight, Star, Sparkles, ArrowDownRight, Tag, Footprints, Flame, Trophy } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
+import Sneaker3DShowcase from '@/components/Sneaker3DShowcase';
 
 interface SalesCollection {
   id: number;
@@ -163,9 +164,9 @@ export default function Home() {
               
               {/* Main Title - Kinetic Typography */}
               <h1 className="font-display text-7xl md:text-8xl lg:text-9xl font-light tracking-tighter text-charcoal-900 dark:text-pearl-50 animate-kinetic-text">
-                DRESS
+                SNEAKER
                 <br />
-                <span className="font-normal italic">CODE</span>
+                <span className="font-normal italic">AIR</span>
               </h1>
               
               {/* Subtitle */}
@@ -188,8 +189,8 @@ export default function Home() {
             <div className="lg:col-span-5 animate-fade-in" style={{ animationDelay: '0.6s' }}>
               <div className="relative aspect-[3/4] rounded-2xl overflow-hidden">
                 <img
-                  src="https://images.unsplash.com/photo-1539008835657-9e8e9680c956?w=800&q=80"
-                  alt="Luxury Fashion"
+                  src="https://images.unsplash.com/photo-1552346154-21d32810aba3?w=800&q=80"
+                  alt="Premium Sneakers"
                   className="w-full h-full object-cover"
                   loading="eager"
                 />
@@ -216,15 +217,15 @@ export default function Home() {
           {[...Array(4)].map((_, i) => (
             <div key={i} className="flex items-center gap-8 px-8 whitespace-nowrap">
               <span className="text-2xl md:text-4xl font-display text-pearl-50 dark:text-charcoal-900 font-light tracking-tight">
-                DRESS CODE
+                SNEAKER AIR
               </span>
               <span className="text-luxury-gold text-2xl">✦</span>
               <span className="text-2xl md:text-4xl font-display text-pearl-50/50 dark:text-charcoal-900/50 font-light tracking-tight">
-                LUXURY FASHION
+                PREMIUM DROPS
               </span>
               <span className="text-luxury-gold text-2xl">✦</span>
               <span className="text-2xl md:text-4xl font-display text-pearl-50 dark:text-charcoal-900 font-light tracking-tight">
-                NEW COLLECTION 2026
+                NEW HEAT 2026
               </span>
               <span className="text-luxury-gold text-2xl">✦</span>
             </div>
@@ -333,12 +334,12 @@ export default function Home() {
 
           {/* Bento Grid */}
           <div className="bento-grid">
-            {/* Large Card - Dresses */}
-            <Link href="/shop?category=dresses" className="bento-card-large md:col-span-2 md:row-span-2 group">
+            {/* Large Card - Running */}
+            <Link href="/shop?category=running" className="bento-card-large md:col-span-2 md:row-span-2 group">
               <div className="absolute inset-0">
                 <img
-                  src="https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=800&q=80"
-                  alt="Dresses"
+                  src="https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=800&q=80"
+                  alt="Running"
                   className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                   loading="lazy"
                 />
@@ -352,11 +353,11 @@ export default function Home() {
               </div>
             </Link>
 
-            {/* Small Card - Tops */}
-            <Link href="/shop?category=tops" className="bento-card-small group">
+            {/* Small Card - Basketball */}
+            <Link href="/shop?category=basketball" className="bento-card-small group">
               <div className="absolute inset-0 bg-gradient-to-br from-rose-100 to-pink-100 dark:from-rose-900/30 dark:to-pink-900/30" />
               <div className="absolute inset-0 flex flex-col items-center justify-center p-6">
-                <Shirt className="w-10 h-10 mb-3 text-rose-500 group-hover:scale-110 transition-transform duration-500" />
+                <Trophy className="w-10 h-10 mb-3 text-rose-500 group-hover:scale-110 transition-transform duration-500" />
                 <h3 className="text-lg font-display text-charcoal-900 dark:text-pearl-50 font-light">
                   {t('home.tops')}
                 </h3>
@@ -364,11 +365,11 @@ export default function Home() {
               </div>
             </Link>
 
-            {/* Small Card - Pants */}
-            <Link href="/shop?category=pants" className="bento-card-small group">
+            {/* Small Card - Lifestyle */}
+            <Link href="/shop?category=lifestyle" className="bento-card-small group">
               <div className="absolute inset-0 bg-gradient-to-br from-neutral-100 to-neutral-200 dark:from-neutral-800 dark:to-neutral-700" />
               <div className="absolute inset-0 flex flex-col items-center justify-center p-6">
-                <Wind className="w-10 h-10 mb-3 text-neutral-500 group-hover:scale-110 transition-transform duration-500" />
+                <Footprints className="w-10 h-10 mb-3 text-neutral-500 group-hover:scale-110 transition-transform duration-500" />
                 <h3 className="text-lg font-display text-charcoal-900 dark:text-pearl-50 font-light">
                   {t('home.pants')}
                 </h3>
@@ -376,11 +377,11 @@ export default function Home() {
               </div>
             </Link>
 
-            {/* Small Card - Skirts */}
-            <Link href="/shop?category=skirts" className="bento-card-small group">
+            {/* Small Card - Skate */}
+            <Link href="/shop?category=skate" className="bento-card-small group">
               <div className="absolute inset-0 bg-gradient-to-br from-amber-100 to-orange-100 dark:from-amber-900/30 dark:to-orange-900/30" />
               <div className="absolute inset-0 flex flex-col items-center justify-center p-6">
-                <Sun className="w-10 h-10 mb-3 text-amber-500 group-hover:scale-110 transition-transform duration-500" />
+                <Flame className="w-10 h-10 mb-3 text-amber-500 group-hover:scale-110 transition-transform duration-500" />
                 <h3 className="text-lg font-display text-charcoal-900 dark:text-pearl-50 font-light">
                   {t('home.skirts')}
                 </h3>
@@ -388,11 +389,11 @@ export default function Home() {
               </div>
             </Link>
 
-            {/* Small Card - Accessories */}
-            <Link href="/shop?category=accessories" className="bento-card-small group">
+            {/* Small Card - Limited */}
+            <Link href="/shop?category=limited" className="bento-card-small group">
               <div className="absolute inset-0 bg-gradient-to-br from-emerald-100 to-teal-100 dark:from-emerald-900/30 dark:to-teal-900/30" />
               <div className="absolute inset-0 flex flex-col items-center justify-center p-6">
-                <Gem className="w-10 h-10 mb-3 text-emerald-500 group-hover:scale-110 transition-transform duration-500" />
+                <Sparkles className="w-10 h-10 mb-3 text-emerald-500 group-hover:scale-110 transition-transform duration-500" />
                 <h3 className="text-lg font-display text-charcoal-900 dark:text-pearl-50 font-light">
                   {t('home.accessories')}
                 </h3>
@@ -400,12 +401,12 @@ export default function Home() {
               </div>
             </Link>
 
-            {/* Medium Card - Outerwear */}
-            <Link href="/shop?category=outerwear" className="bento-card md:col-span-2 group">
+            {/* Medium Card - Training */}
+            <Link href="/shop?category=training" className="bento-card md:col-span-2 group">
               <div className="absolute inset-0">
                 <img
-                  src="https://images.unsplash.com/photo-1544022613-e87ca75a784a?w=600&q=80"
-                  alt="Outerwear"
+                  src="https://images.unsplash.com/photo-1460353581641-37baddab0fa2?w=600&q=80"
+                  alt="Training"
                   className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                   loading="lazy"
                 />
@@ -451,7 +452,7 @@ export default function Home() {
               <div className="aspect-[4/5] rounded-2xl overflow-hidden relative">
                 <img
                   src="https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=800&q=80"
-                  alt="Editorial Fashion"
+                  alt="Editorial Sneaker Culture"
                   className="w-full h-full object-cover"
                   style={{ transform: `translateY(${(scrollY - 1000) * 0.1}px)` }}
                   loading="lazy"
@@ -539,6 +540,9 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* ==================== LIVE 3D SHOWCASE ==================== */}
+      <Sneaker3DShowcase products={featuredProducts} />
 
       {/* ==================== TESTIMONIAL SECTION ==================== */}
       <section className="py-32 px-4 bg-charcoal-900 dark:bg-charcoal-950 text-pearl-50 relative overflow-hidden">

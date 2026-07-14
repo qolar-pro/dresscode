@@ -12,7 +12,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
     if (products) {
       productUrls = products.map((product) => ({
-        url: `https://blancographics.xyz/product/${product.id}`,
+        url: `https://sneakerair.com/product/${product.id}`,
         lastModified: new Date(product.created_at),
         changeFrequency: 'weekly',
         priority: 0.7,
@@ -24,37 +24,37 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   return [
     {
-      url: 'https://blancographics.xyz',
+      url: 'https://sneakerair.com',
       lastModified: new Date(),
       changeFrequency: 'daily',
       priority: 1,
     },
     {
-      url: 'https://blancographics.xyz/shop',
+      url: 'https://sneakerair.com/shop',
       lastModified: new Date(),
       changeFrequency: 'daily',
       priority: 0.8,
     },
     {
-      url: 'https://blancographics.xyz/contact',
+      url: 'https://sneakerair.com/contact',
       lastModified: new Date(),
       changeFrequency: 'monthly',
       priority: 0.5,
     },
     {
-      url: 'https://blancographics.xyz/legal/privacy-policy',
+      url: 'https://sneakerair.com/legal/privacy-policy',
       lastModified: new Date(),
       changeFrequency: 'monthly',
       priority: 0.3,
     },
     {
-      url: 'https://blancographics.xyz/legal/terms-of-service',
+      url: 'https://sneakerair.com/legal/terms-of-service',
       lastModified: new Date(),
       changeFrequency: 'monthly',
       priority: 0.3,
     },
     {
-      url: 'https://blancographics.xyz/legal/return-policy',
+      url: 'https://sneakerair.com/legal/return-policy',
       lastModified: new Date(),
       changeFrequency: 'monthly',
       priority: 0.3,

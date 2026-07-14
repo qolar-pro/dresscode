@@ -30,7 +30,7 @@ export default function AdminSalesCollections() {
   const fetchData = useCallback(async () => {
     try {
       const [collectionsRes, productsRes] = await Promise.all([
-        fetch('/api/sales-collections'),
+        fetch('/api/sales-collections?admin=true'),
         fetch('/api/products'),
       ]);
 

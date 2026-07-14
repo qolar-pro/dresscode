@@ -10,82 +10,128 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // 2026 Luxury Theme
+        // ---------------------------------------------------------------
+        // SNEAKER AIR — dark-first, high-energy sneaker-culture palette.
+        // Existing key NAMES are preserved (charcoal / pearl / cream /
+        // accent / luxury / neutral) so every className already written
+        // against them keeps working — only the hex VALUES changed to
+        // the new identity. New keys (ink, surface, aura) are additive.
+        // ---------------------------------------------------------------
+
+        // "charcoal" = the ink scale. charcoal-900 is the exact signature
+        // background (#0a0a0b), charcoal-800 is the signature surface
+        // (#141417). Also doubles as the "dark text on light bg" color.
         charcoal: {
-          50: '#f5f5f5',
-          100: '#e5e5e5',
-          200: '#d4d4d4',
-          300: '#a3a3a3',
-          400: '#737373',
-          500: '#525252',
-          600: '#404040',
-          700: '#2a2a2a',
-          800: '#1a1a1a',
-          900: '#121212',
-          950: '#0a0a0a',
+          50: '#f4f4f5',
+          100: '#e4e4e7',
+          200: '#d4d4d8',
+          300: '#a1a1aa',
+          400: '#71717a',
+          500: '#4b4b52',
+          600: '#2c2c31',
+          700: '#1f1f23',
+          800: '#141417', // signature surface
+          900: '#0a0a0b', // signature ink background
+          950: '#050506',
         },
+        // "pearl" = the off-white scale. pearl-50 is the exact signature
+        // off-white foreground (#f5f5f4).
         pearl: {
-          50: '#ffffff',
-          100: '#fefefe',
-          200: '#fdfdfd',
-          300: '#fcfcfc',
-          400: '#fbfbfb',
-          500: '#f9f9f9',
-          600: '#e8e8e8',
-          700: '#d1d1d1',
-          800: '#bababa',
-          900: '#a3a3a3',
+          50: '#f5f5f4', // signature off-white text
+          100: '#efefec',
+          200: '#e2e2de',
+          300: '#cfcfc9',
+          400: '#b3b3ac',
+          500: '#97978f',
+          600: '#7c7c75',
+          700: '#5f5f5a',
+          800: '#434340',
+          900: '#262624',
         },
+        // "accent" = the primary electric-blue CTA scale (the leading
+        // stop of the signature gradient). accent-500 is the button/glow
+        // color used across the site.
         accent: {
-          50: '#fdf4ff',
-          100: '#fae8ff',
-          200: '#f5d0fe',
-          300: '#f0abfc',
-          400: '#e879f9',
-          500: '#d946ef',
-          600: '#c026d3',
-          700: '#a21caf',
-          800: '#86198f',
-          900: '#701a75',
-          950: '#4a044e',
+          50: '#eff6ff',
+          100: '#dbeafe',
+          200: '#bfdbfe',
+          300: '#93c5fd',
+          400: '#60a5fa',
+          500: '#2563eb', // primary CTA / glow
+          600: '#1d4ed8',
+          700: '#1e40af',
+          800: '#1e3a8a',
+          900: '#172554',
+          950: '#0f172a',
         },
         neutral: {
           50: '#fafafa',
-          100: '#f5f5f5',
-          200: '#e5e5e5',
-          300: '#d4d4d4',
-          400: '#a3a3a3',
-          500: '#737373',
-          600: '#525252',
-          700: '#404040',
-          800: '#262626',
-          900: '#171717',
-          950: '#0a0a0a',
+          100: '#f2f2f2',
+          200: '#e4e4e5',
+          300: '#c9c9cb',
+          400: '#96969b',
+          500: '#68686f',
+          600: '#48484d',
+          700: '#2f2f33',
+          800: '#1b1b1e',
+          900: '#111113',
+          950: '#0a0a0b',
         },
+        // "cream" = light-mode warm-neutral surface scale.
         cream: {
-          50: '#fefdfb',
-          100: '#fdf9f3',
-          200: '#faf3e6',
-          300: '#f5e9d4',
-          400: '#eddbb8',
-          500: '#e2c99a',
-          600: '#d4b07a',
-          700: '#c49a5e',
-          800: '#a67e4a',
-          900: '#8a6840',
+          50: '#fafaf9',
+          100: '#f5f5f4',
+          200: '#ececea',
+          300: '#dcdcd8',
+          400: '#c2c2bc',
+          500: '#a5a59d',
+          600: '#87877d',
+          700: '#6a6a61',
+          800: '#4d4d46',
+          900: '#33332f',
         },
-        // Quiet Luxury Palette
+        // "luxury" repointed to the sneaker signature accents — kept as a
+        // named group so existing `luxury-gold` / `luxury-*` references
+        // (used as the site's hero highlight color) now render the
+        // Sneaker Air gradient hues instead of gold.
         luxury: {
-          gold: '#c9a96e',
-          champagne: '#f7e7ce',
-          ivory: '#fffff0',
-          onyx: '#353839',
-          slate: '#708090',
-        }
+          gold: '#ec4899',       // hero highlight (hot magenta, gradient's pop stop)
+          champagne: '#f0abfc',  // soft light tint of the highlight
+          ivory: '#f5f5f4',      // == pearl-50 off-white
+          onyx: '#0a0a0b',       // == charcoal-900 ink
+          slate: '#71717a',      // neutral sporty gray
+        },
+        // New: the three signature gradient stops exposed as flat utility
+        // colors (bg-aura-blue, text-aura-violet, border-aura-magenta...)
+        aura: {
+          blue: '#2563eb',
+          violet: '#7c3aed',
+          magenta: '#ec4899',
+        },
       },
       fontFamily: {
-        sans: ['var(--font-inter)', 'system-ui', 'sans-serif'],
-        display: ['var(--font-playfair)', 'Georgia', 'serif'],
+        // References var(--font-sans) / var(--font-display) / var(--font-mono)
+        // as the primary source (to be wired in app/layout.tsx), falling
+        // back to the currently-loaded next/font variables, then to system
+        // fonts, so nothing breaks before that wiring lands.
+        sans: [
+          'var(--font-sans, var(--font-inter, system-ui))',
+          'system-ui',
+          '-apple-system',
+          'sans-serif',
+        ],
+        display: [
+          'var(--font-display, var(--font-playfair, "Arial Black"))',
+          'Impact',
+          'Helvetica Neue',
+          'sans-serif',
+        ],
+        mono: [
+          'var(--font-mono, ui-monospace)',
+          'SFMono-Regular',
+          'Menlo',
+          'monospace',
+        ],
       },
       animation: {
         'fade-in': 'fadeIn 1s ease-out',

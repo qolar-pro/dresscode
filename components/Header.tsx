@@ -54,7 +54,7 @@ export default function Header() {
             {/* Logo */}
             <Link href="/" className="group">
               <h1 className="font-display text-2xl tracking-tight text-charcoal-900 dark:text-pearl-50">
-                DRESS CODE
+                SNEAKER AIR
               </h1>
             </Link>
 
@@ -180,7 +180,7 @@ export default function Header() {
         <div className="flex items-center justify-between h-16 px-4">
           <Link href="/">
             <h1 className="font-display text-xl tracking-tight text-charcoal-900 dark:text-pearl-50">
-              DRESS CODE
+              SNEAKER AIR
             </h1>
           </Link>
           

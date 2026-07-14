@@ -18,7 +18,7 @@ export default function ReturnPolicy() {
             
             <section>
               <h2 className="text-2xl font-semibold text-charcoal-900 dark:text-pearl-50 mb-4">30-Day Return Policy</h2>
-              <p>At DRESS CODE, we want you to be completely satisfied with your purchase. If you are not entirely satisfied with your purchase, we're here to help.</p>
+              <p>At Sneaker Air, we want you to be completely satisfied with your purchase. If you are not entirely satisfied with your purchase, we're here to help.</p>
               <p>You have <strong>30 calendar days</strong> to return an item from the date you received it.</p>
             </section>
 
@@ -43,7 +43,7 @@ export default function ReturnPolicy() {
             <section>
               <h2 className="text-2xl font-semibold text-charcoal-900 dark:text-pearl-50 mb-4">How to Return an Item</h2>
               <ol className="list-decimal pl-6 space-y-2">
-                <li>Contact our customer support team at returns@blancographics.xyz to request a return authorization.</li>
+                <li>Contact our customer support team at returns@sneakerair.com to request a return authorization.</li>
                 <li>Pack the item securely in its original packaging.</li>
                 <li>Include the original receipt or proof of purchase.</li>
                 <li>Ship the item to the address provided by our support team.</li>
@@ -54,8 +54,8 @@ export default function ReturnPolicy() {
               <h2 className="text-2xl font-semibold text-charcoal-900 dark:text-pearl-50 mb-4">Contact Us</h2>
               <p>If you have any questions on how to return your item to us, contact us:</p>
               <p className="font-medium text-charcoal-900 dark:text-pearl-50">
-                Email: returns@blancographics.xyz<br />
-                Phone: (555) 123-4567
+                Email: returns@sneakerair.com<br />
+                Phone: +30 210 555 0199
               </p>
             </section>
           </div>

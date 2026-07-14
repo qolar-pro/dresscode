@@ -73,8 +73,8 @@ export default function AdminDashboard() {
     setEmailStatus('sending');
     const testOrder = {
       id: 'TEST-' + Date.now(),
-      items: [{ product: { name: 'Test Dress', price: 99.99 }, quantity: 1 }],
-      customer: { email: 'admin@blancographics.xyz', firstName: 'Admin', lastName: 'Test' },
+      items: [{ product: { name: 'Test Sneaker', price: 99.99 }, quantity: 1 }],
+      customer: { email: 'hello@sneakerair.com', firstName: 'Admin', lastName: 'Test' },
       total: 99.99,
       date: new Date().toISOString(),
       paymentMethod: 'Cash on Delivery',
@@ -238,7 +238,7 @@ export default function AdminDashboard() {
       {/* Quick Actions */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Link
-          href="/admin/orders"
+          href={`/${slug}/orders`}
           className="bg-charcoal-900 rounded-xl p-6 hover:bg-charcoal-800 transition-colors group"
         >
           <ShoppingBag className="w-8 h-8 text-pearl-400 mb-4 group-hover:text-pearl-50" />
@@ -247,7 +247,7 @@ export default function AdminDashboard() {
         </Link>
 
         <Link
-          href="/admin/products"
+          href={`/${slug}/products`}
           className="bg-charcoal-900 rounded-xl p-6 hover:bg-charcoal-800 transition-colors group"
         >
           <Package className="w-8 h-8 text-pearl-400 mb-4 group-hover:text-pearl-50" />

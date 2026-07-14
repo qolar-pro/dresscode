@@ -27,10 +27,10 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-16 mb-16">
           {/* Brand */}
           <div>
-            <h3 className="font-display text-3xl tracking-tight mb-6">DRESS CODE</h3>
+            <h3 className="font-display text-3xl tracking-tight mb-6">SNEAKER AIR</h3>
             <p className="text-neutral-400 leading-relaxed mb-8 font-light">
-              Your destination for modern, sophisticated women's fashion. 
-              Curated styles that define your presence.
+              Your destination for premium sneakers, drops & street style —
+              built for those who move different.
             </p>
             <div className="flex gap-4">
               <a href="#" className="w-10 h-10 border border-neutral-700 hover:border-pearl-50 rounded-full flex items-center justify-center transition-all duration-300 hover:bg-pearl-50 hover:text-charcoal-900">
@@ -55,17 +55,17 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/shop?category=dresses" className="text-neutral-400 hover:text-pearl-50 transition-colors font-light">
+                <Link href="/shop?category=running" className="text-neutral-400 hover:text-pearl-50 transition-colors font-light">
                   {t('home.dresses')}
                 </Link>
               </li>
               <li>
-                <Link href="/shop?category=tops" className="text-neutral-400 hover:text-pearl-50 transition-colors font-light">
+                <Link href="/shop?category=basketball" className="text-neutral-400 hover:text-pearl-50 transition-colors font-light">
                   {t('home.tops')}
                 </Link>
               </li>
               <li>
-                <Link href="/shop?category=accessories" className="text-neutral-400 hover:text-pearl-50 transition-colors font-light">
+                <Link href="/shop?category=limited" className="text-neutral-400 hover:text-pearl-50 transition-colors font-light">
                   {t('home.accessories')}
                 </Link>
               </li>
@@ -114,13 +114,13 @@ export default function Footer() {
               </div>
               <div className="flex items-center gap-3">
                 <Phone className="w-4 h-4 text-neutral-500 flex-shrink-0" />
-                <a href="tel:+15551234567" className="text-neutral-400 hover:text-pearl-50 transition-colors font-light">
+                <a href="tel:+302105550199" className="text-neutral-400 hover:text-pearl-50 transition-colors font-light">
                   {t('footer.phone')}
                 </a>
               </div>
               <div className="flex items-center gap-3">
                 <Mail className="w-4 h-4 text-neutral-500 flex-shrink-0" />
-                <a href="mailto:hello@dresscode.com" className="text-neutral-400 hover:text-pearl-50 transition-colors font-light">
+                <a href="mailto:hello@sneakerair.com" className="text-neutral-400 hover:text-pearl-50 transition-colors font-light">
                   {t('footer.email')}
                 </a>
               </div>
@@ -168,47 +168,61 @@ export default function Footer() {
 
           <div className="p-8 space-y-8">
             <div>
-              <h4 className="font-display text-lg text-charcoal-900 dark:text-pearl-50 mb-4">Women{"'"}s Clothing (US)</h4>
+              <h4 className="font-display text-lg text-charcoal-900 dark:text-pearl-50 mb-4">Sneaker Size Conversion</h4>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-neutral-300 dark:border-charcoal-700">
-                      <th className="py-3 px-4 text-left font-medium text-neutral-600 dark:text-neutral-400">Size</th>
-                      <th className="py-3 px-4 text-left font-medium text-neutral-600 dark:text-neutral-400">Bust (in)</th>
-                      <th className="py-3 px-4 text-left font-medium text-neutral-600 dark:text-neutral-400">Waist (in)</th>
-                      <th className="py-3 px-4 text-left font-medium text-neutral-600 dark:text-neutral-400">Hip (in)</th>
+                      <th className="py-3 px-4 text-left font-medium text-neutral-600 dark:text-neutral-400">EU</th>
+                      <th className="py-3 px-4 text-left font-medium text-neutral-600 dark:text-neutral-400">US</th>
+                      <th className="py-3 px-4 text-left font-medium text-neutral-600 dark:text-neutral-400">UK</th>
                     </tr>
                   </thead>
                   <tbody className="text-neutral-700 dark:text-neutral-300">
                     <tr className="border-b border-neutral-200 dark:border-charcoal-800">
-                      <td className="py-3 px-4 font-medium">XS</td>
-                      <td className="py-3 px-4">31-32</td>
-                      <td className="py-3 px-4">24-25</td>
-                      <td className="py-3 px-4">34-35</td>
+                      <td className="py-3 px-4 font-medium">38</td>
+                      <td className="py-3 px-4">6</td>
+                      <td className="py-3 px-4">5.5</td>
                     </tr>
                     <tr className="border-b border-neutral-200 dark:border-charcoal-800">
-                      <td className="py-3 px-4 font-medium">S</td>
-                      <td className="py-3 px-4">33-34</td>
-                      <td className="py-3 px-4">26-27</td>
-                      <td className="py-3 px-4">36-37</td>
+                      <td className="py-3 px-4 font-medium">39</td>
+                      <td className="py-3 px-4">6.5</td>
+                      <td className="py-3 px-4">6</td>
                     </tr>
                     <tr className="border-b border-neutral-200 dark:border-charcoal-800">
-                      <td className="py-3 px-4 font-medium">M</td>
-                      <td className="py-3 px-4">35-36</td>
-                      <td className="py-3 px-4">28-29</td>
-                      <td className="py-3 px-4">38-39</td>
+                      <td className="py-3 px-4 font-medium">40</td>
+                      <td className="py-3 px-4">7</td>
+                      <td className="py-3 px-4">6.5</td>
                     </tr>
                     <tr className="border-b border-neutral-200 dark:border-charcoal-800">
-                      <td className="py-3 px-4 font-medium">L</td>
-                      <td className="py-3 px-4">37-39</td>
-                      <td className="py-3 px-4">30-32</td>
-                      <td className="py-3 px-4">40-42</td>
+                      <td className="py-3 px-4 font-medium">41</td>
+                      <td className="py-3 px-4">8</td>
+                      <td className="py-3 px-4">7</td>
+                    </tr>
+                    <tr className="border-b border-neutral-200 dark:border-charcoal-800">
+                      <td className="py-3 px-4 font-medium">42</td>
+                      <td className="py-3 px-4">8.5</td>
+                      <td className="py-3 px-4">7.5</td>
+                    </tr>
+                    <tr className="border-b border-neutral-200 dark:border-charcoal-800">
+                      <td className="py-3 px-4 font-medium">43</td>
+                      <td className="py-3 px-4">9.5</td>
+                      <td className="py-3 px-4">8.5</td>
+                    </tr>
+                    <tr className="border-b border-neutral-200 dark:border-charcoal-800">
+                      <td className="py-3 px-4 font-medium">44</td>
+                      <td className="py-3 px-4">10</td>
+                      <td className="py-3 px-4">9</td>
+                    </tr>
+                    <tr className="border-b border-neutral-200 dark:border-charcoal-800">
+                      <td className="py-3 px-4 font-medium">45</td>
+                      <td className="py-3 px-4">11</td>
+                      <td className="py-3 px-4">10</td>
                     </tr>
                     <tr>
-                      <td className="py-3 px-4 font-medium">XL</td>
-                      <td className="py-3 px-4">40-42</td>
-                      <td className="py-3 px-4">33-35</td>
-                      <td className="py-3 px-4">43-45</td>
+                      <td className="py-3 px-4 font-medium">46</td>
+                      <td className="py-3 px-4">12</td>
+                      <td className="py-3 px-4">11</td>
                     </tr>
                   </tbody>
                 </table>
@@ -218,9 +232,9 @@ export default function Footer() {
             <div className="bg-neutral-50 dark:bg-charcoal-800 p-6 rounded-xl">
               <h4 className="font-medium text-charcoal-900 dark:text-pearl-50 mb-3">How to Measure</h4>
               <ul className="space-y-2 text-sm text-neutral-600 dark:text-neutral-400 font-light">
-                <li>{"\u2022"} <strong>Bust:</strong> Measure around the fullest part of your chest</li>
-                <li>{"\u2022"} <strong>Waist:</strong> Measure around the narrowest part of your waist</li>
-                <li>{"\u2022"} <strong>Hip:</strong> Measure around the fullest part of your hips</li>
+                <li>{"\u2022"} <strong>Foot Length:</strong> Stand on a piece of paper and mark your longest toe and heel, then measure the distance in cm</li>
+                <li>{"\u2022"} <strong>Best Time:</strong> Measure your feet in the evening, when they are at their largest</li>
+                <li>{"\u2022"} <strong>Both Feet:</strong> Measure both feet and use the larger measurement to find your size</li>
               </ul>
             </div>
 

@@ -1,7 +1,39 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sanitizeEmail } from '@/lib/sanitize';
 
+// Simple in-memory IP rate limiter (same pattern as app/api/contact/route.ts).
+// Max 5 subscribe attempts per 10 minute window per IP.
+const subscribeAttempts = new Map<string, { count: number; resetTime: number }>();
+
+function checkSubscribeRateLimit(ip: string): { allowed: boolean; retryAfter?: number } {
+  const now = Date.now();
+  const entry = subscribeAttempts.get(ip) || { count: 0, resetTime: now + 10 * 60 * 1000 };
+
+  if (now > entry.resetTime) {
+    entry.count = 0;
+    entry.resetTime = now + 10 * 60 * 1000;
+  }
+
+  entry.count += 1;
+  subscribeAttempts.set(ip, entry);
+
+  if (entry.count > 5) {
+    return { allowed: false, retryAfter: Math.ceil((entry.resetTime - now) / 1000) };
+  }
+
+  return { allowed: true };
+}
+
 export async function POST(request: NextRequest) {
+  const ip = request.headers.get('x-real-ip') || request.headers.get('x-forwarded-for') || 'unknown';
+  const rateLimit = checkSubscribeRateLimit(ip);
+  if (!rateLimit.allowed) {
+    return NextResponse.json(
+      { error: 'Too many requests. Please try again later.' },
+      { status: 429, headers: { 'Retry-After': String(rateLimit.retryAfter || 600) } }
+    );
+  }
+
   try {
     const body = await request.json();
     const { email } = body;
@@ -39,6 +71,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true }, { status: 200 });
   } catch (error: any) {
     console.error('Newsletter subscription error:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: 'Request failed' }, { status: 500 });
   }
 }

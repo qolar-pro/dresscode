@@ -89,9 +89,9 @@ export default function ContactPage() {
                 <div>
                   <h3 className="font-medium text-neutral-900 dark:text-white mb-2">{t('contact.visitStore')}</h3>
                   <address className="text-neutral-600 dark:text-neutral-400 not-italic font-light leading-relaxed">
-                    123 Fashion Street<br />
-                    Style District, NY 10001<br />
-                    United States
+                    88 Sneaker Boulevard<br />
+                    Athens 10552<br />
+                    Greece
                   </address>
                 </div>
               </div>
@@ -103,8 +103,8 @@ export default function ContactPage() {
                 <Phone className="w-5 h-5 flex-shrink-0 mt-1 text-neutral-900 dark:text-white" />
                 <div>
                   <h3 className="font-medium text-neutral-900 dark:text-white mb-2">{t('contact.callUs')}</h3>
-                  <a href="tel:+15551234567" className="text-neutral-900 dark:text-white hover:text-neutral-600 dark:hover:text-neutral-400 font-light transition-colors">
-                    (555) 123-4567
+                  <a href="tel:+302105550199" className="text-neutral-900 dark:text-white hover:text-neutral-600 dark:hover:text-neutral-400 font-light transition-colors">
+                    +30 210 555 0199
                   </a>
                   <p className="text-sm text-neutral-500 dark:text-neutral-500 mt-1 font-light">Mon-Sat, 9am-8pm EST</p>
                 </div>
@@ -117,8 +117,8 @@ export default function ContactPage() {
                 <Mail className="w-5 h-5 flex-shrink-0 mt-1 text-neutral-900 dark:text-white" />
                 <div>
                   <h3 className="font-medium text-neutral-900 dark:text-white mb-2">{t('contact.emailUs')}</h3>
-                  <a href="mailto:hello@dresscode.com" className="text-neutral-900 dark:text-white hover:text-neutral-600 dark:hover:text-neutral-400 font-light transition-colors">
-                    hello@dresscode.com
+                  <a href="mailto:hello@sneakerair.com" className="text-neutral-900 dark:text-white hover:text-neutral-600 dark:hover:text-neutral-400 font-light transition-colors">
+                    hello@sneakerair.com
                   </a>
                   <p className="text-sm text-neutral-500 dark:text-neutral-500 mt-1 font-light">We'll respond within 24 hours</p>
                 </div>
@@ -269,8 +269,8 @@ export default function ContactPage() {
                 />
                 <div className="text-center relative z-10">
                   <MapPin className="w-10 h-10 text-neutral-900 dark:text-white mx-auto mb-4" />
-                  <p className="font-medium text-neutral-900 dark:text-white mb-2">123 Fashion Street</p>
-                  <p className="text-sm text-neutral-600 dark:text-neutral-400 font-light mb-4">Style District, NY 10001</p>
+                  <p className="font-medium text-neutral-900 dark:text-white mb-2">88 Sneaker Boulevard</p>
+                  <p className="text-sm text-neutral-600 dark:text-neutral-400 font-light mb-4">Athens 10552, Greece</p>
                   <a
                     href="https://maps.google.com"
                     target="_blank"

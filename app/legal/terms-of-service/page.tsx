@@ -18,7 +18,7 @@ export default function TermsOfService() {
             
             <section>
               <h2 className="text-2xl font-semibold text-charcoal-900 dark:text-pearl-50 mb-4">1. Overview</h2>
-              <p>This website is operated by DRESS CODE. Throughout the site, the terms "we", "us" and "our" refer to DRESS CODE. DRESS CODE offers this website, including all information, tools and services available from this site to you, the user, conditioned upon your acceptance of all terms, conditions, policies and notices stated here.</p>
+              <p>This website is operated by Sneaker Air. Throughout the site, the terms "we", "us" and "our" refer to Sneaker Air. Sneaker Air offers this website, including all information, tools and services available from this site to you, the user, conditioned upon your acceptance of all terms, conditions, policies and notices stated here.</p>
             </section>
 
             <section>
@@ -45,8 +45,8 @@ export default function TermsOfService() {
               <h2 className="text-2xl font-semibold text-charcoal-900 dark:text-pearl-50 mb-4">6. Contact Information</h2>
               <p>Questions about the Terms of Service should be sent to us at:</p>
               <p className="font-medium text-charcoal-900 dark:text-pearl-50">
-                Email: legal@blancographics.xyz<br />
-                Phone: (555) 123-4567
+                Email: legal@sneakerair.com<br />
+                Phone: +30 210 555 0199
               </p>
             </section>
           </div>

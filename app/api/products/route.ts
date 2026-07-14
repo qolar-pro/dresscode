@@ -14,7 +14,7 @@ export async function GET() {
     return NextResponse.json({ products: data || [] });
   } catch (error: any) {
     console.error('Products GET error:', error);
-    return NextResponse.json({ error: error.message || 'Failed to fetch products' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to fetch products' }, { status: 500 });
   }
 }
 
@@ -39,6 +39,7 @@ export async function POST(request: NextRequest) {
         colors: sanitized.colors || [],
         is_new: sanitized.isNew ?? false,
         is_featured: sanitized.isFeatured ?? false,
+        stock: sanitized.stock ?? 100,
       }])
       .select()
       .single();
@@ -47,7 +48,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ product: data }, { status: 201 });
   } catch (error: any) {
     console.error('Products POST error:', error);
-    return NextResponse.json({ error: error.message || 'Failed to create product' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to create product' }, { status: 500 });
   }
 }
 
@@ -75,6 +76,7 @@ export async function PUT(request: NextRequest) {
         colors: sanitized.colors || [],
         is_new: sanitized.isNew ?? false,
         is_featured: sanitized.isFeatured ?? false,
+        stock: sanitized.stock ?? 100,
       })
       .eq('id', id)
       .select()
@@ -84,7 +86,7 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json({ product: data });
   } catch (error: any) {
     console.error('Products PUT error:', error);
-    return NextResponse.json({ error: error.message || 'Failed to update product' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to update product' }, { status: 500 });
   }
 }
 
@@ -108,6 +110,6 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ success: true });
   } catch (error: any) {
     console.error('Products DELETE error:', error);
-    return NextResponse.json({ error: error.message || 'Failed to delete product' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to delete product' }, { status: 500 });
   }
 }

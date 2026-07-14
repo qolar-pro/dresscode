@@ -2,19 +2,25 @@ import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { supabaseAdmin } from '@/lib/supabase';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2026-03-25.dahlia' as any,
-});
-
-const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || '';
+// Lazy Stripe init: constructing `new Stripe(...)` at module load time throws
+// if STRIPE_SECRET_KEY is missing, which crashes the build/deploy. Deferring
+// construction into the handler means a missing key only fails the request.
+function getStripe() {
+  const key = process.env.STRIPE_SECRET_KEY;
+  if (!key) throw new Error('Stripe not configured');
+  return new Stripe(key, { apiVersion: '2026-03-25.dahlia' as any });
+}
 
 export async function POST(request: NextRequest) {
+  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || '';
   const body = await request.text();
   const signature = request.headers.get('stripe-signature')!;
 
+  let stripe: Stripe;
   let event: Stripe.Event;
 
   try {
+    stripe = getStripe();
     event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
   } catch (err: any) {
     console.error(`Webhook signature verification failed: ${err.message}`);
