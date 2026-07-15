@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { randomUUID } from 'crypto';
 import Stripe from 'stripe';
-import { supabaseAdmin } from '@/lib/supabase';
+import { productsDb } from '@/lib/db';
 
 // Lazy Stripe init: constructing `new Stripe(...)` at module load time throws
 // if STRIPE_SECRET_KEY is missing, which crashes the build/deploy. Deferring
@@ -56,26 +56,20 @@ export async function POST(request: NextRequest) {
       let productImages: string[] = [];
 
       try {
-        console.log('[CHECKOUT] Looking up product', productId, 'from Supabase');
-        const { data: dbProduct, error: productError } = await supabaseAdmin
-          .from('products')
-          .select('id, name, images, sizes, price')
-          .eq('id', productId)
-          .single();
+        const dbProduct = await productsDb.get(productId);
 
-        if (productError || !dbProduct) {
-          console.error('[CHECKOUT] Product validation failed:', productError?.message || 'Product not found in DB');
+        if (!dbProduct) {
+          console.error('[CHECKOUT] Product validation failed: not found', productId);
           return NextResponse.json({ error: `Product not found or unavailable: ${item.product?.name || productId}` }, { status: 404 });
         }
 
-        console.log('[CHECKOUT] Product verified:', dbProduct.name, 'price:', dbProduct.price);
         productName = dbProduct.name;
         productImages = dbProduct.images || [];
-        
+
         if (dbProduct.price === null || dbProduct.price === undefined || dbProduct.price <= 0) {
           return NextResponse.json({ error: `Invalid price for product ${productName}` }, { status: 400 });
         }
-        
+
         usePrice = dbProduct.price;
       } catch (dbError: any) {
         console.error('[CHECKOUT] Database exception during validation:', dbError?.message);

@@ -3,248 +3,273 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useLanguage } from '@/context/LanguageContext';
-import { Instagram, Facebook, Twitter, Mail, Phone, MapPin, X, Ruler } from 'lucide-react';
+import { Instagram, Facebook, Twitter, Mail, Phone, MapPin, X, Ruler, ArrowUpRight } from 'lucide-react';
+
+const SIZE_ROWS = [
+  ['38', '6', '5.5'],
+  ['39', '6.5', '6'],
+  ['40', '7', '6.5'],
+  ['41', '8', '7'],
+  ['42', '8.5', '7.5'],
+  ['43', '9.5', '8.5'],
+  ['44', '10', '9'],
+  ['45', '11', '10'],
+  ['46', '12', '11'],
+];
 
 export default function Footer() {
   const { t } = useLanguage();
   const [showSizeGuide, setShowSizeGuide] = useState(false);
+  const [email, setEmail] = useState('');
+  const [subscribed, setSubscribed] = useState(false);
+
+  const subscribe = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email) return;
+    try {
+      await fetch('/api/newsletter/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+      setSubscribed(true);
+      setEmail('');
+    } catch {
+      setSubscribed(true);
+    }
+  };
 
   return (
     <>
-    <footer className="relative bg-charcoal-900 dark:bg-charcoal-950 text-pearl-50 overflow-hidden">
-      {/* Background Image */}
-      <div className="absolute inset-0">
-        <img
-          src="https://images.unsplash.com/photo-1558171813-4c088753af8f?w=1920&q=80"
-          alt=""
-          className="w-full h-full object-cover opacity-10"
-          loading="lazy"
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-charcoal-900/95 to-charcoal-950/98" />
-      </div>
-      
-      <div className="container mx-auto px-4 py-20 relative z-10">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-16 mb-16">
-          {/* Brand */}
-          <div>
-            <h3 className="font-display text-3xl tracking-tight mb-6">SNEAKER AIR</h3>
-            <p className="text-neutral-400 leading-relaxed mb-8 font-light">
-              Your destination for premium sneakers, drops & street style —
-              built for those who move different.
-            </p>
-            <div className="flex gap-4">
-              <a href="#" className="w-10 h-10 border border-neutral-700 hover:border-pearl-50 rounded-full flex items-center justify-center transition-all duration-300 hover:bg-pearl-50 hover:text-charcoal-900">
-                <Instagram className="w-4 h-4" />
-              </a>
-              <a href="#" className="w-10 h-10 border border-neutral-700 hover:border-pearl-50 rounded-full flex items-center justify-center transition-all duration-300 hover:bg-pearl-50 hover:text-charcoal-900">
-                <Facebook className="w-4 h-4" />
-              </a>
-              <a href="#" className="w-10 h-10 border border-neutral-700 hover:border-pearl-50 rounded-full flex items-center justify-center transition-all duration-300 hover:bg-pearl-50 hover:text-charcoal-900">
-                <Twitter className="w-4 h-4" />
-              </a>
+      <footer className="relative overflow-hidden border-t border-fog/8 bg-carbon text-fog">
+        <div aria-hidden className="pointer-events-none absolute inset-0">
+          <div className="aura-blob aura-blob-a left-[-5%] bottom-[-10%] h-[40vh] w-[40vh] opacity-30" />
+          <div className="absolute inset-0 grid-overlay opacity-40" />
+        </div>
+
+        {/* giant wordmark */}
+        <div className="relative mx-auto max-w-[1500px] px-6 pt-20 md:px-12">
+          <div className="pointer-events-none select-none font-display text-[22vw] font-bold uppercase leading-[0.8] tracking-tight text-hollow opacity-[0.07] md:text-[16vw]">
+            Sneaker Air
+          </div>
+        </div>
+
+        <div className="relative mx-auto max-w-[1500px] px-6 pb-14 md:px-12">
+          {/* newsletter */}
+          <div className="mb-16 grid grid-cols-1 gap-8 border-b border-fog/8 pb-16 md:grid-cols-2 md:items-end">
+            <div>
+              <div className="mb-3 font-mono text-[11px] uppercase tracking-[0.35em] text-mist">The Drop List</div>
+              <h3 className="font-display text-4xl font-semibold uppercase leading-[0.9] tracking-tight md:text-5xl">
+                Move <span className="text-neon">different</span>
+              </h3>
             </div>
+            <form onSubmit={subscribe} className="flex items-center gap-3">
+              {subscribed ? (
+                <p className="font-mono text-[12px] uppercase tracking-[0.2em] text-volt">
+                  ✓ You&apos;re on the list.
+                </p>
+              ) : (
+                <>
+                  <input
+                    type="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="your@email.com"
+                    className="w-full rounded-full border border-fog/12 bg-void/40 px-5 py-3.5 font-mono text-[12px] tracking-wide text-fog outline-none transition-colors placeholder:text-ghost focus:border-fog/40"
+                  />
+                  <button
+                    type="submit"
+                    data-cursor="link"
+                    className="flex shrink-0 items-center gap-2 rounded-full bg-neon px-6 py-3.5 font-mono text-[10px] uppercase tracking-[0.2em] text-white transition-[filter] hover:brightness-110"
+                  >
+                    Join <ArrowUpRight className="h-3.5 w-3.5" />
+                  </button>
+                </>
+              )}
+            </form>
           </div>
 
-          {/* Quick Links */}
-          <div>
-            <h4 className="text-xs tracking-[0.3em] uppercase font-medium mb-8 text-neutral-400">{t('footer.shop')}</h4>
-            <ul className="space-y-4">
-              <li>
-                <Link href="/shop" className="text-neutral-400 hover:text-pearl-50 transition-colors font-light">
-                  {t('footer.allProducts')}
-                </Link>
-              </li>
-              <li>
-                <Link href="/shop?category=running" className="text-neutral-400 hover:text-pearl-50 transition-colors font-light">
-                  {t('home.dresses')}
-                </Link>
-              </li>
-              <li>
-                <Link href="/shop?category=basketball" className="text-neutral-400 hover:text-pearl-50 transition-colors font-light">
-                  {t('home.tops')}
-                </Link>
-              </li>
-              <li>
-                <Link href="/shop?category=limited" className="text-neutral-400 hover:text-pearl-50 transition-colors font-light">
-                  {t('home.accessories')}
-                </Link>
-              </li>
-            </ul>
-          </div>
+          <div className="grid grid-cols-1 gap-12 md:grid-cols-2 lg:grid-cols-4">
+            {/* brand */}
+            <div>
+              <div className="mb-5 flex items-baseline gap-[3px]">
+                <span className="font-display text-2xl font-semibold uppercase tracking-tight text-fog">Sneaker</span>
+                <span className="font-display text-2xl font-semibold uppercase tracking-tight text-neon">Air</span>
+              </div>
+              <p className="max-w-xs leading-relaxed text-mist">
+                Premium sneakers, drops &amp; street style — engineered for those who move different.
+              </p>
+              <div className="mt-6 flex gap-3">
+                {[Instagram, Facebook, Twitter].map((Icon, i) => (
+                  <a
+                    key={i}
+                    href="#"
+                    data-cursor="link"
+                    className="grid h-10 w-10 place-items-center rounded-full border border-fog/12 text-mist transition-all duration-300 hover:border-plasma hover:text-plasma"
+                  >
+                    <Icon className="h-4 w-4" />
+                  </a>
+                ))}
+              </div>
+            </div>
 
-          {/* Customer Care */}
-          <div>
-            <h4 className="text-xs tracking-[0.3em] uppercase font-medium mb-8 text-neutral-400">{t('footer.support')}</h4>
-            <ul className="space-y-4">
-              <li>
-                <Link href="/contact" className="text-neutral-400 hover:text-pearl-50 transition-colors font-light">
-                  {t('footer.contactUs')}
-                </Link>
-              </li>
+            {/* shop */}
+            <FooterCol title={t('footer.shop')}>
+              <FooterLink href="/shop">{t('footer.allProducts')}</FooterLink>
+              <FooterLink href="/shop?category=running">{t('home.running') !== 'home.running' ? t('home.running') : 'Running'}</FooterLink>
+              <FooterLink href="/shop?category=basketball">{t('home.basketball') !== 'home.basketball' ? t('home.basketball') : 'Basketball'}</FooterLink>
+              <FooterLink href="/shop?category=limited">{t('home.limited') !== 'home.limited' ? t('home.limited') : 'Limited'}</FooterLink>
+            </FooterCol>
+
+            {/* support */}
+            <FooterCol title={t('footer.support')}>
+              <FooterLink href="/contact">{t('footer.contactUs')}</FooterLink>
               <li>
                 <button
                   onClick={() => setShowSizeGuide(true)}
-                  className="text-neutral-400 hover:text-pearl-50 transition-colors font-light"
+                  data-cursor="link"
+                  className="font-mono text-[12px] uppercase tracking-[0.12em] text-mist transition-colors hover:text-fog"
                 >
                   {t('footer.sizeGuide')}
                 </button>
               </li>
-              <li>
-                <Link href="/contact#shipping" className="text-neutral-400 hover:text-pearl-50 transition-colors font-light">
-                  {t('footer.shippingInfo')}
-                </Link>
-              </li>
-              <li>
-                <Link href="/legal/return-policy" className="text-neutral-400 hover:text-pearl-50 transition-colors font-light">
-                  {t('footer.returns')}
-                </Link>
-              </li>
-            </ul>
-          </div>
+              <FooterLink href="/contact#shipping">{t('footer.shippingInfo')}</FooterLink>
+              <FooterLink href="/legal/return-policy">{t('footer.returns')}</FooterLink>
+            </FooterCol>
 
-          {/* Contact Info */}
-          <div>
-            <h4 className="text-xs tracking-[0.3em] uppercase font-medium mb-8 text-neutral-400">{t('footer.visitUs')}</h4>
-            <div className="space-y-4">
-              <div className="flex items-start gap-3">
-                <MapPin className="w-4 h-4 text-neutral-500 flex-shrink-0 mt-1" />
-                <address className="text-neutral-400 not-italic font-light">
-                  {t('footer.address')}
-                </address>
-              </div>
-              <div className="flex items-center gap-3">
-                <Phone className="w-4 h-4 text-neutral-500 flex-shrink-0" />
-                <a href="tel:+302105550199" className="text-neutral-400 hover:text-pearl-50 transition-colors font-light">
+            {/* contact */}
+            <FooterCol title={t('footer.visitUs')}>
+              <li className="flex items-start gap-3 text-mist">
+                <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-ghost" />
+                <address className="not-italic leading-relaxed">{t('footer.address')}</address>
+              </li>
+              <li className="flex items-center gap-3">
+                <Phone className="h-4 w-4 shrink-0 text-ghost" />
+                <a href="tel:+302105550199" className="text-mist transition-colors hover:text-fog">
                   {t('footer.phone')}
                 </a>
-              </div>
-              <div className="flex items-center gap-3">
-                <Mail className="w-4 h-4 text-neutral-500 flex-shrink-0" />
-                <a href="mailto:hello@sneakerair.com" className="text-neutral-400 hover:text-pearl-50 transition-colors font-light">
+              </li>
+              <li className="flex items-center gap-3">
+                <Mail className="h-4 w-4 shrink-0 text-ghost" />
+                <a href="mailto:hello@sneakerair.com" className="text-mist transition-colors hover:text-fog">
                   {t('footer.email')}
                 </a>
-              </div>
-            </div>
+              </li>
+            </FooterCol>
           </div>
-        </div>
 
-        {/* Bottom Bar */}
-        <div className="border-t border-neutral-800 pt-8">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <p className="text-neutral-500 text-sm font-light">
-              {t('footer.rights')}
-            </p>
+          {/* bottom bar */}
+          <div className="mt-16 flex flex-col items-center justify-between gap-4 border-t border-fog/8 pt-8 md:flex-row">
+            <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-ghost">{t('footer.rights')}</p>
             <div className="flex flex-wrap justify-center gap-6">
-              <Link href="/legal/privacy-policy" className="text-neutral-500 hover:text-pearl-50 text-sm font-light transition-colors">
-                Privacy Policy
-              </Link>
-              <Link href="/legal/terms-of-service" className="text-neutral-500 hover:text-pearl-50 text-sm font-light transition-colors">
-                Terms of Service
-              </Link>
-              <Link href="/legal/return-policy" className="text-neutral-500 hover:text-pearl-50 text-sm font-light transition-colors">
-                Return Policy
-              </Link>
+              <FooterMini href="/legal/privacy-policy">Privacy</FooterMini>
+              <FooterMini href="/legal/terms-of-service">Terms</FooterMini>
+              <FooterMini href="/legal/return-policy">Returns</FooterMini>
             </div>
           </div>
         </div>
-      </div>
-    </footer>
+      </footer>
 
-    {showSizeGuide && (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-        <div className="bg-white dark:bg-charcoal-900 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
-          <div className="sticky top-0 bg-white dark:bg-charcoal-900 border-b border-neutral-200 dark:border-charcoal-800 p-6 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Ruler className="w-5 h-5 text-neutral-600 dark:text-neutral-400" />
-              <h3 className="font-display text-xl text-charcoal-900 dark:text-pearl-50">Size Guide</h3>
-            </div>
-            <button
-              onClick={() => setShowSizeGuide(false)}
-              className="p-2 hover:bg-neutral-100 dark:hover:bg-charcoal-800 rounded-full transition-colors"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-
-          <div className="p-8 space-y-8">
-            <div>
-              <h4 className="font-display text-lg text-charcoal-900 dark:text-pearl-50 mb-4">Sneaker Size Conversion</h4>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-neutral-300 dark:border-charcoal-700">
-                      <th className="py-3 px-4 text-left font-medium text-neutral-600 dark:text-neutral-400">EU</th>
-                      <th className="py-3 px-4 text-left font-medium text-neutral-600 dark:text-neutral-400">US</th>
-                      <th className="py-3 px-4 text-left font-medium text-neutral-600 dark:text-neutral-400">UK</th>
-                    </tr>
-                  </thead>
-                  <tbody className="text-neutral-700 dark:text-neutral-300">
-                    <tr className="border-b border-neutral-200 dark:border-charcoal-800">
-                      <td className="py-3 px-4 font-medium">38</td>
-                      <td className="py-3 px-4">6</td>
-                      <td className="py-3 px-4">5.5</td>
-                    </tr>
-                    <tr className="border-b border-neutral-200 dark:border-charcoal-800">
-                      <td className="py-3 px-4 font-medium">39</td>
-                      <td className="py-3 px-4">6.5</td>
-                      <td className="py-3 px-4">6</td>
-                    </tr>
-                    <tr className="border-b border-neutral-200 dark:border-charcoal-800">
-                      <td className="py-3 px-4 font-medium">40</td>
-                      <td className="py-3 px-4">7</td>
-                      <td className="py-3 px-4">6.5</td>
-                    </tr>
-                    <tr className="border-b border-neutral-200 dark:border-charcoal-800">
-                      <td className="py-3 px-4 font-medium">41</td>
-                      <td className="py-3 px-4">8</td>
-                      <td className="py-3 px-4">7</td>
-                    </tr>
-                    <tr className="border-b border-neutral-200 dark:border-charcoal-800">
-                      <td className="py-3 px-4 font-medium">42</td>
-                      <td className="py-3 px-4">8.5</td>
-                      <td className="py-3 px-4">7.5</td>
-                    </tr>
-                    <tr className="border-b border-neutral-200 dark:border-charcoal-800">
-                      <td className="py-3 px-4 font-medium">43</td>
-                      <td className="py-3 px-4">9.5</td>
-                      <td className="py-3 px-4">8.5</td>
-                    </tr>
-                    <tr className="border-b border-neutral-200 dark:border-charcoal-800">
-                      <td className="py-3 px-4 font-medium">44</td>
-                      <td className="py-3 px-4">10</td>
-                      <td className="py-3 px-4">9</td>
-                    </tr>
-                    <tr className="border-b border-neutral-200 dark:border-charcoal-800">
-                      <td className="py-3 px-4 font-medium">45</td>
-                      <td className="py-3 px-4">11</td>
-                      <td className="py-3 px-4">10</td>
-                    </tr>
-                    <tr>
-                      <td className="py-3 px-4 font-medium">46</td>
-                      <td className="py-3 px-4">12</td>
-                      <td className="py-3 px-4">11</td>
-                    </tr>
-                  </tbody>
-                </table>
+      {/* SIZE GUIDE */}
+      {showSizeGuide && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-void/80 p-4 backdrop-blur-sm"
+          onClick={() => setShowSizeGuide(false)}
+        >
+          <div
+            className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl panel-glass"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="sticky top-0 flex items-center justify-between border-b border-fog/8 bg-carbon/80 p-6 backdrop-blur">
+              <div className="flex items-center gap-3">
+                <Ruler className="h-5 w-5 text-plasma" />
+                <h3 className="font-display text-xl uppercase tracking-tight text-fog">Size Guide</h3>
               </div>
+              <button
+                onClick={() => setShowSizeGuide(false)}
+                className="rounded-full p-2 text-mist transition-colors hover:bg-fog/5 hover:text-fog"
+              >
+                <X className="h-5 w-5" />
+              </button>
             </div>
 
-            <div className="bg-neutral-50 dark:bg-charcoal-800 p-6 rounded-xl">
-              <h4 className="font-medium text-charcoal-900 dark:text-pearl-50 mb-3">How to Measure</h4>
-              <ul className="space-y-2 text-sm text-neutral-600 dark:text-neutral-400 font-light">
-                <li>{"\u2022"} <strong>Foot Length:</strong> Stand on a piece of paper and mark your longest toe and heel, then measure the distance in cm</li>
-                <li>{"\u2022"} <strong>Best Time:</strong> Measure your feet in the evening, when they are at their largest</li>
-                <li>{"\u2022"} <strong>Both Feet:</strong> Measure both feet and use the larger measurement to find your size</li>
-              </ul>
-            </div>
+            <div className="space-y-8 p-8">
+              <div>
+                <h4 className="mb-4 font-mono text-[11px] uppercase tracking-[0.25em] text-mist">EU · US · UK Conversion</h4>
+                <div className="overflow-x-auto rounded-xl border border-fog/8">
+                  <table className="w-full font-mono text-sm">
+                    <thead>
+                      <tr className="border-b border-fog/8 text-ghost">
+                        <th className="px-4 py-3 text-left text-[11px] uppercase tracking-[0.2em]">EU</th>
+                        <th className="px-4 py-3 text-left text-[11px] uppercase tracking-[0.2em]">US</th>
+                        <th className="px-4 py-3 text-left text-[11px] uppercase tracking-[0.2em]">UK</th>
+                      </tr>
+                    </thead>
+                    <tbody className="text-fog">
+                      {SIZE_ROWS.map((r) => (
+                        <tr key={r[0]} className="border-b border-fog/5 last:border-0">
+                          <td className="px-4 py-3 font-semibold text-plasma">{r[0]}</td>
+                          <td className="px-4 py-3 text-mist">{r[1]}</td>
+                          <td className="px-4 py-3 text-mist">{r[2]}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
 
-            <p className="text-xs text-neutral-500 dark:text-neutral-400 text-center">
-              If you{"'"}re between sizes, we recommend sizing up for a more comfortable fit.
-            </p>
+              <div className="rounded-xl border border-fog/8 bg-void/40 p-6">
+                <h4 className="mb-3 font-display text-lg text-fog">How to measure</h4>
+                <ul className="space-y-2 text-sm leading-relaxed text-mist">
+                  <li>• <strong className="text-fog">Foot length:</strong> stand on paper, mark heel and longest toe, measure in cm.</li>
+                  <li>• <strong className="text-fog">Best time:</strong> measure in the evening, when feet are largest.</li>
+                  <li>• <strong className="text-fog">Both feet:</strong> use the larger measurement to pick your size.</li>
+                </ul>
+              </div>
+
+              <p className="text-center font-mono text-[11px] uppercase tracking-[0.15em] text-ghost">
+                Between sizes? Size up for a roomier fit.
+              </p>
+            </div>
           </div>
         </div>
-      </div>
-    )}
+      )}
     </>
+  );
+}
+
+function FooterCol({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <h4 className="mb-6 font-mono text-[11px] uppercase tracking-[0.3em] text-ghost">{title}</h4>
+      <ul className="space-y-4">{children}</ul>
+    </div>
+  );
+}
+
+function FooterLink({ href, children }: { href: string; children: React.ReactNode }) {
+  return (
+    <li>
+      <Link
+        href={href}
+        data-cursor="link"
+        className="font-mono text-[12px] uppercase tracking-[0.12em] text-mist transition-colors hover:text-fog"
+      >
+        {children}
+      </Link>
+    </li>
+  );
+}
+
+function FooterMini({ href, children }: { href: string; children: React.ReactNode }) {
+  return (
+    <Link
+      href={href}
+      data-cursor="link"
+      className="font-mono text-[11px] uppercase tracking-[0.2em] text-ghost transition-colors hover:text-fog"
+    >
+      {children}
+    </Link>
   );
 }

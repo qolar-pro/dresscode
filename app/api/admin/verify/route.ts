@@ -13,8 +13,6 @@ export async function GET(request: NextRequest) {
   if (!auth.valid) {
     return NextResponse.json({ error: auth.error }, { status: 401 });
   }
-  return NextResponse.json({
-    authenticated: true,
-    secretUrl: process.env.ADMIN_SECRET_URL || 'admin',
-  });
+  // Slug intentionally omitted — the client derives it from the URL it's on.
+  return NextResponse.json({ authenticated: true });
 }

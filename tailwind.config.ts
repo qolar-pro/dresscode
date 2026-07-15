@@ -108,6 +108,21 @@ const config: Config = {
           violet: '#7c3aed',
           magenta: '#ec4899',
         },
+
+        // ---------------------------------------------------------------
+        // SNEAKER AIR cinematic system (ported from blancographics.xyz):
+        // void/carbon/steel surfaces, fog/mist/ghost type, volt/plasma/flare
+        // neon accents. Used by the redesigned storefront surfaces.
+        // ---------------------------------------------------------------
+        void: '#030309',
+        carbon: '#0b0b14',
+        steel: '#14141f',
+        fog: '#f2f2f7',
+        mist: '#9a9aaf',
+        ghost: '#5a5a70',
+        volt: '#4d7cff',
+        plasma: '#8a5cff',
+        flare: '#ff4fd8',
       },
       fontFamily: {
         // References var(--font-sans) / var(--font-display) / var(--font-mono)

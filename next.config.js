@@ -15,6 +15,21 @@ try {
   // keep wildcard fallback
 }
 
+// Next.js dev mode (React Refresh / HMR / webpack eval-source-maps) REQUIRES
+// 'unsafe-eval'. Production output does not. Include it only in development so
+// the client bundle can evaluate locally, while keeping the production CSP
+// strict (no eval). Without this, dev throws a CSP EvalError and React never
+// hydrates — every client component appears stuck "loading forever".
+const isDev = process.env.NODE_ENV !== 'production';
+const scriptSrc = [
+  "'self'",
+  "'unsafe-inline'",
+  isDev ? "'unsafe-eval'" : '',
+  'https://js.stripe.com',
+]
+  .filter(Boolean)
+  .join(' ');
+
 const nextConfig = {
   images: {
     remotePatterns: [
@@ -66,7 +81,7 @@ const nextConfig = {
             // re-add it deliberately with a comment explaining why.
             // 'unsafe-inline' is kept for script-src/style-src because Next.js
             // injects inline bootstrap scripts/styles that don't use nonces here.
-            value: `default-src 'self'; script-src 'self' 'unsafe-inline' https://js.stripe.com; style-src 'self' 'unsafe-inline'; img-src 'self' https: data:; font-src 'self' data:; connect-src 'self' ${supabaseOrigin} https://api.stripe.com; frame-src https://js.stripe.com https://hooks.stripe.com; frame-ancestors 'none'; object-src 'none'; base-uri 'self'; form-action 'self'`,
+            value: `default-src 'self'; script-src ${scriptSrc}; style-src 'self' 'unsafe-inline'; img-src 'self' https: data: blob:; font-src 'self' data:; connect-src 'self' ${supabaseOrigin} https://api.stripe.com; frame-src https://js.stripe.com https://hooks.stripe.com; frame-ancestors 'none'; object-src 'none'; base-uri 'self'; form-action 'self'`,
           },
           {
             key: 'Permissions-Policy',

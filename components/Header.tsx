@@ -3,206 +3,193 @@
 import Link from 'next/link';
 import { useCart } from '@/context/CartContext';
 import { useLanguage } from '@/context/LanguageContext';
-import { useTheme } from '@/context/ThemeContext';
-import { ShoppingBag, Sun, Moon, Globe, ChevronDown } from 'lucide-react';
+import { ShoppingBag, Globe, ChevronDown } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { categories } from '@/data/products';
+import Magnetic from '@/components/Magnetic';
+import TextRoll from '@/components/TextRoll';
 
 export default function Header() {
   const { getCartCount, setIsCartOpen } = useCart();
   const { language, setLanguage, t } = useLanguage();
-  const { toggleTheme, isDark } = useTheme();
   const [scrolled, setScrolled] = useState(false);
   const [showLangDropdown, setShowLangDropdown] = useState(false);
   const cartCount = getCartCount();
 
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 50);
+    const handleScroll = () => setScrolled(window.scrollY > 40);
+    handleScroll();
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  const navLink =
+    'group relative font-mono text-[11px] uppercase tracking-[0.28em] text-mist transition-colors hover:text-fog';
+  const underline =
+    'pointer-events-none absolute -bottom-1 left-0 h-px w-0 bg-neon transition-all duration-500 group-hover:w-full';
+
   return (
     <>
-      {/* Desktop Header - Hidden on Mobile */}
-      <header className={`hidden md:block fixed top-0 left-0 right-0 z-50 transition-all duration-700 ${
-        scrolled 
-          ? 'glass-nav' 
-          : 'bg-transparent'
-      }`}>
-        {/* Top Bar with Background Image */}
-        <div className={`relative overflow-hidden transition-all duration-700 ${
-          scrolled ? 'h-0 opacity-0' : 'h-10'
-        }`}>
-          <div className="absolute inset-0">
-            <img
-              src="https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?w=1920&q=80"
-              alt=""
-              className="w-full h-full object-cover opacity-30 dark:opacity-20"
-            />
-            <div className="absolute inset-0 bg-gradient-to-r from-charcoal-900/80 to-charcoal-800/80" />
-          </div>
-          <div className="container mx-auto px-4 h-full flex items-center justify-center relative z-10">
-            <p className="text-[10px] tracking-[0.3em] uppercase text-white/90">
-              {t('header.freeShipping')}
-            </p>
+      {/* ============================= DESKTOP ============================= */}
+      <header
+        className={`fixed inset-x-0 top-0 z-50 hidden transition-all duration-500 md:block ${
+          scrolled ? 'panel-glass shadow-[0_10px_40px_-20px_rgba(0,0,0,0.8)]' : 'bg-transparent'
+        }`}
+      >
+        {/* announcement rail */}
+        <div
+          className={`overflow-hidden border-b border-fog/5 transition-all duration-500 ${
+            scrolled ? 'h-0 opacity-0' : 'h-9 opacity-100'
+          }`}
+        >
+          <div className="flex h-9 items-center justify-center gap-2 font-mono text-[10px] uppercase tracking-[0.35em] text-ghost">
+            <span className="h-1 w-1 rounded-full bg-flare shadow-[0_0_8px_#ff4fd8]" />
+            {t('header.freeShipping')}
           </div>
         </div>
 
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between h-20">
-            {/* Logo */}
-            <Link href="/" className="group">
-              <h1 className="font-display text-2xl tracking-tight text-charcoal-900 dark:text-pearl-50">
-                SNEAKER AIR
-              </h1>
+        <div className="mx-auto flex h-[68px] max-w-[1500px] items-center justify-between px-6 md:px-12">
+          {/* wordmark */}
+          <Magnetic strength={0.25}>
+            <Link href="/" data-cursor="link" className="roll-trigger flex items-baseline gap-[3px]">
+              <span className="font-display text-xl font-semibold uppercase tracking-tight text-fog">
+                Sneaker
+              </span>
+              <span className="font-display text-xl font-semibold uppercase tracking-tight text-neon">
+                Air
+              </span>
+            </Link>
+          </Magnetic>
+
+          {/* nav */}
+          <nav className="flex items-center gap-11">
+            <Link href="/" data-cursor="link" className={navLink}>
+              <TextRoll text={t('nav.home')} />
+              <span className={underline} />
             </Link>
 
-            {/* Desktop Navigation */}
-            <nav className="flex items-center gap-12">
+            {/* categories dropdown */}
+            <div className="group/cat relative">
               <Link
-                href="/"
-                className="text-xs tracking-[0.2em] uppercase font-medium text-neutral-600 dark:text-neutral-400 hover:text-charcoal-900 dark:hover:text-pearl-50 transition-colors relative group"
+                href="/shop"
+                data-cursor="link"
+                className="flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-[0.28em] text-mist transition-colors group-hover/cat:text-fog"
               >
-                {t('nav.home')}
-                <span className="absolute -bottom-1 left-0 w-0 h-[1px] bg-charcoal-900 dark:bg-pearl-50 group-hover:w-full transition-all duration-500" />
+                <TextRoll text={t('nav.shop')} />
+                <ChevronDown className="h-3 w-3 transition-transform duration-300 group-hover/cat:rotate-180" />
               </Link>
-              {/* Categories Dropdown */}
-              <div className="relative group/categories">
-                <Link
-                  href="/shop"
-                  className="flex items-center gap-1 text-xs tracking-[0.2em] uppercase font-medium text-neutral-600 dark:text-neutral-400 group-hover/categories:text-charcoal-900 dark:group-hover/categories:text-pearl-50 transition-colors"
-                >
-                  {t('nav.shop')}
-                  <ChevronDown className="w-3 h-3 transition-transform duration-300 group-hover/categories:rotate-180" />
-                </Link>
-                
-                <div className="absolute top-full left-1/2 -translate-x-1/2 pt-4 opacity-0 invisible group-hover/categories:opacity-100 group-hover/categories:visible transition-all duration-300 z-50">
-                  <div className="bg-white dark:bg-charcoal-900 border border-neutral-200 dark:border-charcoal-800 shadow-2xl rounded-xl overflow-hidden min-w-[200px] p-2">
-                    <Link
-                      href="/shop"
-                      className="block px-4 py-3 text-[10px] tracking-[0.2em] uppercase font-medium text-neutral-600 dark:text-neutral-400 hover:bg-neutral-50 dark:hover:bg-charcoal-800 hover:text-charcoal-900 dark:hover:text-pearl-50 rounded-lg transition-all"
-                    >
-                      {t('shop.all')}
-                    </Link>
-                    {categories.filter(c => c.id !== 'all').map((cat) => (
+
+              <div className="invisible absolute left-1/2 top-full -translate-x-1/2 pt-5 opacity-0 transition-all duration-300 group-hover/cat:visible group-hover/cat:opacity-100">
+                <div className="min-w-[220px] overflow-hidden rounded-2xl panel-glass p-2">
+                  <Link
+                    href="/shop"
+                    data-cursor="link"
+                    className="block rounded-xl px-4 py-3 font-mono text-[10px] uppercase tracking-[0.22em] text-mist transition-colors hover:bg-fog/5 hover:text-fog"
+                  >
+                    {t('shop.all')}
+                  </Link>
+                  {categories
+                    .filter((c) => c.id !== 'all')
+                    .map((cat) => (
                       <Link
                         key={cat.id}
                         href={`/shop?category=${cat.id}`}
-                        className="block px-4 py-3 text-[10px] tracking-[0.2em] uppercase font-medium text-neutral-600 dark:text-neutral-400 hover:bg-neutral-50 dark:hover:bg-charcoal-800 hover:text-charcoal-900 dark:hover:text-pearl-50 rounded-lg transition-all"
+                        data-cursor="link"
+                        className="flex items-center justify-between rounded-xl px-4 py-3 font-mono text-[10px] uppercase tracking-[0.22em] text-mist transition-colors hover:bg-fog/5 hover:text-fog"
                       >
-                        {t(`home.${cat.id}`) || cat.name}
+                        {t(`home.${cat.id}`) !== `home.${cat.id}` ? t(`home.${cat.id}`) : cat.name}
+                        <span className="h-1 w-1 rounded-full bg-plasma opacity-0 transition-opacity duration-300 group-hover/cat:opacity-60" />
                       </Link>
                     ))}
-                  </div>
                 </div>
               </div>
-              <Link
-                href="/contact"
-                className="text-xs tracking-[0.2em] uppercase font-medium text-neutral-600 dark:text-neutral-400 hover:text-charcoal-900 dark:hover:text-pearl-50 transition-colors relative group"
-              >
-                {t('nav.contact')}
-                <span className="absolute -bottom-1 left-0 w-0 h-[1px] bg-charcoal-900 dark:bg-pearl-50 group-hover:w-full transition-all duration-500" />
-              </Link>
-            </nav>
+            </div>
 
-            {/* Controls & Cart */}
-            <div className="flex items-center gap-4">
-              {/* Language Toggle */}
-              <div className="relative">
-                <button
-                  onClick={() => setShowLangDropdown(!showLangDropdown)}
-                  className="p-2 hover:bg-neutral-100 dark:hover:bg-charcoal-800 rounded-full transition-colors"
-                  aria-label="Language"
-                >
-                  <Globe className="w-5 h-5 text-neutral-700 dark:text-neutral-300" />
-                </button>
-                
-                {showLangDropdown && (
-                  <div className="absolute right-0 top-full mt-2 bg-white dark:bg-charcoal-800 border border-neutral-200 dark:border-charcoal-700 rounded-lg shadow-xl overflow-hidden min-w-[120px] animate-fade-in">
-                    <button
-                      onClick={() => { setLanguage('en'); setShowLangDropdown(false); }}
-                      className={`w-full text-left px-4 py-3 text-sm transition-colors ${
-                        language === 'en' 
-                          ? 'bg-neutral-100 dark:bg-charcoal-700 font-medium' 
-                          : 'hover:bg-neutral-50 dark:hover:bg-charcoal-700'
-                      }`}
-                    >
-                      English
-                    </button>
-                    <button
-                      onClick={() => { setLanguage('gr'); setShowLangDropdown(false); }}
-                      className={`w-full text-left px-4 py-3 text-sm transition-colors ${
-                        language === 'gr' 
-                          ? 'bg-neutral-100 dark:bg-charcoal-700 font-medium' 
-                          : 'hover:bg-neutral-50 dark:hover:bg-charcoal-700'
-                      }`}
-                    >
-                      Ελληνικά
-                    </button>
-                  </div>
-                )}
-              </div>
+            <Link href="/contact" data-cursor="link" className={navLink}>
+              <TextRoll text={t('nav.contact')} />
+              <span className={underline} />
+            </Link>
+          </nav>
 
-              {/* Theme Toggle */}
+          {/* controls */}
+          <div className="flex items-center gap-2">
+            {/* language */}
+            <div className="relative">
               <button
-                onClick={toggleTheme}
-                className="p-2 hover:bg-neutral-100 dark:hover:bg-charcoal-800 rounded-full transition-colors"
-                aria-label="Toggle theme"
+                onClick={() => setShowLangDropdown((v) => !v)}
+                data-cursor="link"
+                className="flex items-center gap-1.5 rounded-full border border-fog/10 px-3 py-2 font-mono text-[10px] uppercase tracking-[0.2em] text-mist transition-colors hover:border-fog/30 hover:text-fog"
+                aria-label="Language"
               >
-                {isDark ? (
-                  <Sun className="w-5 h-5 text-neutral-700 dark:text-neutral-300" />
-                ) : (
-                  <Moon className="w-5 h-5 text-neutral-700 dark:text-neutral-300" />
-                )}
+                <Globe className="h-3.5 w-3.5" />
+                {language === 'en' ? 'EN' : 'GR'}
               </button>
 
-              {/* Cart */}
+              {showLangDropdown && (
+                <div className="absolute right-0 top-full mt-2 min-w-[130px] overflow-hidden rounded-xl panel-glass">
+                  {(['en', 'gr'] as const).map((lng) => (
+                    <button
+                      key={lng}
+                      onClick={() => {
+                        setLanguage(lng);
+                        setShowLangDropdown(false);
+                      }}
+                      className={`block w-full px-4 py-3 text-left font-mono text-[11px] uppercase tracking-[0.2em] transition-colors hover:bg-fog/5 ${
+                        language === lng ? 'text-neon' : 'text-mist hover:text-fog'
+                      }`}
+                    >
+                      {lng === 'en' ? 'English' : 'Ελληνικά'}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* cart */}
+            <Magnetic strength={0.35}>
               <button
                 onClick={() => setIsCartOpen(true)}
-                className="relative p-2 hover:bg-neutral-100 dark:hover:bg-charcoal-800 rounded-full transition-colors"
+                data-cursor="link"
+                className="relative flex items-center gap-2 rounded-full bg-neon px-5 py-2.5 font-mono text-[10px] uppercase tracking-[0.2em] text-white transition-[filter] hover:brightness-110"
                 aria-label="Open cart"
               >
-                <ShoppingBag className="w-5 h-5 text-neutral-700 dark:text-neutral-300" />
+                <ShoppingBag className="h-4 w-4" />
+                <span className="hidden lg:inline">Cart</span>
                 {cartCount > 0 && (
-                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-charcoal-900 dark:bg-pearl-50 text-pearl-50 dark:text-charcoal-900 text-[10px] rounded-full flex items-center justify-center font-medium">
+                  <span className="grid h-4 min-w-4 place-items-center rounded-full bg-white px-1 text-[9px] font-semibold text-plasma">
                     {cartCount}
                   </span>
                 )}
               </button>
-            </div>
+            </Magnetic>
           </div>
         </div>
       </header>
 
-      {/* Mobile Header - Minimal */}
-      <header className="md:hidden fixed top-0 left-0 right-0 z-40 glass-nav">
-        <div className="flex items-center justify-between h-16 px-4">
-          <Link href="/">
-            <h1 className="font-display text-xl tracking-tight text-charcoal-900 dark:text-pearl-50">
-              SNEAKER AIR
-            </h1>
+      {/* ============================== MOBILE ============================== */}
+      <header className="fixed inset-x-0 top-0 z-40 panel-glass md:hidden">
+        <div className="flex h-16 items-center justify-between px-4">
+          <Link href="/" className="flex items-baseline gap-[2px]">
+            <span className="font-display text-lg font-semibold uppercase tracking-tight text-fog">Sneaker</span>
+            <span className="font-display text-lg font-semibold uppercase tracking-tight text-neon">Air</span>
           </Link>
-          
+
           <div className="flex items-center gap-2">
             <button
-              onClick={toggleTheme}
-              className="p-2 hover:bg-neutral-100 dark:hover:bg-charcoal-800 rounded-full transition-colors"
+              onClick={() => setLanguage(language === 'en' ? 'gr' : 'en')}
+              className="rounded-full border border-fog/10 px-2.5 py-1.5 font-mono text-[10px] uppercase tracking-[0.2em] text-mist"
+              aria-label="Toggle language"
             >
-              {isDark ? (
-                <Sun className="w-5 h-5 text-neutral-700 dark:text-neutral-300" />
-              ) : (
-                <Moon className="w-5 h-5 text-neutral-700 dark:text-neutral-300" />
-              )}
+              {language === 'en' ? 'EN' : 'GR'}
             </button>
-            
             <button
               onClick={() => setIsCartOpen(true)}
-              className="relative p-2 hover:bg-neutral-100 dark:hover:bg-charcoal-800 rounded-full transition-colors"
+              className="relative rounded-full bg-neon p-2.5 text-white"
+              aria-label="Open cart"
             >
-              <ShoppingBag className="w-5 h-5 text-neutral-700 dark:text-neutral-300" />
+              <ShoppingBag className="h-4 w-4" />
               {cartCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-4 h-4 bg-charcoal-900 dark:bg-pearl-50 text-pearl-50 dark:text-charcoal-900 text-[10px] rounded-full flex items-center justify-center font-medium">
+                <span className="absolute -right-1 -top-1 grid h-4 w-4 place-items-center rounded-full bg-white text-[9px] font-semibold text-plasma">
                   {cartCount}
                 </span>
               )}
@@ -211,12 +198,8 @@ export default function Header() {
         </div>
       </header>
 
-      {/* Click outside to close language dropdown */}
       {showLangDropdown && (
-        <div 
-          className="fixed inset-0 z-40" 
-          onClick={() => setShowLangDropdown(false)}
-        />
+        <div className="fixed inset-0 z-40" onClick={() => setShowLangDropdown(false)} />
       )}
     </>
   );

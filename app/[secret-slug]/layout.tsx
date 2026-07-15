@@ -15,29 +15,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [showLangDropdown, setShowLangDropdown] = useState(false);
-  const [secretSlug, setSecretSlug] = useState<string | null>(null);
 
-  // Fetch the secret slug from config endpoint on mount
-  useEffect(() => {
-    async function fetchSlug() {
-      try {
-        const res = await fetch('/api/admin/config');
-        if (res.ok) {
-          const data = await res.json();
-          setSecretSlug(data.secretUrl || 'admin');
-        } else {
-          setSecretSlug('admin');
-        }
-      } catch {
-        setSecretSlug('admin');
-      }
-    }
-    fetchSlug();
-  }, []);
+  // The admin area lives under /[secret-slug]/* — so the slug is simply the
+  // first path segment. Reading it from the URL (instead of a public config
+  // endpoint) means the slug is never exposed to unauthenticated clients.
+  const secretSlug = pathname.split('/')[1] || '';
 
-  // Check authentication AFTER we have the secret slug
+  // Check authentication
   useEffect(() => {
-    if (secretSlug === null) return; // Wait for slug
+    if (!secretSlug) return;
 
     if (pathname === `/${secretSlug}`) {
       setIsLoading(false);
@@ -77,8 +63,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     }
   };
 
-  // Show loading state while fetching slug or verifying session
-  if (secretSlug === null || isLoading) {
+  // Show loading state while verifying session
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-charcoal-950 flex items-center justify-center">
         <div className="text-center">

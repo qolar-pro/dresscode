@@ -11,7 +11,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       .order('created_at', { ascending: false });
 
     if (products) {
-      productUrls = products.map((product) => ({
+      productUrls = products.map((product: { id: number; created_at: string }) => ({
         url: `https://sneakerair.com/product/${product.id}`,
         lastModified: new Date(product.created_at),
         changeFrequency: 'weekly',

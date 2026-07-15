@@ -6,8 +6,10 @@ import { getClientIP, isIPAllowed } from '@/lib/ip-whitelist';
 
 // Password hash read from environment variable at request time (not module load)
 
-// Rate limiting for login attempts (IP-based, in-memory)
-const loginAttempts = new Map<string, { count: number; resetTime: number; blockedUntil: number }>();
+// Rate limiting for login attempts (IP-based). Pinned to globalThis so the
+// 5-attempt lockout is shared across route-bundle instances in one process.
+const loginAttempts: Map<string, { count: number; resetTime: number; blockedUntil: number }> =
+  (globalThis as any).__saLoginAttempts ?? ((globalThis as any).__saLoginAttempts = new Map());
 
 function checkLoginRateLimit(ip: string): { allowed: boolean; retryAfter?: number } {
   const now = Date.now();
@@ -90,7 +92,8 @@ export async function POST(request: NextRequest) {
       path: '/',
     });
 
-    const response = NextResponse.json({ success: true, secretUrl: process.env.ADMIN_SECRET_URL || 'admin' });
+    // Do NOT return the slug — the client already knows it from the URL it's on.
+    const response = NextResponse.json({ success: true });
     response.headers.set('Set-Cookie', cookie);
 
     return response;

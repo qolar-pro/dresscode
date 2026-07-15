@@ -1,40 +1,40 @@
 'use client';
 
 import { useLanguage } from '@/context/LanguageContext';
-import { useState } from 'react';
-import { MapPin, Phone, Mail, Clock, Send, Instagram, Facebook, Twitter, ArrowRight } from 'lucide-react';
+import { useState, useRef } from 'react';
+import { MapPin, Phone, Mail, Clock, Send, Instagram, Facebook, Twitter, ArrowUpRight } from 'lucide-react';
+import { useReveal } from '@/lib/reveal';
+import Magnetic from '@/components/Magnetic';
+import TextRoll from '@/components/TextRoll';
+
+const inputClass =
+  'w-full rounded-xl border border-fog/12 bg-void/40 px-4 py-3.5 font-mono text-[13px] text-fog outline-none transition-colors placeholder:text-ghost focus:border-plasma';
 
 export default function ContactPage() {
   const { t } = useLanguage();
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    subject: '',
-    message: '',
-  });
+  const scope = useRef<HTMLDivElement>(null);
+  const [formData, setFormData] = useState({ name: '', email: '', subject: '', message: '' });
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
+
+  useReveal(scope, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
     setSubmitError('');
-
     try {
       const res = await fetch('/api/contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
       });
-
       const data = await res.json();
-
       if (!res.ok) {
         setSubmitError(data.error || 'Failed to send message');
         return;
       }
-
       setSubmitted(true);
       setTimeout(() => {
         setSubmitted(false);
@@ -48,244 +48,179 @@ export default function ContactPage() {
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    setFormData(prev => ({
-      ...prev,
-      [e.target.name]: e.target.value,
-    }));
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => {
+    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
   return (
-    <div className="min-h-screen bg-white dark:bg-neutral-950">
-      {/* Page Header with Background Image */}
-      <div className="relative overflow-hidden">
-        <div className="absolute inset-0">
-          <img
-            src="https://images.unsplash.com/photo-1558171813-4c088753af8f?w=1920&q=80"
-            alt="Contact Us"
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-white/95 via-white/80 to-white/60 dark:from-neutral-950/95 dark:via-neutral-950/80 dark:to-neutral-950/60" />
-        </div>
-        
-        <div className="container mx-auto px-4 py-24 relative z-10">
-          <div className="inline-flex items-center gap-3 mb-6">
-            <div className="w-8 h-[1px] bg-neutral-900 dark:bg-white" />
-            <span className="text-xs font-medium tracking-[0.3em] uppercase text-neutral-600 dark:text-neutral-400">{t('contact.getLabel')}</span>
-          </div>
-          <h1 className="font-display text-6xl md:text-7xl font-light tracking-tight text-neutral-900 dark:text-white mb-4">{t('contact.title')}</h1>
-          <p className="text-neutral-600 dark:text-neutral-400 font-light text-lg">{t('contact.subtitle')}</p>
-        </div>
+    <div ref={scope} className="relative min-h-screen overflow-hidden bg-void text-fog">
+      <div aria-hidden className="pointer-events-none absolute inset-0">
+        <div className="aura-blob aura-blob-a right-[-6%] top-[8%] h-[48vh] w-[48vh] opacity-30" />
+        <div className="aura-blob aura-blob-c left-[-8%] top-[45%] h-[42vh] w-[42vh] opacity-20" />
+        <div className="absolute inset-0 grid-overlay opacity-40" />
       </div>
 
-      <div className="container mx-auto px-4 py-16">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-16">
-          {/* Contact Information */}
-          <div className="space-y-12">
-            {/* Store Location */}
-            <div>
-              <div className="flex items-start gap-4 mb-3">
-                <MapPin className="w-5 h-5 flex-shrink-0 mt-1 text-neutral-900 dark:text-white" />
-                <div>
-                  <h3 className="font-medium text-neutral-900 dark:text-white mb-2">{t('contact.visitStore')}</h3>
-                  <address className="text-neutral-600 dark:text-neutral-400 not-italic font-light leading-relaxed">
-                    88 Sneaker Boulevard<br />
-                    Athens 10552<br />
-                    Greece
-                  </address>
-                </div>
-              </div>
-            </div>
+      {/* HERO */}
+      <section className="relative pt-40 pb-12 md:pt-48">
+        <div className="mx-auto max-w-[1500px] px-6 md:px-12">
+          <div className="mb-5 flex items-center gap-3 font-mono text-[11px] uppercase tracking-[0.35em] text-mist" data-reveal>
+            <span className="h-1.5 w-1.5 rounded-full bg-plasma shadow-[0_0_10px_#8a5cff]" />
+            {t('contact.getLabel')}
+          </div>
+          <h1 className="font-display text-6xl font-semibold uppercase leading-[0.85] tracking-tight md:text-8xl">
+            <span className="line-mask"><span className="block">{t('contact.title')}</span></span>
+          </h1>
+          <p className="mt-6 max-w-md text-mist" data-reveal data-reveal-delay="0.1">{t('contact.subtitle')}</p>
+        </div>
+      </section>
 
-            {/* Phone */}
-            <div>
-              <div className="flex items-start gap-4 mb-3">
-                <Phone className="w-5 h-5 flex-shrink-0 mt-1 text-neutral-900 dark:text-white" />
-                <div>
-                  <h3 className="font-medium text-neutral-900 dark:text-white mb-2">{t('contact.callUs')}</h3>
-                  <a href="tel:+302105550199" className="text-neutral-900 dark:text-white hover:text-neutral-600 dark:hover:text-neutral-400 font-light transition-colors">
-                    +30 210 555 0199
-                  </a>
-                  <p className="text-sm text-neutral-500 dark:text-neutral-500 mt-1 font-light">Mon-Sat, 9am-8pm EST</p>
-                </div>
-              </div>
-            </div>
+      <div className="relative mx-auto max-w-[1500px] px-6 pb-24 md:px-12">
+        <div className="grid grid-cols-1 gap-14 lg:grid-cols-3">
+          {/* INFO */}
+          <div className="space-y-8" data-reveal-group>
+            <InfoBlock icon={MapPin} title={t('contact.visitStore')}>
+              <address className="not-italic leading-relaxed text-mist">
+                88 Sneaker Boulevard<br />Athens 10552<br />Greece
+              </address>
+            </InfoBlock>
 
-            {/* Email */}
-            <div>
-              <div className="flex items-start gap-4 mb-3">
-                <Mail className="w-5 h-5 flex-shrink-0 mt-1 text-neutral-900 dark:text-white" />
-                <div>
-                  <h3 className="font-medium text-neutral-900 dark:text-white mb-2">{t('contact.emailUs')}</h3>
-                  <a href="mailto:hello@sneakerair.com" className="text-neutral-900 dark:text-white hover:text-neutral-600 dark:hover:text-neutral-400 font-light transition-colors">
-                    hello@sneakerair.com
-                  </a>
-                  <p className="text-sm text-neutral-500 dark:text-neutral-500 mt-1 font-light">We'll respond within 24 hours</p>
-                </div>
-              </div>
-            </div>
+            <InfoBlock icon={Phone} title={t('contact.callUs')}>
+              <a href="tel:+302105550199" className="text-fog transition-colors hover:text-plasma">+30 210 555 0199</a>
+              <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.15em] text-ghost">Mon–Sat · 9am–8pm</p>
+            </InfoBlock>
 
-            {/* Business Hours */}
-            <div>
-              <div className="flex items-start gap-4 mb-3">
-                <Clock className="w-5 h-5 flex-shrink-0 mt-1 text-neutral-900 dark:text-white" />
-                <div>
-                  <h3 className="font-medium text-neutral-900 dark:text-white mb-4">{t('contact.storeHours')}</h3>
-                  <ul className="space-y-2 text-sm font-light">
-                    <li className="flex justify-between py-2 border-b border-neutral-200 dark:border-neutral-800">
-                      <span className="text-neutral-600 dark:text-neutral-400">{t('contact.hoursMonFri')}</span>
-                      <span className="text-neutral-900 dark:text-white">9:00 AM - 8:00 PM</span>
-                    </li>
-                    <li className="flex justify-between py-2 border-b border-neutral-200 dark:border-neutral-800">
-                      <span className="text-neutral-600 dark:text-neutral-400">{t('contact.hoursSat')}</span>
-                      <span className="text-neutral-900 dark:text-white">10:00 AM - 7:00 PM</span>
-                    </li>
-                    <li className="flex justify-between py-2">
-                      <span className="text-neutral-600 dark:text-neutral-400">{t('contact.hoursSun')}</span>
-                      <span className="text-neutral-900 dark:text-white">11:00 AM - 5:00 PM</span>
-                    </li>
-                  </ul>
-                </div>
-              </div>
-            </div>
+            <InfoBlock icon={Mail} title={t('contact.emailUs')}>
+              <a href="mailto:hello@sneakerair.com" className="text-fog transition-colors hover:text-plasma">hello@sneakerair.com</a>
+              <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.15em] text-ghost">Reply within 24h</p>
+            </InfoBlock>
 
-            {/* Social Media */}
+            <InfoBlock icon={Clock} title={t('contact.storeHours')}>
+              <ul className="space-y-2 font-mono text-[12px]">
+                <li className="flex justify-between border-b border-fog/8 py-1.5">
+                  <span className="text-mist">{t('contact.hoursMonFri')}</span><span className="text-fog">09–20</span>
+                </li>
+                <li className="flex justify-between border-b border-fog/8 py-1.5">
+                  <span className="text-mist">{t('contact.hoursSat')}</span><span className="text-fog">10–19</span>
+                </li>
+                <li className="flex justify-between py-1.5">
+                  <span className="text-mist">{t('contact.hoursSun')}</span><span className="text-fog">11–17</span>
+                </li>
+              </ul>
+            </InfoBlock>
+
             <div>
-              <h3 className="font-medium text-neutral-900 dark:text-white mb-4">{t('contact.followUs')}</h3>
+              <h3 className="mb-4 font-mono text-[11px] uppercase tracking-[0.25em] text-ghost">{t('contact.followUs')}</h3>
               <div className="flex gap-3">
-                <a href="#" className="w-10 h-10 border border-neutral-300 dark:border-neutral-700 hover:border-neutral-900 dark:hover:border-white flex items-center justify-center transition-all duration-300">
-                  <Instagram className="w-4 h-4 text-neutral-700 dark:text-neutral-300" />
-                </a>
-                <a href="#" className="w-10 h-10 border border-neutral-300 dark:border-neutral-700 hover:border-neutral-900 dark:hover:border-white flex items-center justify-center transition-all duration-300">
-                  <Facebook className="w-4 h-4 text-neutral-700 dark:text-neutral-300" />
-                </a>
-                <a href="#" className="w-10 h-10 border border-neutral-300 dark:border-neutral-700 hover:border-neutral-900 dark:hover:border-white flex items-center justify-center transition-all duration-300">
-                  <Twitter className="w-4 h-4 text-neutral-700 dark:text-neutral-300" />
-                </a>
+                {[Instagram, Facebook, Twitter].map((Icon, i) => (
+                  <a key={i} href="#" data-cursor="link" className="grid h-10 w-10 place-items-center rounded-full border border-fog/12 text-mist transition-all duration-300 hover:border-plasma hover:text-plasma">
+                    <Icon className="h-4 w-4" />
+                  </a>
+                ))}
               </div>
             </div>
           </div>
 
-          {/* Contact Form */}
+          {/* FORM */}
           <div className="lg:col-span-2">
-            <div className="max-w-2xl">
-              <h2 className="font-display text-3xl font-light tracking-tight text-neutral-900 dark:text-white mb-2">{t('contact.sendMessage')}</h2>
-              <p className="text-neutral-600 dark:text-neutral-400 font-light mb-12">{t('contact.sendMessageDesc')}</p>
-              
+            <div className="rounded-3xl panel-glass p-8 md:p-10" data-reveal>
+              <h2 className="font-display text-3xl font-semibold uppercase tracking-tight text-fog">{t('contact.sendMessage')}</h2>
+              <p className="mb-9 mt-2 text-mist">{t('contact.sendMessageDesc')}</p>
+
               {submitted ? (
-                <div className="border border-neutral-300 dark:border-neutral-700 p-12 text-center">
-                  <div className="w-16 h-16 border-2 border-neutral-900 dark:border-white rounded-full flex items-center justify-center mx-auto mb-6">
-                    <Send className="w-8 h-8 text-neutral-900 dark:text-white" />
+                <div className="rounded-2xl border border-volt/30 bg-volt/5 p-12 text-center">
+                  <div className="mx-auto mb-6 grid h-16 w-16 place-items-center rounded-full bg-neon text-white">
+                    <Send className="h-7 w-7" />
                   </div>
-                  <h3 className="font-display text-2xl font-light tracking-tight text-neutral-900 dark:text-white mb-2">{t('contact.sent')}</h3>
-                  <p className="text-neutral-600 dark:text-neutral-400 font-light">
-                    {t('contact.sentDesc')}
-                  </p>
+                  <h3 className="font-display text-2xl uppercase tracking-tight text-fog">{t('contact.sent')}</h3>
+                  <p className="mt-2 text-mist">{t('contact.sentDesc')}</p>
                 </div>
               ) : (
-                <form onSubmit={handleSubmit} className="space-y-8">
+                <form onSubmit={handleSubmit} className="space-y-6">
                   {submitError && (
-                    <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 p-4 text-red-700 dark:text-red-400 text-sm">
-                      {submitError}
-                    </div>
+                    <div className="rounded-xl border border-flare/30 bg-flare/5 p-4 font-mono text-[12px] text-flare">{submitError}</div>
                   )}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <div>
-                      <label className="block text-xs tracking-[0.2em] uppercase font-medium mb-3 text-neutral-500 dark:text-neutral-400">{t('contact.yourName')} *</label>
-                      <input
-                        type="text"
-                        name="name"
-                        required
-                        value={formData.name}
-                        onChange={handleChange}
-                        className="input-field"
-                        placeholder="Jane Doe"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs tracking-[0.2em] uppercase font-medium mb-3 text-neutral-500 dark:text-neutral-400">{t('contact.emailAddress')} *</label>
-                      <input
-                        type="email"
-                        name="email"
-                        required
-                        value={formData.email}
-                        onChange={handleChange}
-                        className="input-field"
-                        placeholder="jane@example.com"
-                      />
-                    </div>
+                  <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                    <Field label={`${t('contact.yourName')} *`}>
+                      <input type="text" name="name" required value={formData.name} onChange={handleChange} className={inputClass} placeholder="Jane Doe" />
+                    </Field>
+                    <Field label={`${t('contact.emailAddress')} *`}>
+                      <input type="email" name="email" required value={formData.email} onChange={handleChange} className={inputClass} placeholder="jane@example.com" />
+                    </Field>
                   </div>
 
-                  <div>
-                    <label className="block text-xs tracking-[0.2em] uppercase font-medium mb-3 text-neutral-500 dark:text-neutral-400">{t('contact.subject')} *</label>
-                    <select
-                      name="subject"
-                      required
-                      value={formData.subject}
-                      onChange={handleChange}
-                      className="input-field"
-                    >
-                      <option value="">{t('contact.selectSubject')}</option>
-                      <option value="general">{t('contact.generalInquiry')}</option>
-                      <option value="order">{t('contact.orderQuestion')}</option>
-                      <option value="product">{t('contact.productInfo')}</option>
-                      <option value="returns">{t('contact.returns')}</option>
-                      <option value="feedback">{t('contact.feedback')}</option>
+                  <Field label={`${t('contact.subject')} *`}>
+                    <select name="subject" required value={formData.subject} onChange={handleChange} className={`${inputClass} cursor-pointer`}>
+                      <option value="" className="bg-carbon">{t('contact.selectSubject')}</option>
+                      <option value="general" className="bg-carbon">{t('contact.generalInquiry')}</option>
+                      <option value="order" className="bg-carbon">{t('contact.orderQuestion')}</option>
+                      <option value="product" className="bg-carbon">{t('contact.productInfo')}</option>
+                      <option value="returns" className="bg-carbon">{t('contact.returns')}</option>
+                      <option value="feedback" className="bg-carbon">{t('contact.feedback')}</option>
                     </select>
-                  </div>
+                  </Field>
 
-                  <div>
-                    <label className="block text-xs tracking-[0.2em] uppercase font-medium mb-3 text-neutral-500 dark:text-neutral-400">{t('contact.message')} *</label>
-                    <textarea
-                      name="message"
-                      required
-                      value={formData.message}
-                      onChange={handleChange}
-                      className="input-field resize-none"
-                      rows={6}
-                      placeholder={t('contact.messagePlaceholder')}
-                    />
-                  </div>
+                  <Field label={`${t('contact.message')} *`}>
+                    <textarea name="message" required value={formData.message} onChange={handleChange} rows={6} className={`${inputClass} resize-none`} placeholder={t('contact.messagePlaceholder')} />
+                  </Field>
 
-                  <button
-                    type="submit"
-                    disabled={submitting}
-                    className="bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 px-10 py-4 text-xs tracking-[0.2em] uppercase font-medium hover:bg-neutral-800 dark:hover:bg-neutral-200 transition-colors inline-flex items-center gap-3 disabled:opacity-50"
-                  >
-                    {submitting ? 'Sending...' : t('contact.send')}
-                    <ArrowRight className="w-4 h-4" />
-                  </button>
+                  <Magnetic strength={0.15}>
+                    <button
+                      type="submit"
+                      disabled={submitting}
+                      data-cursor="link"
+                      className="inline-flex items-center gap-3 rounded-full bg-neon px-9 py-4 font-mono text-[12px] uppercase tracking-[0.2em] text-white transition-[filter] hover:brightness-110 disabled:opacity-50"
+                    >
+                      {submitting ? 'Sending…' : <TextRoll text={t('contact.send')} />}
+                      <ArrowUpRight className="h-4 w-4" />
+                    </button>
+                  </Magnetic>
                 </form>
               )}
             </div>
 
-            {/* Map Placeholder with Background */}
-            <div className="mt-16 relative overflow-hidden">
-              <div className="h-80 bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center relative">
-                <img
-                  src="https://images.unsplash.com/photo-1524758631624-e2822e304c36?w=1200&q=80"
-                  alt="Store Location"
-                  className="absolute inset-0 w-full h-full object-cover opacity-20 dark:opacity-10"
-                />
-                <div className="text-center relative z-10">
-                  <MapPin className="w-10 h-10 text-neutral-900 dark:text-white mx-auto mb-4" />
-                  <p className="font-medium text-neutral-900 dark:text-white mb-2">88 Sneaker Boulevard</p>
-                  <p className="text-sm text-neutral-600 dark:text-neutral-400 font-light mb-4">Athens 10552, Greece</p>
-                  <a
-                    href="https://maps.google.com"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 text-xs tracking-[0.15em] uppercase font-medium text-neutral-900 dark:text-white hover:text-neutral-600 dark:hover:text-neutral-400 transition-colors"
-                  >
-                    {t('contact.openMaps')}
-                    <ArrowRight className="w-3 h-3" />
-                  </a>
-                </div>
-              </div>
+            {/* location card */}
+            <div className="mt-8 flex flex-col items-center justify-center gap-3 rounded-3xl panel-glass p-12 text-center" data-reveal>
+              <MapPin className="h-8 w-8 text-plasma" />
+              <p className="font-display text-lg text-fog">88 Sneaker Boulevard</p>
+              <p className="font-mono text-[11px] uppercase tracking-[0.15em] text-mist">Athens 10552 · Greece</p>
+              <a
+                href="https://maps.google.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                data-cursor="link"
+                className="mt-2 inline-flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.15em] text-fog transition-colors hover:text-plasma"
+              >
+                {t('contact.openMaps')} <ArrowUpRight className="h-3.5 w-3.5" />
+              </a>
             </div>
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+function InfoBlock({ icon: Icon, title, children }: { icon: any; title: string; children: React.ReactNode }) {
+  return (
+    <div className="flex items-start gap-4">
+      <div className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-full border border-fog/10 text-plasma">
+        <Icon className="h-4 w-4" />
+      </div>
+      <div>
+        <h3 className="mb-2 font-mono text-[11px] uppercase tracking-[0.2em] text-fog">{title}</h3>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <label className="mb-3 block font-mono text-[10px] uppercase tracking-[0.2em] text-ghost">{label}</label>
+      {children}
     </div>
   );
 }

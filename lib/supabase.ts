@@ -10,25 +10,45 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-// Fail loudly with a clear message instead of passing `undefined` into
-// createClient (which yields cryptic runtime errors deep in a request).
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error(
-    'Supabase not configured: set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in your environment (.env.local).'
-  );
-}
-if (!supabaseServiceKey) {
-  throw new Error(
-    'Supabase not configured: set SUPABASE_SERVICE_ROLE_KEY in your environment (.env.local). This key is server-only.'
-  );
+/**
+ * A value counts as a real Supabase credential only if it is present AND not a
+ * local-dev placeholder. When Supabase is NOT configured, the app transparently
+ * falls back to the persistent in-memory store in `lib/localStore.ts` (wired via
+ * `lib/db.ts`) so the whole storefront + admin work locally without a backend —
+ * instead of hanging forever on fetches to a dead placeholder URL.
+ */
+function isReal(value: string | undefined): value is string {
+  if (!value) return false;
+  const v = value.trim().toLowerCase();
+  return v.length > 0 && !v.includes('placeholder') && v !== 'your-key-here';
 }
 
-// Browser client (RLS-protected, read-only catalog per RLS policies)
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export function isSupabaseConfigured(): boolean {
+  if (!isReal(supabaseUrl) || !isReal(supabaseServiceKey)) return false;
+  try {
+    // A real project URL must parse and be a supabase.co (or custom) https host,
+    // not the literal placeholder.
+    const u = new URL(supabaseUrl as string);
+    return u.protocol === 'https:' && !u.hostname.startsWith('placeholder');
+  } catch {
+    return false;
+  }
+}
+
+const configured = isSupabaseConfigured();
+
+// Browser client (RLS-protected, read-only catalog per RLS policies).
+// `null` when Supabase is unconfigured — server code must go through lib/db.ts,
+// which checks isSupabaseConfigured() before touching these clients.
+export const supabase = configured
+  ? createClient(supabaseUrl as string, supabaseAnonKey as string)
+  : (null as any);
 
 // Server client (service role, bypasses RLS — use ONLY in API routes, never in
 // a 'use client' component).
-export const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+export const supabaseAdmin = configured
+  ? createClient(supabaseUrl as string, supabaseServiceKey as string)
+  : (null as any);
 
 /**
  * Database types matching Supabase schema

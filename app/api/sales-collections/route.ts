@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabaseAdmin } from '@/lib/supabase';
+import { collectionsDb } from '@/lib/db';
 import { requireAdmin } from '@/lib/auth-middleware';
 
 export async function GET(request: NextRequest) {
@@ -13,30 +13,9 @@ export async function GET(request: NextRequest) {
       if (auth) return auth;
     }
 
-    let query = supabaseAdmin
-      .from('sales_collections')
-      .select('*');
-
-    // Public users only see active collections
-    if (!adminView) {
-      query = query.eq('is_active', true);
-    }
-
-    query = query.order('created_at', { ascending: false });
-
-    const { data, error } = await query;
-
-    if (error) {
-      console.warn('Sales collections table error:', error.message);
-      return NextResponse.json({ collections: [] });
-    }
-
-    const safeData = (data || []).map((c: any) => ({
-      ...c,
-      product_ids: Array.isArray(c.product_ids) ? c.product_ids : [],
-    }));
-
-    return NextResponse.json({ collections: safeData });
+    // Public users only see active collections.
+    const collections = await collectionsDb.list(!adminView);
+    return NextResponse.json({ collections });
   } catch (error: any) {
     console.error('Sales Collections GET error:', error);
     return NextResponse.json({ collections: [] });
@@ -59,7 +38,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const collectionData = {
+    const collection = await collectionsDb.create({
       name: body.name || 'Unnamed Collection',
       description: body.description || '',
       discount_percentage: discount,
@@ -68,20 +47,9 @@ export async function POST(request: NextRequest) {
       is_active: body.is_active !== false,
       start_date: body.start_date || null,
       end_date: body.end_date || null,
-    };
+    });
 
-    const { data, error } = await supabaseAdmin
-      .from('sales_collections')
-      .insert([collectionData])
-      .select()
-      .single();
-
-    if (error) {
-      console.error('Sales Collections insert error:', error);
-      return NextResponse.json({ error: 'Request failed' }, { status: 500 });
-    }
-
-    return NextResponse.json({ collection: data }, { status: 201 });
+    return NextResponse.json({ collection }, { status: 201 });
   } catch (error: any) {
     console.error('Sales Collections POST error:', error);
     return NextResponse.json({ error: 'Request failed' }, { status: 500 });
@@ -112,15 +80,8 @@ export async function PATCH(request: NextRequest) {
       updates.discount_percentage = discount;
     }
 
-    const { data, error } = await supabaseAdmin
-      .from('sales_collections')
-      .update(updates)
-      .eq('id', id)
-      .select()
-      .single();
-
-    if (error) throw error;
-    return NextResponse.json({ collection: data });
+    const collection = await collectionsDb.update(id, updates);
+    return NextResponse.json({ collection });
   } catch (error: any) {
     console.error('Sales Collections PATCH error:', error);
     return NextResponse.json({ error: 'Request failed' }, { status: 500 });
@@ -132,23 +93,18 @@ export async function DELETE(request: NextRequest) {
   if (auth) return auth;
 
   try {
-    const body = await request.json();
+    const body = await request.json().catch(() => ({}));
     let id = body?.id;
-  if (!id && request.method === 'DELETE') {
-    const queryId = request.nextUrl.searchParams.get('id');
-    if (queryId) id = queryId;
-  }
+    if (!id) {
+      const queryId = request.nextUrl.searchParams.get('id');
+      if (queryId) id = queryId;
+    }
 
     if (!id) {
       return NextResponse.json({ error: 'Collection ID is required' }, { status: 400 });
     }
 
-    const { error } = await supabaseAdmin
-      .from('sales_collections')
-      .delete()
-      .eq('id', id);
-
-    if (error) throw error;
+    await collectionsDb.remove(id);
     return NextResponse.json({ success: true });
   } catch (error: any) {
     console.error('Sales Collections DELETE error:', error);

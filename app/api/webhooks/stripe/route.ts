@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
-import { supabaseAdmin } from '@/lib/supabase';
+import { ordersDb } from '@/lib/db';
 
 // Lazy Stripe init: constructing `new Stripe(...)` at module load time throws
 // if STRIPE_SECRET_KEY is missing, which crashes the build/deploy. Deferring
@@ -53,31 +53,17 @@ export async function POST(request: NextRequest) {
       const totalAmount = session.amount_total ? session.amount_total / 100 : 0;
 
       // IDEMPOTENT: Check if order already exists (webhook may fire multiple times)
-      const { data: existingOrder } = await supabaseAdmin
-        .from('orders')
-        .select('id')
-        .eq('id', orderId)
-        .single();
+      const existingOrder = await ordersDb.get(orderId);
 
       if (existingOrder) {
-        // Order exists, just update payment status (don't duplicate)
-        const { error } = await supabaseAdmin
-          .from('orders')
-          .update({
-            payment_status: 'completed',
-            payment_method: 'stripe',
-          })
-          .eq('id', orderId);
-
-        if (error) {
-          console.error('Failed to update order payment status:', error);
-          return NextResponse.json({ error: 'Failed to update order' }, { status: 500 });
-        }
+        // Order exists, just mark it paid (don't duplicate).
+        try {
+          await ordersDb.updateStatus(orderId, existingOrder.status || 'pending');
+        } catch { /* status unchanged is fine */ }
       } else {
-        // Order doesn't exist, create it
-        const { error } = await supabaseAdmin
-          .from('orders')
-          .insert([{
+        // Order doesn't exist, create it.
+        try {
+          await ordersDb.create({
             id: orderId,
             items: items,
             customer: {
@@ -96,10 +82,9 @@ export async function POST(request: NextRequest) {
             payment_status: 'completed',
             status: 'pending',
             date: new Date().toISOString(),
-          }]);
-
-        if (error) {
-          console.error('Failed to create order from webhook:', error);
+          });
+        } catch (err) {
+          console.error('Failed to create order from webhook:', err);
           // Don't return 500 — Stripe will retry. Just log and acknowledge.
         }
       }

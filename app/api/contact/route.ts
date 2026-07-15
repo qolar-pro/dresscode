@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabaseAdmin } from '@/lib/supabase';
+import { contactsDb } from '@/lib/db';
 import { sanitizeEmail, sanitizeString } from '@/lib/sanitize';
+import { getClientIP } from '@/lib/ip-whitelist';
 
-// Simple in-memory IP rate limiter (same pattern as app/api/orders/route.ts).
+// IP rate limiter, pinned to globalThis so it's shared across route bundles.
 // Max 5 submissions per 10 minute window per IP.
-const contactAttempts = new Map<string, { count: number; resetTime: number }>();
+const contactAttempts: Map<string, { count: number; resetTime: number }> =
+  (globalThis as any).__saContactAttempts ?? ((globalThis as any).__saContactAttempts = new Map());
 
 function checkContactRateLimit(ip: string): { allowed: boolean; retryAfter?: number } {
   const now = Date.now();
@@ -26,7 +28,7 @@ function checkContactRateLimit(ip: string): { allowed: boolean; retryAfter?: num
 }
 
 export async function POST(request: NextRequest) {
-  const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown';
+  const ip = getClientIP(request);
   const rateLimit = checkContactRateLimit(ip);
   if (!rateLimit.allowed) {
     return NextResponse.json(
@@ -55,22 +57,12 @@ export async function POST(request: NextRequest) {
     const sanitizedName = sanitizeString(name || '');
     const sanitizedMessage = sanitizeString(message);
 
-    // Store contact submission in database for admin review
-    const { data, error } = await supabaseAdmin
-      .from('contact_submissions')
-      .insert([{
-        email: sanitizedEmail,
-        name: sanitizedName,
-        message: sanitizedMessage,
-        date: new Date().toISOString(),
-      }])
-      .select()
-      .single();
-
-    if (error) {
-      // If table doesn't exist yet, still return success
-      console.warn('Contact submissions table not found:', error.message);
-    }
+    // Store contact submission for admin review (Supabase or local store).
+    await contactsDb.add({
+      email: sanitizedEmail,
+      name: sanitizedName,
+      message: sanitizedMessage,
+    });
 
     return NextResponse.json({ success: true }, { status: 200 });
   } catch (error: any) {

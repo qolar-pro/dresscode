@@ -16,12 +16,13 @@ export default function AdminLogin() {
     checkAuth();
   }, []);
 
+  // The slug is the first path segment of the URL we're already on.
+  const slug = typeof window !== 'undefined' ? window.location.pathname.split('/')[1] : '';
+
   const checkAuth = async () => {
     try {
       const res = await fetch('/api/admin/verify');
       if (res.ok) {
-        const data = await res.json();
-        const slug = data.secretUrl || 'admin';
         router.push(`/${slug}/dashboard`);
       }
     } catch {
@@ -54,8 +55,7 @@ export default function AdminLogin() {
       const data = await res.json();
 
       if (res.ok) {
-        // Successful login - redirect to secret URL
-        const slug = data.secretUrl || 'admin';
+        // Successful login - redirect to the dashboard under the current slug.
         router.push(`/${slug}/dashboard`);
       } else if (res.status === 429) {
         // Rate limited

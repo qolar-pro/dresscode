@@ -3,14 +3,14 @@ import { ArrowLeft } from 'lucide-react';
 
 export default function PrivacyPolicy() {
   return (
-    <div className="min-h-screen bg-pearl-50 dark:bg-charcoal-950 py-16 px-4">
+    <div className="min-h-screen bg-void text-fog pt-32 pb-20 px-4">
       <div className="container mx-auto max-w-4xl">
-        <Link href="/" className="inline-flex items-center gap-2 text-neutral-600 dark:text-neutral-400 hover:text-charcoal-900 dark:hover:text-pearl-50 mb-8 transition-colors">
+        <Link href="/" className="inline-flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.2em] text-mist hover:text-fog mb-8 transition-colors">
           <ArrowLeft className="w-4 h-4" />
           Back to Store
         </Link>
 
-        <div className="bg-white dark:bg-charcoal-900 p-8 md:p-12 rounded-2xl shadow-sm border border-neutral-200 dark:border-charcoal-800">
+        <div className="panel-glass p-8 md:p-12 rounded-3xl">
           <h1 className="font-display text-4xl font-bold text-charcoal-900 dark:text-pearl-50 mb-8">Privacy Policy</h1>
           
           <div className="prose dark:prose-invert max-w-none text-neutral-700 dark:text-neutral-300 space-y-6">

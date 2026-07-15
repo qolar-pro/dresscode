@@ -3,7 +3,8 @@ import { sanitizeEmail } from '@/lib/sanitize';
 
 // Simple in-memory IP rate limiter (same pattern as app/api/contact/route.ts).
 // Max 5 subscribe attempts per 10 minute window per IP.
-const subscribeAttempts = new Map<string, { count: number; resetTime: number }>();
+const subscribeAttempts: Map<string, { count: number; resetTime: number }> =
+  (globalThis as any).__saSubscribeAttempts ?? ((globalThis as any).__saSubscribeAttempts = new Map());
 
 function checkSubscribeRateLimit(ip: string): { allowed: boolean; retryAfter?: number } {
   const now = Date.now();
@@ -48,24 +49,11 @@ export async function POST(request: NextRequest) {
     // Sanitize and validate email
     const sanitizedEmail = sanitizeEmail(email);
 
-    // Store newsletter subscription in Supabase
-    const { supabaseAdmin } = await import('@/lib/supabase');
-    const { error } = await supabaseAdmin
-      .from('newsletter_subscribers')
-      .insert([{
-        email: sanitizedEmail,
-        subscribed_at: new Date().toISOString(),
-      }])
-      .select()
-      .single();
-
-    if (error) {
-      // If email already exists, that's fine
-      if (error.code === '23505') {
-        return NextResponse.json({ success: true, message: 'Already subscribed' });
-      }
-      // If table doesn't exist, log but still return success
-      console.warn('Newsletter subscribers table not found:', error.message);
+    // Store newsletter subscription (Supabase or local store).
+    const { newsletterDb } = await import('@/lib/db');
+    const { duplicate } = await newsletterDb.subscribe(sanitizedEmail);
+    if (duplicate) {
+      return NextResponse.json({ success: true, message: 'Already subscribed' });
     }
 
     return NextResponse.json({ success: true }, { status: 200 });

@@ -1,11 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { randomUUID } from 'crypto';
-import { supabaseAdmin } from '@/lib/supabase';
+import { productsDb, ordersDb } from '@/lib/db';
 import { sanitizeOrderData } from '@/lib/sanitize';
 import { requireAdmin } from '@/lib/auth-middleware';
+import { getClientIP } from '@/lib/ip-whitelist';
 
-// Rate limiting for order creation (IP-based, in-memory)
-const orderAttempts = new Map<string, { count: number; resetTime: number; blockedUntil: number }>();
+// Rate limiting for order creation (IP-based). Pinned to globalThis so all
+// route-bundle instances in one process share it (see lib/admin-sessions.ts).
+const orderAttempts: Map<string, { count: number; resetTime: number; blockedUntil: number }> =
+  (globalThis as any).__saOrderAttempts ?? ((globalThis as any).__saOrderAttempts = new Map());
 
 function checkOrderRateLimit(ip: string): { allowed: boolean; retryAfter?: number } {
   const now = Date.now();
@@ -40,13 +43,8 @@ export async function GET(request: NextRequest) {
   if (auth) return auth;
 
   try {
-    const { data, error } = await supabaseAdmin
-      .from('orders')
-      .select('*')
-      .order('date', { ascending: false });
-
-    if (error) throw error;
-    return NextResponse.json({ orders: data || [] });
+    const orders = await ordersDb.list();
+    return NextResponse.json({ orders });
   } catch (error: any) {
     console.error('Orders GET error:', error);
     return NextResponse.json({ error: 'Request failed' }, { status: 500 });
@@ -57,8 +55,9 @@ export async function POST(request: NextRequest) {
   // NOTE: This endpoint is used by checkout, so we don't require auth here.
   // But we validate prices server-side and rate limit to prevent abuse.
 
-  // Rate limiting
-  const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown';
+  // Rate limiting — use the trusted client IP (prefers Vercel's x-real-ip),
+  // not the client-spoofable x-forwarded-for, so buckets can't be reset per req.
+  const ip = getClientIP(request);
   const rateLimit = checkOrderRateLimit(ip);
   if (!rateLimit.allowed) {
     return NextResponse.json(
@@ -84,116 +83,71 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // VALIDATE PRICES: Recalculate total from database prices
-    let serverTotal = 0;
-    if (sanitized.items && sanitized.items.length > 0) {
-      for (const item of sanitized.items) {
-        const productId = item.product?.id;
-        if (!productId) continue;
+    const items = Array.isArray(sanitized.items) ? sanitized.items : [];
 
-        const { data: products, error: prodError } = await supabaseAdmin
-          .from('products')
-          .select('price')
-          .eq('id', productId);
-
-        if (!prodError && products && products.length > 0) {
-          serverTotal += products[0].price * (item.quantity || 1);
-        }
+    // Normalize + hard-validate quantities BEFORE any pricing/stock math. A
+    // client-supplied negative/huge/non-integer quantity would otherwise drive
+    // the total negative and (via Math.max(0, stock - qty)) *increase* stock.
+    const MAX_QTY_PER_ITEM = 25;
+    const normalizedItems: { productId: any; size: any; quantity: number; raw: any }[] = [];
+    for (const item of items) {
+      const productId = item?.product?.id;
+      const quantity = Math.floor(Number(item?.quantity));
+      if (!productId) {
+        return NextResponse.json({ error: 'Invalid item: missing product' }, { status: 400 });
       }
+      if (!Number.isFinite(quantity) || quantity < 1 || quantity > MAX_QTY_PER_ITEM) {
+        return NextResponse.json({ error: 'Invalid quantity' }, { status: 400 });
+      }
+      normalizedItems.push({ productId, size: item?.size, quantity, raw: item });
     }
 
-    // Use server-calculated total (never trust client-side price)
-    const finalTotal = serverTotal + (sanitized.shipping || 0) + (sanitized.paymentFee || 0);
+    // VALIDATE PRICES: recompute the total from stored prices only.
+    let serverTotal = 0;
+    for (const it of normalizedItems) {
+      const price = await productsDb.priceOf(it.productId);
+      if (price != null && price > 0) serverTotal += price * it.quantity;
+    }
+
+    // Shipping + payment fee are recomputed server-side too — never trusted
+    // from the client. Payment method is whitelisted; payment status is ALWAYS
+    // 'pending' here (only the Stripe webhook may mark an order paid).
+    const ALLOWED_METHODS = ['cash_on_delivery', 'stripe', 'paypal', 'viva_wallet'];
+    const paymentMethod = ALLOWED_METHODS.includes(sanitized.paymentMethod)
+      ? sanitized.paymentMethod
+      : 'cash_on_delivery';
+    const shipping = serverTotal >= 100 ? 0 : 9.99;
+    const paymentFee = 0; // COD has no processing fee; Stripe fees are handled by Stripe.
+    const finalTotal = serverTotal + shipping + paymentFee;
 
     // Server-authoritative, unguessable order ID.
-    // Never trust a client-supplied id (client used to send `ORD-${Date.now()}`,
-    // which is trivially guessable/enumerable).
     const orderId = 'ORD-' + randomUUID();
 
-    // 1. Insert Order with server-validated total
-    const { data, error } = await supabaseAdmin
-      .from('orders')
-      .insert([{
-        id: orderId,
-        items: sanitized.items || [],
-        customer: sanitized.customer,
-        total: finalTotal,
-        subtotal: serverTotal,
-        shipping: sanitized.shipping || 0,
-        payment_fee: sanitized.paymentFee || 0,
-        payment_method: sanitized.paymentMethod || 'cash_on_delivery',
-        payment_status: sanitized.paymentStatus || 'pending',
-        status: 'pending',
-        date: sanitized.date || new Date().toISOString(),
-      }])
-      .select()
-      .single();
+    const order = await ordersDb.create({
+      id: orderId,
+      items,
+      customer: sanitized.customer,
+      total: finalTotal,
+      subtotal: serverTotal,
+      shipping,
+      payment_fee: paymentFee,
+      payment_method: paymentMethod,
+      payment_status: 'pending',
+      status: 'pending',
+      date: new Date().toISOString(),
+    });
 
-    if (error) throw error;
-
-    // 2. Decrement Stock PER SIZE for each item with optimistic retry
-    if (sanitized.items && sanitized.items.length > 0) {
-      for (const item of sanitized.items) {
-        const productId = item.product?.id;
-        const selectedSize = item.size;
-        const quantity = item.quantity;
-
-        if (!productId || !selectedSize) {
-          console.warn('Missing product ID or size in order item, skipping stock update');
-          continue;
-        }
-
-        // Optimistic retry loop to handle concurrent stock updates
-        const MAX_RETRIES = 3;
-        let stockUpdated = false;
-
-        for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
-          const { data: products, error: prodError } = await supabaseAdmin
-            .from('products')
-            .select('id, sizes')
-            .eq('id', productId)
-            .single();
-
-          if (prodError || !products) {
-            console.error(`Failed to fetch product ${productId} for stock update:`, prodError?.message);
-            break;
-          }
-
-          const currentSizes = products.sizes || [];
-
-          const updatedSizes = currentSizes.map((s: any) => {
-            if (s.name === selectedSize) {
-              const currentSizeStock = s.stock ?? 0;
-              const newSizeStock = Math.max(0, currentSizeStock - quantity);
-              console.log(`Stock update: Product ${productId}, Size ${selectedSize} -> ${currentSizeStock} - ${quantity} = ${newSizeStock}`);
-              return { ...s, stock: newSizeStock };
-            }
-            return s;
-          });
-
-          const { error: updateError } = await supabaseAdmin
-            .from('products')
-            .update({ sizes: updatedSizes })
-            .eq('id', productId);
-
-          if (!updateError) {
-            stockUpdated = true;
-            break;
-          }
-
-          // If update failed, retry with small delay
-          if (attempt < MAX_RETRIES - 1) {
-            await new Promise(resolve => setTimeout(resolve, 50 * (attempt + 1)));
-          }
-        }
-
-        if (!stockUpdated) {
-          console.error(`Failed to update stock for product ${productId}, size ${selectedSize} after ${MAX_RETRIES} retries`);
-        }
+    // Decrement per-size stock using the validated quantities.
+    for (const it of normalizedItems) {
+      if (!it.size) continue;
+      try {
+        await productsDb.decrementSize(it.productId, it.size, it.quantity);
+      } catch (e) {
+        console.error(`Stock decrement failed for product ${it.productId}/${it.size}`);
       }
     }
 
-    return NextResponse.json({ order: data }, { status: 201 });
+    return NextResponse.json({ order }, { status: 201 });
   } catch (error: any) {
     console.error('Orders POST error:', error);
     return NextResponse.json({ error: 'Request failed' }, { status: 500 });
@@ -211,12 +165,7 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Order ID is required' }, { status: 400 });
     }
 
-    const { error } = await supabaseAdmin
-      .from('orders')
-      .delete()
-      .eq('id', id);
-
-    if (error) throw error;
+    await ordersDb.remove(id);
     return NextResponse.json({ success: true });
   } catch (error: any) {
     console.error('Orders DELETE error:', error);

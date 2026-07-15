@@ -42,15 +42,14 @@
   }
   
   body {
-    @apply bg-pearl-50 text-charcoal-900 dark:bg-charcoal-900 dark:text-pearl-50;
-    font-feature-settings: "cv11", "ss01";
-    font-variation-settings: "opsz" 32;
+    @apply bg-pearl-50 text-charcoal-900 dark:bg-void dark:text-fog;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
   }
-  
+
   ::selection {
-    @apply bg-charcoal-900 text-pearl-50 dark:bg-pearl-50 dark:text-charcoal-900;
+    @apply bg-plasma text-white;
   }
   
   /* Smooth scrolling for scrollytelling */
@@ -333,4 +332,105 @@
   html {
     scroll-behavior: auto;
   }
+}
+
+/* ================================================================
+   SNEAKER AIR — cinematic "void" system (ported from blancographics.xyz)
+   ================================================================ */
+:root {
+  --ease-cine: cubic-bezier(0.16, 1, 0.3, 1);
+  --sa-void: #030309;
+  --sa-volt: #4d7cff;
+  --sa-plasma: #8a5cff;
+  --sa-flare: #ff4fd8;
+  --sa-fog: #f2f2f7;
+}
+
+/* Lenis owns scrolling */
+html.lenis,
+html.lenis body { height: auto; }
+.lenis.lenis-smooth { scroll-behavior: auto !important; }
+.lenis.lenis-stopped { overflow: hidden; }
+
+/* Native cursor hidden only where the custom cursor exists */
+@media (pointer: fine) {
+  body[data-custom-cursor='true'],
+  body[data-custom-cursor='true'] a,
+  body[data-custom-cursor='true'] button,
+  body[data-custom-cursor='true'] [data-cursor] {
+    cursor: none;
+  }
+}
+
+/* Smoked glass panel — hairline edge, faint inner light */
+.panel-glass {
+  background: linear-gradient(155deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.012) 55%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+/* Brushed metal — vertical grain sheen for headers / rails */
+.panel-metal {
+  background:
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.022) 0 1px, transparent 1px 3px),
+    linear-gradient(180deg, #16161f, #0c0c13);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+/* Hollow display type */
+.text-hollow {
+  -webkit-text-stroke: 1.5px rgba(242, 242, 247, 0.55);
+  color: transparent;
+}
+.text-hollow-accent {
+  -webkit-text-stroke: 1.5px rgba(138, 92, 255, 0.85);
+  color: transparent;
+}
+
+/* Neon gradient text */
+.text-neon {
+  background: linear-gradient(100deg, var(--sa-volt), var(--sa-plasma) 50%, var(--sa-flare));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.bg-neon {
+  background: linear-gradient(100deg, var(--sa-volt), var(--sa-plasma) 50%, var(--sa-flare));
+}
+
+/* Masked-line reveal primitives (driven by GSAP useReveal) */
+.line-mask { display: block; overflow: hidden; }
+.line-mask > * { display: block; transform: translateY(115%); will-change: transform; }
+
+/* Film grain overlay for cinematic depth */
+.grain-overlay {
+  position: fixed;
+  inset: -100%;
+  z-index: 5;
+  pointer-events: none;
+  opacity: 0.05;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  animation: grain-shift 0.9s steps(4) infinite;
+}
+@keyframes grain-shift {
+  0% { transform: translate(0, 0); }
+  25% { transform: translate(-2%, 1%); }
+  50% { transform: translate(1%, -2%); }
+  75% { transform: translate(-1%, 2%); }
+  100% { transform: translate(2%, -1%); }
+}
+
+/* Character-roll hover (see components/TextRoll.tsx) */
+.textroll { display: inline-flex; overflow: hidden; vertical-align: bottom; }
+.textroll-char { position: relative; display: inline-block; transition: transform 0.5s var(--ease-cine); }
+.textroll-glyph { display: inline-block; white-space: pre; }
+.textroll-twin { position: absolute; left: 0; top: 100%; }
+.roll-trigger:hover .textroll-char { transform: translateY(-100%); }
+
+@media (prefers-reduced-motion: reduce) {
+  .textroll-char { transition: none; }
+  .roll-trigger:hover .textroll-char { transform: none; }
+  .grain-overlay { animation: none; }
+  .line-mask > * { transform: none; }
 }

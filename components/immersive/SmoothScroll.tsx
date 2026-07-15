@@ -1,39 +1,35 @@
-"use client";
+'use client';
 
-import { ReactNode, useEffect } from "react";
-import Lenis from "lenis";
+import { ReactNode, useEffect } from 'react';
+import Lenis from 'lenis';
+import { gsap, ScrollTrigger, registerGsap } from '@/lib/motion';
+import { useQuality } from '@/lib/quality';
 
 /**
- * Lenis smooth scroll. Disabled automatically when the user prefers reduced
- * motion. Wrap the app once (e.g. in a client layout component).
+ * Lenis ↔ GSAP bridge. Lenis produces the scroll, GSAP's ticker drives it, and
+ * ScrollTrigger listens to it so all scroll reveals stay in lockstep. Disabled
+ * under reduced motion (native scrolling takes over).
  */
 export default function SmoothScroll({ children }: { children: ReactNode }) {
+  const { reducedMotion } = useQuality();
+
   useEffect(() => {
-    if (
-      typeof window !== "undefined" &&
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches
-    ) {
-      return;
-    }
+    if (reducedMotion) return;
+    registerGsap();
 
-    const lenis = new Lenis({
-      duration: 1.1,
-      easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-      smoothWheel: true,
-    });
+    const lenis = new Lenis({ lerp: 0.09, wheelMultiplier: 1, touchMultiplier: 1.4 });
 
-    let rafId = 0;
-    function raf(time: number) {
-      lenis.raf(time);
-      rafId = requestAnimationFrame(raf);
-    }
-    rafId = requestAnimationFrame(raf);
+    lenis.on('scroll', () => ScrollTrigger.update());
+
+    const raf = (time: number) => lenis.raf(time * 1000);
+    gsap.ticker.add(raf);
+    gsap.ticker.lagSmoothing(0);
 
     return () => {
-      cancelAnimationFrame(rafId);
+      gsap.ticker.remove(raf);
       lenis.destroy();
     };
-  }, []);
+  }, [reducedMotion]);
 
   return <>{children}</>;
 }

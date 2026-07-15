@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabaseAdmin } from '@/lib/supabase';
+import { ordersDb } from '@/lib/db';
 import { requireAdmin } from '@/lib/auth-middleware';
 
 export async function GET(
@@ -18,17 +18,12 @@ export async function GET(
       return NextResponse.json({ error: 'Order ID is required' }, { status: 400 });
     }
 
-    const { data, error } = await supabaseAdmin
-      .from('orders')
-      .select('*')
-      .eq('id', id)
-      .single();
-
-    if (error) {
+    const order = await ordersDb.get(id);
+    if (!order) {
       return NextResponse.json({ error: 'Order not found' }, { status: 404 });
     }
 
-    return NextResponse.json({ order: data });
+    return NextResponse.json({ order });
   } catch (error: any) {
     console.error('Order GET error:', error);
     return NextResponse.json({ error: 'Request failed' }, { status: 500 });
@@ -55,16 +50,8 @@ export async function PATCH(
       return NextResponse.json({ error: 'Invalid status' }, { status: 400 });
     }
 
-    const { data, error } = await supabaseAdmin
-      .from('orders')
-      .update({ status })
-      .eq('id', id)
-      .select()
-      .single();
-
-    if (error) throw error;
-
-    return NextResponse.json({ order: data });
+    const order = await ordersDb.updateStatus(id, status);
+    return NextResponse.json({ order });
   } catch (error: any) {
     console.error('Order status update error:', error);
     return NextResponse.json({ error: 'Request failed' }, { status: 500 });

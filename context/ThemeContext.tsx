@@ -14,15 +14,16 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>('light');
+  // Sneaker Air is a cinematic dark-first brand — default to dark and keep the
+  // `dark` class (set on <html> from SSR) unless the user explicitly opts out.
+  const [theme, setThemeState] = useState<Theme>('dark');
 
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme') as Theme;
     if (savedTheme) {
       setThemeState(savedTheme);
       document.documentElement.classList.toggle('dark', savedTheme === 'dark');
-    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      setThemeState('dark');
+    } else {
       document.documentElement.classList.add('dark');
     }
   }, []);

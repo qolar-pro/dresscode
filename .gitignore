@@ -29,6 +29,10 @@ yarn-error.log*
 # Vercel
 .vercel
 
+# Local dev data store + uploaded images (used when Supabase is unconfigured)
+/.data/
+/public/uploads/
+
 # TypeScript
 *.tsbuildinfo
 next-env.d.ts
