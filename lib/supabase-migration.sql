@@ -54,6 +54,16 @@ ALTER TABLE sales_collections      ENABLE ROW LEVEL SECURITY;
 ALTER TABLE newsletter_subscribers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE contact_submissions    ENABLE ROW LEVEL SECURITY;
 
+-- Durable admin sessions (serverless-safe login). Service-role access only.
+CREATE TABLE IF NOT EXISTS admin_sessions (
+  token TEXT PRIMARY KEY,
+  email TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  expires_at TIMESTAMPTZ NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_admin_sessions_expires ON admin_sessions(expires_at);
+ALTER TABLE admin_sessions ENABLE ROW LEVEL SECURITY;
+
 DROP POLICY IF EXISTS "Products are publicly readable"        ON products;
 DROP POLICY IF EXISTS "Allow all product operations for now"  ON products;
 DROP POLICY IF EXISTS "Anyone can create orders (checkout)"   ON orders;

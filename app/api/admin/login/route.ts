@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { serialize } from 'cookie';
-import { sessions, SESSION_TTL, generateSessionToken } from '@/lib/admin-sessions';
+import { createSession, SESSION_TTL, generateSessionToken } from '@/lib/admin-sessions';
 import { getClientIP, isIPAllowed } from '@/lib/ip-whitelist';
 
 // Password hash read from environment variable at request time (not module load)
@@ -79,9 +79,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid password' }, { status: 401 });
     }
 
-    // Create secure session token
+    // Create secure session token (durable in Supabase, in-memory in local dev)
     const sessionToken = generateSessionToken();
-    sessions.set(sessionToken, { createdAt: Date.now() });
+    await createSession(sessionToken);
 
     // Set HttpOnly, Secure, SameSite cookie
     const cookie = serialize('admin_session', sessionToken, {

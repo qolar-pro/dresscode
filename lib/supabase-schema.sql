@@ -90,6 +90,20 @@ CREATE TABLE IF NOT EXISTS contact_submissions (
 );
 
 -- ==========================================
+-- 5b. ADMIN SESSIONS (durable, serverless-safe admin login sessions)
+-- Replaces the in-memory session Map so logins survive across Vercel lambda
+-- instances / cold starts. Written/read ONLY via the service-role key.
+-- ==========================================
+CREATE TABLE IF NOT EXISTS admin_sessions (
+  token TEXT PRIMARY KEY,
+  email TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  expires_at TIMESTAMPTZ NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_admin_sessions_expires ON admin_sessions(expires_at);
+
+-- ==========================================
 -- 6. ROW LEVEL SECURITY
 -- ------------------------------------------
 -- The app performs ALL reads/writes server-side via the SERVICE ROLE key
@@ -106,6 +120,9 @@ ALTER TABLE orders                 ENABLE ROW LEVEL SECURITY;
 ALTER TABLE sales_collections      ENABLE ROW LEVEL SECURITY;
 ALTER TABLE newsletter_subscribers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE contact_submissions    ENABLE ROW LEVEL SECURITY;
+ALTER TABLE admin_sessions         ENABLE ROW LEVEL SECURITY;
+-- admin_sessions: RLS enabled + NO anon policy => only the service role can
+-- read/write sessions. A leaked anon key can never touch admin sessions.
 
 -- Drop any legacy wide-open policies if present (from the old schema)
 DROP POLICY IF EXISTS "Products are publicly readable"        ON products;

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { serialize } from 'cookie';
-import { sessions } from '@/lib/admin-sessions';
+import { deleteSession } from '@/lib/admin-sessions';
 import { getClientIP, isIPAllowed } from '@/lib/ip-whitelist';
 
 export async function POST(request: NextRequest) {
@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
   // Delete server-side session
   const sessionCookie = request.cookies.get('admin_session');
   if (sessionCookie) {
-    sessions.delete(sessionCookie.value);
+    await deleteSession(sessionCookie.value);
   }
 
   // Clear client cookie

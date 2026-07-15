@@ -1,25 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { sessions, SESSION_TTL } from '@/lib/admin-sessions';
+import { getSession } from '@/lib/admin-sessions';
 
 export async function verifyAdminSession(request: NextRequest): Promise<{ valid: boolean; error?: string }> {
-  // Get session cookie
   const sessionCookie = request.cookies.get('admin_session');
-
   if (!sessionCookie) {
     return { valid: false, error: 'Not authenticated' };
   }
 
-  const sessionToken = sessionCookie.value;
-  const session = sessions.get(sessionToken);
-
+  // getSession returns null for missing OR expired sessions (it self-cleans).
+  const session = await getSession(sessionCookie.value);
   if (!session) {
     return { valid: false, error: 'Invalid session' };
-  }
-
-  // Check if session expired
-  if (Date.now() - session.createdAt > SESSION_TTL) {
-    sessions.delete(sessionToken);
-    return { valid: false, error: 'Session expired' };
   }
 
   return { valid: true };
